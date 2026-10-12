@@ -117,7 +117,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   );
   const demoCal = gcal(
     "FIN:NECT · Singapore Demo Day",
-    "20261119T100000/20261119T120000",
+    "20261119T090000/20261119T123000",
     `${EVENT_VENUE}, ${EVENT_ADDRESS}`,
     [...demoDay.map((d) => `• ${d}`), "", SITE].join("\n"),
   );

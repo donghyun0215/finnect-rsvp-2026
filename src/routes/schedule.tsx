@@ -68,8 +68,9 @@ const DAYS: ScheduleDay[] = [
     date: "11/19", dow: "Thu", theme: "Demo Day & 1:1 Meetings",
     joint: true,
     items: [
-      { time: "08:00", title: "Meet in the hotel lobby, bus to venue" },
-      ...DEMO_AGENDA.map(([time, title]) => ({ time, title, venue: /Tenity/.test(title) ? EVENT_VENUE : undefined, highlight: /Tenity/.test(title) })),
+      { time: "08:30", title: "Group arrival at the venue", venue: EVENT_VENUE },
+      ...DEMO_AGENDA.map(([time, title]) => ({ time, title, highlight: /pitching|VC 1:1/.test(title) })),
+      { time: "From 12:30", title: "Networking near the venue (TBC)" },
       ...TIMESLOTS.map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: MEETUP_VENUE, highlight: true })),
     ],
   },

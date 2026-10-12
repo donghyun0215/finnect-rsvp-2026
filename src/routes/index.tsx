@@ -288,7 +288,7 @@ function Landing() {
               {EVENT_TIME}
             </p>
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Startup pitches and speed-dating meetings with investors, run with Tenity, then a networking lunch.
+              IR pitches, then three rounds of 20-minute VC 1:1 meetings, run with Tenity.
             </p>
             <div className="mt-4">
               <Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} />

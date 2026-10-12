@@ -2,8 +2,10 @@
 // Source: "[마스터파일] 핀테크지원센터_현지프로그램" › 2026 스타트업 명단 (12 Oct):
 // each company's own English service overview (서비스 개요 영문) as the
 // tagline. Funding amounts, revenue and the MYSC diagnostic notes in that
-// sheet are internal and stay out. Eight companies from the centre so far;
-// two more come from 전북창경원 (1:1 밋업 sheet, 12 Oct) — names not yet given.
+// sheet are internal and stay out. Ops deck (12 Oct): 12 companies — these
+// 8 selected, plus alumni 머니가드서비스 · 앳원스 and 전북창경 십일리터 ·
+// 지투시그마 (Tenity programme + visits; 전북 pair also get one online 1:1
+// with LodestarT). ponytail: those four join the site once their data lands.
 // IR decks are NOT published (CMK lesson, 7 Oct). Sector labels are ours.
 
 export interface Company {

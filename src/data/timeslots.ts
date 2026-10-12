@@ -7,7 +7,8 @@ export interface Timeslot {
 // ── FIN:NECT Global Singapore 2026 (Korea Fintech Support Center) ──
 // Everything event-specific lives in this file, so a confirmed venue or time
 // is a one-line change. Source: "[마스터파일] 핀테크지원센터_현지프로그램"
-// (26_세부 일정표, read 12 Oct) + the ops table (12 Oct). Programme
+// (26_세부 일정표, read 12 Oct), the ops table and the LodestarT × MYSC ops
+// meeting deck (12 Oct: Tenity run of show, 80RR venue). Programme
 // 17–21 Nov during Singapore FinTech Festival week; the public day is Thu
 // 19 Nov: Demo Day with Tenity in the morning, 1:1 meetings after lunch.
 export const SITE_URL = "https://finnect-rsvp-2026.vercel.app";
@@ -22,17 +23,19 @@ export const EVENT_NAME_LINE2 = "Fintech Demo Day";
 
 export const EVENT_DATE = "Thursday, 19 November 2026";
 export const EVENT_DAY_SHORT = "Thu 19 Nov";
-export const EVENT_TIME = "10:00 – 12:00";
-// Run with Tenity; venue not fixed yet (timetable says 미정).
-export const EVENT_VENUE = "Venue to be announced";
-export const EVENT_ADDRESS = "Singapore";
-export const EVENT_MAP_URL = "";
+export const EVENT_TIME = "09:00 – 12:30";
+// Run with Tenity; contract signed, run of show agreed (ops deck, 12 Oct).
+export const EVENT_VENUE = "80RR Fintech Hub SG";
+export const EVENT_ADDRESS = "80 Robinson Road, #08-01, Singapore 068898";
+export const EVENT_MAP_URL =
+  "https://www.google.com/maps/search/?api=1&query=80+Robinson+Road+Singapore+068898";
 
 // Public 1:1 self-booking, same model as KIMST/CMK.
 export const ONE_ON_ONE_OPEN = true;
 
 // 1:1 meetings Thu 19 Nov afternoon: rounds start 14:30 / 15:30 / 16:30
-// (ops table). ponytail: 40 min each like CMK until the length is confirmed.
+// (ops table). ponytail: 40 min each like CMK until the length is confirmed;
+// how the afternoon B2B meetings are set up is still open (ops deck, 12 Oct).
 // IDs are stable references stored in bookings — change labels/times
 // freely, never the ids.
 export const TIMESLOTS: Timeslot[] = [
@@ -66,15 +69,15 @@ export interface ProgramBlock {
 export const PROGRAM: ProgramBlock[] = [
   {
     id: "showcase",
-    title: "Pitches & investor meetings",
-    time: "10:00 – 12:00",
-    description: "Startup pitches and speed-dating meetings with investors, run with Tenity. Format to be confirmed.",
+    title: "Pitches & VC meetings",
+    time: "09:00 – 12:30",
+    description: "IR pitches (5 min pitch, 5 min Q&A each), then three rounds of 20-minute VC 1:1 meetings, run with Tenity.",
   },
   {
     id: "lunch",
-    title: "Networking lunch",
-    time: "From 13:00",
-    description: "A small lunch with the founders, investors and local partners near Clarke Quay.",
+    title: "Networking after the Demo Day",
+    time: "From 12:30",
+    description: "Networking with the founders, investors and local partners near the venue (details to follow).",
   },
   {
     id: "meetups",
@@ -84,10 +87,12 @@ export const PROGRAM: ProgramBlock[] = [
   },
 ];
 
-// Demo Day run of show (timetable, TBC). Shown on the RSVP page.
+// Demo Day run of show (Tenity, agreed 29 Sep; ops deck 12 Oct).
 export const DEMO_AGENDA: [time: string, item: string][] = [
-  ["10:00 – 12:00", "Demo Day with Tenity: startup pitches and speed-dating meetings with investors"],
-  ["From 13:00", "Networking lunch near Clarke Quay"],
+  ["09:00 – 09:20", "Opening and introduction of the VCs / CVCs"],
+  ["09:20 – 11:15", "IR pitching (5 min pitch, 5 min Q&A each)"],
+  ["11:15 – 12:15", "VC 1:1 meetings (20 min × 3 rounds)"],
+  ["12:15 – 12:30", "Open networking and close"],
 ];
 
 // ── Legacy side-track exports (no side track on this event) ─────────

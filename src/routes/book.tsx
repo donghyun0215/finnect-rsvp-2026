@@ -544,7 +544,7 @@ function RsvpPage() {
               <h2 className="text-lg font-bold text-navy">{day === "5" ? "Pick Your Startups" : "Agenda"}</h2>
             </div>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              {day === "5" ? "One startup per round. Leave a round empty if you don't need it. Greyed-out slots are already taken." : "Pitches and investor meetings in the morning, then a networking lunch."}
+              {day === "5" ? "One startup per round. Leave a round empty if you don't need it. Greyed-out slots are already taken." : "Run with Tenity at 80RR Fintech Hub."}
             </p>
 
             {day === "7" && (
