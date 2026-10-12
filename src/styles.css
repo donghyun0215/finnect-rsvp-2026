@@ -2,9 +2,9 @@
 @source "../src";
 @import "tw-animate-css";
 
-/* Typefaces load from Google Fonts in __root.tsx: Unbounded for headlines
-   (wide and geometric, it carries the FIN:NECT name) and Figtree for
-   running text. */
+/* Typefaces load from Google Fonts in __root.tsx: Poppins for headlines
+   (closest open match to the 2025 FIN:NECT banner lettering) and Figtree
+   for running text. */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -39,48 +39,51 @@
   --color-yellow: var(--yellow);
   --color-yellow-foreground: var(--yellow-foreground);
   --font-sans: "Figtree", system-ui, sans-serif;
-  --font-display: "Unbounded", "Figtree", system-ui, sans-serif;
+  --font-display: "Poppins", "Figtree", system-ui, sans-serif;
 }
 
 :root {
   --radius: 0.75rem;
-  /* FIN:NECT — "the connection" (no CI supplied yet, 12 Oct): deep plum
-     ink, an electric violet primary and a lime signal colour used only on
-     dark grounds, for the live link between a startup and an investor.
-     Swap to the centre's CI when it arrives — every colour on the site
-     comes from these tokens.
-     Ink #1C1433 · Violet #5B3DF5 · Lime #C6F432 · Paper #F6F4FB. */
-  --background: #f6f4fb;
-  --foreground: #1c1433;
+  /* FIN:NECT — temporary theme from the 2025 FIN:NECT Global Singapore
+     banner (12 Oct): white ground with soft grey curves, charcoal lettering,
+     gold colon and gold faceted triangles. Swap for the 2026 CI when it
+     arrives — every colour on the site comes from these tokens.
+     Charcoal #2F2F2F · Gold #E5B80B · Paper #F7F7F5. Dark bands (about,
+     profile and RSVP headers) use charcoal with gold accents. */
+  --background: #f7f7f5;
+  --foreground: #2f2f2f;
   --card: #ffffff;
-  --card-foreground: #1c1433;
+  --card-foreground: #2f2f2f;
   --popover: #ffffff;
-  --popover-foreground: #1c1433;
-  --primary: #5b3df5;
+  --popover-foreground: #2f2f2f;
+  --primary: #2f2f2f;
   --primary-foreground: #ffffff;
-  --primary-glow: #8b74ff;
-  --navy: #1c1433;
-  --light-blue: #d9d0ff;
-  --yellow: #c6f432;
-  --yellow-foreground: #17200a;
-  --secondary: #ece8f8;
-  --secondary-foreground: #1c1433;
-  --muted: #f0edf9;
-  --muted-foreground: #57506b;
-  --accent: #e6e0fb;
-  --accent-foreground: #1c1433;
+  --primary-glow: #555555;
+  --navy: #2f2f2f;
+  --light-blue: #ecd77f;
+  --yellow: #e5b80b;
+  --yellow-foreground: #1f1f1f;
+  --gold-text: #9a7b00;
+  --secondary: #efefec;
+  --secondary-foreground: #2f2f2f;
+  --muted: #f0f0ed;
+  --muted-foreground: #5f5f5c;
+  --accent: #fbf3d2;
+  --accent-foreground: #2f2f2f;
   --destructive: #c2410c;
   --destructive-foreground: #ffffff;
-  --border: #ddd6ef;
-  --input: #cfc6e6;
-  --ring: #5b3df5;
+  --border: #e2e2dd;
+  --input: #d4d4ce;
+  --ring: #e5b80b;
 
-  --gradient-hero: radial-gradient(120% 90% at 85% 0%, #3a2470 0%, #22173f 45%, #130d24 100%);
+  --gradient-hero: radial-gradient(120% 90% at 85% 0%, #3d3d3b 0%, #2b2b2a 45%, #1e1e1d 100%);
+  /* the banner's white ground with large, pale grey sweeps */
+  --gradient-paper: radial-gradient(70% 90% at 100% 100%, #ececea 0 38%, transparent 38.2%), radial-gradient(55% 70% at 8% 108%, #f0f0ee 0 45%, transparent 45.2%), #fbfbfa;
   --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
-  --gradient-wave: linear-gradient(180deg, transparent 0%, #ece8f8 100%);
-  --shadow-elegant: 0 18px 40px -22px rgb(28 20 51 / 0.45);
-  --shadow-card: 0 1px 0 rgb(28 20 51 / 0.05), 0 10px 26px -18px rgb(28 20 51 / 0.35);
-  --shadow-glow: 0 0 0 4px rgb(198 244 50 / 0.3);
+  --gradient-wave: linear-gradient(180deg, transparent 0%, #efefec 100%);
+  --shadow-elegant: 0 18px 40px -22px rgb(31 31 31 / 0.4);
+  --shadow-card: 0 1px 0 rgb(31 31 31 / 0.04), 0 10px 26px -18px rgb(31 31 31 / 0.3);
+  --shadow-glow: 0 0 0 4px rgb(229 184 11 / 0.35);
 }
 
 @layer base {
@@ -118,7 +121,7 @@
 }
 
 @utility btn-hero {
-  /* Lime CTA on the dark hero */
+  /* Gold CTA (banner colon colour), charcoal text */
   background: var(--yellow);
   color: var(--yellow-foreground);
   box-shadow: 0 12px 30px -12px color-mix(in oklab, var(--yellow) 60%, transparent);
@@ -152,6 +155,25 @@
   }
 }
 
+@utility bg-paper {
+  background: var(--gradient-paper);
+}
+
+@utility text-gold {
+  color: var(--gold-text);
+}
+
+@utility btn-outline-dark {
+  background: transparent;
+  color: var(--navy);
+  border: 1.5px solid color-mix(in oklab, var(--navy) 35%, transparent);
+  transition: all 0.2s ease;
+  &:hover {
+    border-color: var(--navy);
+    background: color-mix(in oklab, var(--navy) 6%, transparent);
+  }
+}
+
 @utility bg-hero-gradient {
   background: var(--gradient-hero);
 }
@@ -162,7 +184,7 @@
 
 
 /* Home hero: ledger rows arrive once on load, each arrow drawing left to
-   right; the network links draw in behind. */
+   right; gold triangles drift behind. */
 .hero-title {
   letter-spacing: -0.03em;
   text-wrap: balance;
@@ -184,7 +206,7 @@
   border-top: 3.5px solid transparent;
   border-bottom: 3.5px solid transparent;
 }
-.ledger-row a:hover .ledger-arrow { background: #fff; }
+.ledger-row a:hover .ledger-arrow { background: var(--navy); }
 @keyframes ledger-in {
   from { opacity: 0; transform: translateY(6px); }
 }
@@ -195,21 +217,17 @@
   .ledger-row, .ledger-row .ledger-arrow { animation: none; }
 }
 
-/* Hero art: a network of nodes. On load the links draw in once; after
-   that a single lime pulse travels each link now and then — a connection
-   being made. Nothing else moves. */
+/* Hero art: the banner's gold faceted triangles, drifting slowly (pointer
+   parallax via useHeroParallax). Ambient only. */
 .dotgrid {
-  background-image: radial-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1.4px);
+  background-image: radial-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1.4px);
   background-size: 28px 28px;
   mask-image: radial-gradient(90% 80% at 75% 30%, #000 30%, transparent 85%);
 }
-.net-line { fill: none; stroke: rgb(217 208 255 / 0.22); stroke-width: 1.2; stroke-dasharray: 1; stroke-dashoffset: 1; animation: net-draw 1.4s cubic-bezier(0.65, 0, 0.35, 1) calc(300ms + var(--i, 0) * 120ms) forwards; }
-.net-pulse { fill: none; stroke: var(--yellow); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 0.06 1; stroke-dashoffset: 0.06; opacity: 0; animation: net-pulse 7s ease-in-out calc(2s + var(--i, 0) * 1.3s) infinite; filter: drop-shadow(0 0 6px var(--yellow)); }
-.net-node { fill: #d9d0ff; opacity: 0; animation: fade-in 0.6s ease calc(200ms + var(--i, 0) * 120ms) forwards; }
-.net-node-lit { fill: var(--yellow); filter: drop-shadow(0 0 10px var(--yellow)); }
-@keyframes net-draw { to { stroke-dashoffset: 0; } }
-@keyframes net-pulse { 0% { stroke-dashoffset: 0.06; opacity: 0; } 5% { opacity: 1; } 40% { stroke-dashoffset: -1; opacity: 1; } 45%, 100% { stroke-dashoffset: -1; opacity: 0; } }
-@keyframes fade-in { to { opacity: 1; } }
+.facet { animation: facet-float 12s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 10px 14px rgb(154 123 0 / 0.25)); }
+.facet-slow { animation-duration: 17s; animation-delay: -5s; }
+@keyframes facet-float { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(-10px, 14px, 0) rotate(7deg); } }
+.colon-dot { display: inline-block; width: 0.2em; height: 0.2em; border-radius: 9999px; background: var(--yellow); }
 
 /* Scroll reveal (as on the CMK site). Hidden state applies only after JS
    adds .reveal-ready, so SSR / no-JS visitors always see content. */
@@ -222,9 +240,7 @@
   transition-delay: var(--rd, 0ms);
 }
 @media (prefers-reduced-motion: reduce) {
-  .net-line { animation: none; stroke-dashoffset: 0; }
-  .net-node { animation: none; opacity: 1; }
-  .net-pulse { animation: none; display: none; }
+  .facet { animation: none; }
   [data-reveal] { transition: none; }
   .reveal-ready [data-reveal]:not(.is-visible) { opacity: 1; transform: none; }
 }
@@ -247,7 +263,7 @@
 
 /* Ledger rows: hover extends the arrow and lights the destination. */
 .ledger-row a { transition: background 0.3s ease; border-radius: 0.5rem; }
-.ledger-row a:hover { background: rgb(255 255 255 / 0.04); }
+.ledger-row a:hover { background: rgb(229 184 11 / 0.08); }
 .ledger-row .ledger-arrow { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease; }
 .ledger-row a:hover .ledger-arrow { transform: scaleX(1.25); }
 
@@ -259,7 +275,7 @@
 
 /* Tilt cards: 3D lean toward the pointer plus a travelling sheen. */
 .tilt { position: relative; transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease; transform-style: preserve-3d; }
-.tilt::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: radial-gradient(360px circle at var(--px, 50%) var(--py, 50%), rgb(139 116 255 / 0.16), transparent 60%); opacity: 0; transition: opacity 0.3s ease; }
+.tilt::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: radial-gradient(360px circle at var(--px, 50%) var(--py, 50%), rgb(229 184 11 / 0.14), transparent 60%); opacity: 0; transition: opacity 0.3s ease; }
 .tilt:hover::after { opacity: 1; }
 .card-startup.tilt:hover { transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px); }
 

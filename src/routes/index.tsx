@@ -59,7 +59,7 @@ function ContactOrganizer() {
         type="button"
         onClick={handleCopy}
         title={ORGANIZER_EMAIL}
-        className="rounded-full border border-white/30 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10 sm:px-4 sm:py-2 sm:text-sm"
+        className="rounded-full border border-navy/25 px-3 py-1.5 text-xs font-semibold text-navy transition hover:bg-navy/5 sm:px-4 sm:py-2 sm:text-sm"
       >
         {copied ? "Email copied" : "Contact"}
       </button>
@@ -149,26 +149,29 @@ function useTiltAndMagnet() {
   }, []);
 }
 
-const HEADLINE = ["Korean", "fintechs,", "ready", "to", "connect", "in", "Singapore"];
-
-// Hero art: a network of nodes on the right. Links draw in once on load,
-// then one lime pulse at a time travels a link (styles.css: .net-*).
-const NODES: [number, number][] = [[80, 120], [260, 60], [420, 170], [300, 300], [520, 330], [140, 380], [620, 90], [460, 470], [680, 260]];
-const LINKS: [number, number][] = [[0, 1], [1, 2], [2, 3], [3, 0], [2, 4], [3, 5], [1, 6], [4, 7], [6, 8], [4, 8], [3, 7]];
-function Network() {
-  const path = ([a, b]: [number, number]) => `M${NODES[a][0]} ${NODES[a][1]} L${NODES[b][0]} ${NODES[b][1]}`;
+// Hero art: the 2025 banner's gold faceted triangles. Each is a little
+// pyramid of three facets in light, mid and deep gold.
+// Placed in the margins and below the copy so they never sit on text
+// (viewBox units; the SVG is cropped xMaxYMid at desktop width).
+const FACETS: { x: number; y: number; s: number; r: number; slow?: boolean; p: string }[] = [
+  { x: 6, y: 112, s: 0.42, r: 64, p: "parallax-2" },
+  { x: 762, y: 92, s: 0.42, r: 96, slow: true, p: "parallax-3" },
+  { x: 742, y: 300, s: 0.62, r: -28, p: "parallax-1" },
+  { x: 96, y: 500, s: 0.7, r: 38, slow: true, p: "parallax-3" },
+  { x: 470, y: 505, s: 1.05, r: -12, p: "parallax-1" },
+]
+function Facets() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      <div className="dotgrid absolute inset-0" />
-      <svg viewBox="0 0 760 560" className="parallax-dome absolute -bottom-[260px] -right-[220px] w-[760px] opacity-70 lg:-bottom-[300px] lg:-right-[120px] lg:w-[980px]">
-        {LINKS.map((l, i) => (
-          <path key={`l${i}`} d={path(l)} pathLength={1} className="net-line" style={{ "--i": i } as CSSProperties} />
-        ))}
-        {LINKS.map((l, i) => (
-          <path key={`p${i}`} d={path(l)} pathLength={1} className="net-pulse" style={{ "--i": i } as CSSProperties} />
-        ))}
-        {NODES.map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r={i === 2 || i === 4 ? 7 : 4} className={`net-node ${i === 2 || i === 4 ? "net-node-lit" : ""}`} style={{ "--i": i } as CSSProperties} />
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-paper">
+      <svg viewBox="0 0 800 640" preserveAspectRatio="xMaxYMid slice" className="absolute inset-0 h-full w-full max-md:opacity-30">
+        {FACETS.map((f, i) => (
+          <g key={i} transform={`translate(${f.x} ${f.y}) rotate(${f.r}) scale(${f.s})`} className={f.p}>
+            <g className={`facet ${f.slow ? "facet-slow" : ""}`}>
+              <polygon points="0,0 120,34 58,48" fill="#F4D45A" />
+              <polygon points="120,34 58,48 70,118" fill="#D9A908" />
+              <polygon points="0,0 58,48 70,118" fill="#E8BE1E" />
+            </g>
+          </g>
         ))}
       </svg>
     </div>
@@ -181,70 +184,87 @@ function Landing() {
   useTiltAndMagnet();
   return (
     <div className="min-h-screen">
-      {/* HERO — the ledger */}
-      <section id="top" className="relative isolate overflow-hidden bg-hero-gradient text-white">
-        <Network />
+      {/* HERO — the 2025 banner lockup, then the ledger */}
+      <section id="top" className="relative isolate overflow-hidden text-navy">
+        <Facets />
         {/* Phones: wordmark row, then the menu row (four items never fit
             beside the wordmark at 390px); from md they share one line. */}
         <header className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
           <a href="#top" className="min-w-0">
-            <Wordmark light />
+            <Wordmark />
           </a>
           <nav className="-mx-2 flex items-center gap-1 text-sm font-semibold md:mx-0 md:gap-2">
-            <a href="#startups" className="rounded-full px-2 py-1.5 text-white/85 hover:text-white md:px-3 md:py-2">Startups</a>
-            {JUDGES.length > 0 && <a href="#judges" className="rounded-full px-2 py-1.5 text-white/85 hover:text-white md:px-3 md:py-2">Judges</a>}
-            <a href="#about" className="rounded-full px-2 py-1.5 text-white/85 hover:text-white md:px-3 md:py-2">About</a>
-            <a href="/lounge" className="rounded-full px-2 py-1.5 text-white/85 hover:text-white md:px-3 md:py-2">Lounge</a>
+            <a href="#startups" className="rounded-full px-2 py-1.5 text-navy/75 hover:text-navy md:px-3 md:py-2">Startups</a>
+            {JUDGES.length > 0 && <a href="#judges" className="rounded-full px-2 py-1.5 text-navy/75 hover:text-navy md:px-3 md:py-2">Judges</a>}
+            <a href="#about" className="rounded-full px-2 py-1.5 text-navy/75 hover:text-navy md:px-3 md:py-2">About</a>
+            <a href="/lounge" className="rounded-full px-2 py-1.5 text-navy/75 hover:text-navy md:px-3 md:py-2">Lounge</a>
             <span className="ml-auto md:ml-1"><ContactOrganizer /></span>
           </nav>
         </header>
 
         <div className="mx-auto grid max-w-7xl gap-12 px-4 pb-32 pt-8 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:pb-44 lg:pt-14">
           <div className="lg:pt-4">
-            <p className="hero-in text-sm font-medium text-lichen">Fintech Demo Day · {EVENT_DAY_SHORT} 2026 · Singapore FinTech Festival week</p>
-            <h1 className="hero-title mt-4 text-[clamp(2.3rem,7.5vw,4rem)] font-bold leading-[0.98] text-white" aria-label={HEADLINE.join(" ")}>
-              {HEADLINE.map((w, i) => (
-                <span key={w} aria-hidden>
-                  <span className="hero-word-clip">
-                    <span className="hero-word" style={{ "--i": i } as CSSProperties}>{w}</span>
-                  </span>{" "}
+            <p className="hero-in text-sm font-semibold text-gold">Fintech Demo Day · {EVENT_DAY_SHORT} 2026 · Singapore FinTech Festival week</p>
+            {/* The banner lockup: FIN:NECT / Global / Singapore */}
+            <h1 className="mt-5 font-display text-navy" aria-label="FIN:NECT Global Singapore">
+              <span aria-hidden className="hero-word-clip block">
+                <span className="hero-word text-[clamp(3.2rem,9vw,5.6rem)] font-extrabold leading-[1.02] tracking-tight" style={{ "--i": 0 } as CSSProperties}>
+                  {/* .hero-word is inline-block, so the flex row lives inside it */}
+                  <span className="inline-flex">
+                    FIN
+                    <span className="mx-[0.05em] inline-flex flex-col gap-[0.24em] pt-[0.3em] [&>span]:h-[0.16em] [&>span]:w-[0.16em]">
+                      <span className="colon-dot" />
+                      <span className="colon-dot" />
+                    </span>
+                    NECT
+                  </span>
                 </span>
-              ))}
+              </span>
+              <span aria-hidden className="hero-word-clip block">
+                <span className="hero-word block text-[clamp(2.2rem,6vw,3.7rem)] font-semibold leading-[1.1] tracking-[0.42em] text-yellow" style={{ "--i": 1 } as CSSProperties}>
+                  Global
+                </span>
+              </span>
+              <span aria-hidden className="hero-word-clip block">
+                <span className="hero-word block text-[clamp(2.2rem,6vw,3.7rem)] font-semibold leading-[1.1] tracking-tight" style={{ "--i": 2 } as CSSProperties}>
+                  Singapore
+                </span>
+              </span>
             </h1>
-            <p className="hero-in [--i:5] mt-6 max-w-md text-[1.0625rem] leading-relaxed text-white/80">
-              Selected by the Korea Fintech Support Center and sponsored by KakaoBank, they come to Singapore to meet
-              investors, financial institutions and partners. Watch them pitch in the morning, then sit down with the
-              ones that fit.
+            <p className="hero-in [--i:5] mt-6 max-w-md text-[1.0625rem] leading-relaxed text-muted-foreground">
+              Korean fintechs selected by the Korea Fintech Support Center and sponsored by KakaoBank, in Singapore to
+              meet investors, financial institutions and partners. Watch them pitch in the morning, then sit down with
+              the ones that fit.
             </p>
             <div className="hero-in [--i:6] mt-8 flex flex-wrap gap-3">
               <Link to="/book" search={{ day: "7" }} data-magnet className="btn-hero magnet rounded-full px-6 py-3.5 text-sm font-semibold">
                 RSVP for the Demo Day
               </Link>
               {ONE_ON_ONE_OPEN && (
-                <Link to="/book" search={{ day: "5" }} data-magnet className="btn-outline-hero magnet rounded-full px-6 py-3.5 text-sm font-semibold">
+                <Link to="/book" search={{ day: "5" }} data-magnet className="btn-outline-dark magnet rounded-full px-6 py-3.5 text-sm font-semibold">
                   Book a 1:1 meeting
                 </Link>
               )}
             </div>
           </div>
 
-          <ol className="ledger border-t border-white/15" aria-label="Who each startup serves">
+          <ol className="ledger border-t border-navy/15 lg:mt-6" aria-label="Who each startup serves">
             {companies.map((c, i) => {
               const [from, to] = LEDGER[c.slug] ?? ["", c.sector];
               return (
-                <li key={c.slug} style={{ "--d": `${120 + i * 70}ms` } as CSSProperties} className="ledger-row border-b border-white/15">
+                <li key={c.slug} style={{ "--d": `${120 + i * 70}ms` } as CSSProperties} className="ledger-row border-b border-navy/15">
                   <Link
                     to="/companies/$slug"
                     params={{ slug: c.slug }}
                     className="group grid grid-cols-[1fr_auto] items-baseline gap-x-4 py-3 sm:grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)_7rem] sm:py-3.5"
                   >
-                    <span className="text-[15px] text-white/60 sm:text-base">{from}</span>
+                    <span className="text-[15px] text-muted-foreground sm:text-base">{from}</span>
                     <span className="ledger-arrow hidden h-px self-center bg-yellow sm:block" aria-hidden />
-                    <span className="col-start-1 text-lg font-semibold leading-snug text-white sm:col-start-auto sm:text-xl">
+                    <span className="col-start-1 text-lg font-semibold leading-snug text-navy sm:col-start-auto sm:text-xl">
                       <span className="sm:hidden" aria-hidden>→ </span>
                       {to}
                     </span>
-                    <span className="col-start-2 row-span-2 row-start-1 self-center text-right text-xs font-semibold text-lichen transition group-hover:text-yellow sm:col-start-auto sm:row-auto sm:text-sm">
+                    <span className="col-start-2 row-span-2 row-start-1 self-center text-right text-xs font-semibold text-gold transition group-hover:text-navy sm:col-start-auto sm:row-auto sm:text-sm">
                       {c.name}
                     </span>
                   </Link>
@@ -255,10 +275,10 @@ function Landing() {
         </div>
 
         {/* Cohort marquee: the names (logos once supplied) glide across the foot of the hero */}
-        <div className="marquee relative border-t border-white/10 py-5" aria-hidden>
+        <div className="marquee relative border-t border-navy/10 bg-white/60 py-5" aria-hidden>
           <div className="marquee-track">
             {[...companies, ...companies].map((c, i) => (
-              <span key={`${c.slug}-${i}`} className="mx-6 inline-flex shrink-0 items-center gap-6 font-display text-2xl font-semibold text-white/80">
+              <span key={`${c.slug}-${i}`} className="mx-6 inline-flex shrink-0 items-center gap-6 font-display text-2xl font-semibold text-navy/70">
                 {STARTUP_LOGOS[c.slug] ? (
                   <span className="inline-flex h-12 w-36 items-center justify-center rounded-lg bg-white/95 px-4">
                     <img src={STARTUP_LOGOS[c.slug]} alt="" className="max-h-7 max-w-full object-contain" />
