@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type CSSProperties } from "react";
 import { Wordmark } from "@/components/Wordmark";
+import fckLogo from "@/assets/logos/fintech-center-korea.png";
+import fckLogoWhite from "@/assets/logos/fintech-center-korea-white.png";
+import kakaobankLogo from "@/assets/logos/kakaobank.png";
+import kakaobankLogoWhite from "@/assets/logos/kakaobank-white.png";
 import { JUDGES } from "@/data/speakers";
 import { companies } from "@/data/companies";
 import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
@@ -448,20 +452,20 @@ function Landing() {
           <div className="mt-12 grid gap-10 border-t border-white/15 pt-10 md:grid-cols-2">
             <div>
               <p className="text-sm font-medium text-lichen">Hosted by</p>
-              <a href={FCK_SITE} target="_blank" rel="noopener noreferrer" className="mt-3 block font-display text-xl font-bold leading-snug hover:text-yellow">
-                Korea Fintech Support Center
+              <a href={FCK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex">
+                <img src={fckLogoWhite} alt="Korea Fintech Support Center (Fintech Center Korea)" className="h-12 w-auto" />
               </a>
-              <p className="mt-2 text-sm leading-relaxed text-white/75">
+              <p className="mt-4 text-sm leading-relaxed text-white/75">
                 Korea's public support centre for fintech companies, running programmes that help them grow at home
                 and enter global markets.
               </p>
             </div>
             <div>
               <p className="text-sm font-medium text-lichen">Sponsored by</p>
-              <a href={KAKAOBANK_SITE} target="_blank" rel="noopener noreferrer" className="mt-3 block font-display text-xl font-bold leading-snug hover:text-yellow">
-                KakaoBank
+              <a href={KAKAOBANK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex">
+                <img src={kakaobankLogoWhite} alt="KakaoBank" className="h-10 w-auto" />
               </a>
-              <p className="mt-2 text-sm leading-relaxed text-white/75">
+              <p className="mt-4 text-sm leading-relaxed text-white/75">
                 Korea's leading internet-only bank, sponsoring the FIN:NECT programme.
               </p>
             </div>
@@ -472,6 +476,10 @@ function Landing() {
       <footer className="bg-background">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6 px-4 py-10 text-sm text-muted-foreground sm:px-6">
           <Wordmark />
+          <div className="flex items-center gap-6">
+            <img src={fckLogo} alt="Korea Fintech Support Center" className="h-8 w-auto" />
+            <img src={kakaobankLogo} alt="KakaoBank" className="h-6 w-auto" />
+          </div>
           <div>
             <a href={`mailto:${ORGANIZER_EMAIL}`} className="font-semibold text-primary hover:underline">{ORGANIZER_EMAIL}</a>
           </div>
