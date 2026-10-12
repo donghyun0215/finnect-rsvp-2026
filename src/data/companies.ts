@@ -2,8 +2,8 @@
 // Source: "[마스터파일] 핀테크지원센터_현지프로그램" › 2026 스타트업 명단 (12 Oct):
 // each company's own English service overview (서비스 개요 영문) as the
 // tagline. Funding amounts, revenue and the MYSC diagnostic notes in that
-// sheet are internal and stay out. Eight companies so far; the sheet lists
-// four more names without data — two more join (10 in total) once confirmed.
+// sheet are internal and stay out. Eight companies from the centre so far;
+// two more come from 전북창경원 (1:1 밋업 sheet, 12 Oct) — names not yet given.
 // IR decks are NOT published (CMK lesson, 7 Oct). Sector labels are ours.
 
 export interface Company {
