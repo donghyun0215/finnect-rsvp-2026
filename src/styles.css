@@ -1,0 +1,273 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+/* Typefaces load from Google Fonts in __root.tsx: Unbounded for headlines
+   (wide and geometric, it carries the FIN:NECT name) and Figtree for
+   running text. */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-navy: var(--navy);
+  --color-light-blue: var(--light-blue);
+  --color-lichen: var(--light-blue);
+  --color-yellow: var(--yellow);
+  --color-yellow-foreground: var(--yellow-foreground);
+  --font-sans: "Figtree", system-ui, sans-serif;
+  --font-display: "Unbounded", "Figtree", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.75rem;
+  /* FIN:NECT — "the connection" (no CI supplied yet, 12 Oct): deep plum
+     ink, an electric violet primary and a lime signal colour used only on
+     dark grounds, for the live link between a startup and an investor.
+     Swap to the centre's CI when it arrives — every colour on the site
+     comes from these tokens.
+     Ink #1C1433 · Violet #5B3DF5 · Lime #C6F432 · Paper #F6F4FB. */
+  --background: #f6f4fb;
+  --foreground: #1c1433;
+  --card: #ffffff;
+  --card-foreground: #1c1433;
+  --popover: #ffffff;
+  --popover-foreground: #1c1433;
+  --primary: #5b3df5;
+  --primary-foreground: #ffffff;
+  --primary-glow: #8b74ff;
+  --navy: #1c1433;
+  --light-blue: #d9d0ff;
+  --yellow: #c6f432;
+  --yellow-foreground: #17200a;
+  --secondary: #ece8f8;
+  --secondary-foreground: #1c1433;
+  --muted: #f0edf9;
+  --muted-foreground: #57506b;
+  --accent: #e6e0fb;
+  --accent-foreground: #1c1433;
+  --destructive: #c2410c;
+  --destructive-foreground: #ffffff;
+  --border: #ddd6ef;
+  --input: #cfc6e6;
+  --ring: #5b3df5;
+
+  --gradient-hero: radial-gradient(120% 90% at 85% 0%, #3a2470 0%, #22173f 45%, #130d24 100%);
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
+  --gradient-wave: linear-gradient(180deg, transparent 0%, #ece8f8 100%);
+  --shadow-elegant: 0 18px 40px -22px rgb(28 20 51 / 0.45);
+  --shadow-card: 0 1px 0 rgb(28 20 51 / 0.05), 0 10px 26px -18px rgb(28 20 51 / 0.35);
+  --shadow-glow: 0 0 0 4px rgb(198 244 50 / 0.3);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Samsung Internet / Chrome "dark theme for websites" repaints pages that
+     don't declare a scheme, which turned the brand colours muddy on Tammy's phone. Declaring it on html AND body, plus an explicit
+     forced-colors opt-out, is what actually stops those engines. */
+  :root,
+  html,
+  body {
+    color-scheme: only light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root,
+    html,
+    body {
+      color-scheme: only light;
+    }
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility btn-hero {
+  /* Lime CTA on the dark hero */
+  background: var(--yellow);
+  color: var(--yellow-foreground);
+  box-shadow: 0 12px 30px -12px color-mix(in oklab, var(--yellow) 60%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow), var(--shadow-elegant);
+  }
+}
+
+@utility btn-outline-hero {
+  background: transparent;
+  color: var(--primary-foreground);
+  border: 1.5px solid color-mix(in oklab, var(--primary-foreground) 60%, transparent);
+  transition: all 0.2s ease;
+  &:hover {
+    background: color-mix(in oklab, var(--primary-foreground) 15%, transparent);
+    border-color: var(--primary-foreground);
+  }
+}
+
+@utility card-startup {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-elegant);
+    border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+  }
+}
+
+@utility bg-hero-gradient {
+  background: var(--gradient-hero);
+}
+
+@utility bg-wave-fade {
+  background: var(--gradient-wave);
+}
+
+
+/* Home hero: ledger rows arrive once on load, each arrow drawing left to
+   right; the network links draw in behind. */
+.hero-title {
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.ledger-row {
+  animation: ledger-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0ms) both;
+}
+.ledger-row .ledger-arrow {
+  position: relative;
+  transform-origin: left center;
+  animation: ledger-draw 0.7s cubic-bezier(0.65, 0, 0.35, 1) calc(var(--d, 0ms) + 150ms) both;
+}
+.ledger-row .ledger-arrow::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -3px;
+  border-left: 6px solid var(--yellow);
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+}
+.ledger-row a:hover .ledger-arrow { background: #fff; }
+@keyframes ledger-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+@keyframes ledger-draw {
+  from { transform: scaleX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ledger-row, .ledger-row .ledger-arrow { animation: none; }
+}
+
+/* Hero art: a network of nodes. On load the links draw in once; after
+   that a single lime pulse travels each link now and then — a connection
+   being made. Nothing else moves. */
+.dotgrid {
+  background-image: radial-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1.4px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(90% 80% at 75% 30%, #000 30%, transparent 85%);
+}
+.net-line { fill: none; stroke: rgb(217 208 255 / 0.22); stroke-width: 1.2; stroke-dasharray: 1; stroke-dashoffset: 1; animation: net-draw 1.4s cubic-bezier(0.65, 0, 0.35, 1) calc(300ms + var(--i, 0) * 120ms) forwards; }
+.net-pulse { fill: none; stroke: var(--yellow); stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 0.06 1; stroke-dashoffset: 0.06; opacity: 0; animation: net-pulse 7s ease-in-out calc(2s + var(--i, 0) * 1.3s) infinite; filter: drop-shadow(0 0 6px var(--yellow)); }
+.net-node { fill: #d9d0ff; opacity: 0; animation: fade-in 0.6s ease calc(200ms + var(--i, 0) * 120ms) forwards; }
+.net-node-lit { fill: var(--yellow); filter: drop-shadow(0 0 10px var(--yellow)); }
+@keyframes net-draw { to { stroke-dashoffset: 0; } }
+@keyframes net-pulse { 0% { stroke-dashoffset: 0.06; opacity: 0; } 5% { opacity: 1; } 40% { stroke-dashoffset: -1; opacity: 1; } 45%, 100% { stroke-dashoffset: -1; opacity: 0; } }
+@keyframes fade-in { to { opacity: 1; } }
+
+/* Scroll reveal (as on the CMK site). Hidden state applies only after JS
+   adds .reveal-ready, so SSR / no-JS visitors always see content. */
+.reveal-ready [data-reveal]:not(.is-visible) {
+  opacity: 0;
+  transform: translateY(28px);
+}
+[data-reveal] {
+  transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--rd, 0ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .net-line { animation: none; stroke-dashoffset: 0; }
+  .net-node { animation: none; opacity: 1; }
+  .net-pulse { animation: none; display: none; }
+  [data-reveal] { transition: none; }
+  .reveal-ready [data-reveal]:not(.is-visible) { opacity: 1; transform: none; }
+}
+
+/* ── Motion layer ───────────────────────────────────────────── */
+/* Hero entrance: each headline word rises out of a clip, then the eyebrow,
+   copy and buttons follow (--i orders them). Runs once on load. */
+.hero-word-clip { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+.hero-word { display: inline-block; animation: word-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) calc(120ms + var(--i, 0) * 70ms) both; }
+.hero-in { animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) calc(200ms + var(--i, 0) * 90ms) both; }
+@keyframes word-up { from { transform: translateY(110%); } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(14px); } }
+
+/* Pointer parallax (vars set by useHeroParallax). Layers move by different
+   amounts so the scene reads as depth; the dome also sinks on scroll. */
+.parallax-1 { translate: calc(var(--mx, 0) * -18px) calc(var(--my, 0) * -12px); transition: translate 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.parallax-2 { translate: calc(var(--mx, 0) * 10px) calc(var(--my, 0) * 8px); transition: translate 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.parallax-3 { translate: calc(var(--mx, 0) * -6px) calc(var(--my, 0) * 14px); transition: translate 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+.parallax-dome { translate: calc(var(--mx, 0) * 24px) calc(var(--my, 0) * 10px - var(--sy, 0px)); transition: translate 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Ledger rows: hover extends the arrow and lights the destination. */
+.ledger-row a { transition: background 0.3s ease; border-radius: 0.5rem; }
+.ledger-row a:hover { background: rgb(255 255 255 / 0.04); }
+.ledger-row .ledger-arrow { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease; }
+.ledger-row a:hover .ledger-arrow { transform: scaleX(1.25); }
+
+/* Logo marquee at the foot of the hero: pauses on hover. */
+.marquee { overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.marquee-track { display: flex; width: max-content; animation: marquee 40s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* Tilt cards: 3D lean toward the pointer plus a travelling sheen. */
+.tilt { position: relative; transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease; transform-style: preserve-3d; }
+.tilt::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: radial-gradient(360px circle at var(--px, 50%) var(--py, 50%), rgb(139 116 255 / 0.16), transparent 60%); opacity: 0; transition: opacity 0.3s ease; }
+.tilt:hover::after { opacity: 1; }
+.card-startup.tilt:hover { transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px); }
+
+/* Magnetic buttons: lean a few px toward the pointer, spring back. */
+.magnet { translate: var(--tx, 0px) var(--ty, 0px); transition: translate 0.25s cubic-bezier(0.22, 1, 0.36, 1), transform 0.2s ease, box-shadow 0.2s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-word, .hero-in, .marquee-track { animation: none; }
+  .parallax-1, .parallax-2, .parallax-3, .parallax-dome, .magnet { translate: 0 0; }
+  .tilt { transform: none; }
+}
