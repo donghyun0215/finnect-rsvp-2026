@@ -30,14 +30,16 @@ export async function buildReminderBatch(kind: MailKind): Promise<(ConfirmationE
   for (const [email, p] of people) {
     const demoDay = p.showcase || p.lunch;
     if (kind === "meetup-eve" && p.meetings.length === 0) continue;
-    if (kind === "demo-eve" && !demoDay) continue;
+    // Demo Day and 1:1s are the same day here, so one eve email ("demo-eve")
+    // goes to everyone with their full schedule; "meetup-eve" is not scheduled.
+    if (kind === "demo-eve" && !demoDay && p.meetings.length === 0) continue;
     const mail = buildConfirmation({
       kind,
       fullName: p.name,
       // the 1:1 eve email only talks about the 1:1s; the Demo Day eve only about Demo Day
       attendShowcase: kind === "meetup-eve" ? false : p.showcase,
       attendLunch: kind === "meetup-eve" ? false : p.lunch,
-      meetings: kind === "demo-eve" ? [] : p.meetings,
+      meetings: p.meetings,
     });
     out.push({ to: email, ...mail });
   }
