@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type CSSProperties } from "react";
 import { Wordmark } from "@/components/Wordmark";
+import { FinnectLogo, FinnectSymbol, NodePattern, type PatternName } from "@/components/Brand";
 import fckLogo from "@/assets/logos/fintech-center-korea.png";
 import fckLogoWhite from "@/assets/logos/fintech-center-korea-white.png";
 import kakaobankLogo from "@/assets/logos/kakaobank.png";
@@ -153,34 +154,29 @@ function useTiltAndMagnet() {
   }, []);
 }
 
-// Hero art: the 2025 banner's gold faceted triangles. Each is a little
-// pyramid of three facets in light, mid and deep gold.
-// Placed in the margins and below the copy so they never sit on text
-// (viewBox units; the SVG is cropped xMaxYMid at desktop width).
-const FACETS: { x: number; y: number; s: number; r: number; slow?: boolean; p: string }[] = [
-  { x: 6, y: 112, s: 0.42, r: 64, p: "parallax-2" },
-  { x: 762, y: 92, s: 0.42, r: 96, slow: true, p: "parallax-3" },
-  { x: 742, y: 300, s: 0.62, r: -28, p: "parallax-1" },
-  { x: 96, y: 500, s: 0.7, r: 38, slow: true, p: "parallax-3" },
-  { x: 470, y: 505, s: 1.05, r: -12, p: "parallax-1" },
-]
-function Facets() {
+// Hero art from the FIN:NECT 2026 KV: the big stair symbol (connection and
+// growth) rising from the bottom-right, and two node patterns in the margins.
+// Kept below and beside the copy so it never sits on text.
+function HeroArt() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-paper">
-      <svg viewBox="0 0 800 640" preserveAspectRatio="xMaxYMid slice" className="absolute inset-0 h-full w-full max-md:opacity-30">
-        {FACETS.map((f, i) => (
-          <g key={i} transform={`translate(${f.x} ${f.y}) rotate(${f.r}) scale(${f.s})`} className={f.p}>
-            <g className={`facet ${f.slow ? "facet-slow" : ""}`}>
-              <polygon points="0,0 120,34 58,48" fill="#F4D45A" />
-              <polygon points="120,34 58,48 70,118" fill="#D9A908" />
-              <polygon points="0,0 58,48 70,118" fill="#E8BE1E" />
-            </g>
-          </g>
-        ))}
-      </svg>
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {/* climbs out from behind the gradient band, below the CTAs */}
+      <div className="parallax-1 absolute -bottom-12 -left-16 w-[min(52vw,300px)] lg:-left-10">
+        <FinnectSymbol className="hero-symbol h-auto w-full" />
+      </div>
+      <div className="parallax-2 absolute bottom-28 right-[4%] hidden w-12 text-yellow lg:block">
+        <NodePattern name="demoday" className="node-pop h-auto w-full" />
+      </div>
+      <div className="parallax-3 absolute right-[3%] top-24 hidden w-10 text-navy/10 xl:block">
+        <NodePattern name="connect" className="node-pop h-auto w-full" />
+      </div>
     </div>
   );
 }
+
+// Startup cards without a product photo: the KV "Application" card —
+// brand gradient with a white node pattern — cycling the four icons.
+const CARD_PATTERNS: PatternName[] = ["challenge", "school", "demoday", "connect"];
 
 function Landing() {
   useReveal();
@@ -188,9 +184,9 @@ function Landing() {
   useTiltAndMagnet();
   return (
     <div className="min-h-screen">
-      {/* HERO — the 2025 banner lockup, then the ledger */}
-      <section id="top" className="relative isolate overflow-hidden text-navy">
-        <Facets />
+      {/* HERO — the 2026 KV lockup, then the ledger */}
+      <section id="top" className="relative isolate overflow-hidden bg-background text-navy">
+        <HeroArt />
         {/* Phones: wordmark row, then the menu row (four items never fit
             beside the wordmark at 390px); from md they share one line. */}
         <header className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
@@ -209,29 +205,16 @@ function Landing() {
         <div className="mx-auto grid max-w-7xl gap-12 px-4 pb-32 pt-8 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:pb-44 lg:pt-14">
           <div className="lg:pt-4">
             <p className="hero-in text-sm font-semibold text-gold">Fintech Demo Day · {EVENT_DAY_SHORT} 2026 · Singapore FinTech Festival week</p>
-            {/* The banner lockup: FIN:NECT / Global / Singapore */}
-            <h1 className="mt-5 font-display text-navy" aria-label="FIN:NECT Global Singapore">
+            {/* The KV lockup: logo, then the programme name in grey (KV "Program Identity") */}
+            <h1 className="mt-6 font-display text-navy" aria-label="FIN:NECT Global Singapore">
               <span aria-hidden className="hero-word-clip block">
-                <span className="hero-word text-[clamp(3.2rem,9vw,5.6rem)] font-extrabold leading-[1.02] tracking-tight" style={{ "--i": 0 } as CSSProperties}>
-                  {/* .hero-word is inline-block, so the flex row lives inside it */}
-                  <span className="inline-flex">
-                    FIN
-                    <span className="mx-[0.05em] inline-flex flex-col gap-[0.24em] pt-[0.3em] [&>span]:h-[0.16em] [&>span]:w-[0.16em]">
-                      <span className="colon-dot" />
-                      <span className="colon-dot" />
-                    </span>
-                    NECT
-                  </span>
+                <span className="hero-word" style={{ "--i": 0 } as CSSProperties}>
+                  <FinnectLogo className="h-[clamp(2.6rem,7.4vw,4.6rem)] w-auto" />
                 </span>
               </span>
-              <span aria-hidden className="hero-word-clip block">
-                <span className="hero-word block text-[clamp(2.2rem,6vw,3.7rem)] font-semibold leading-[1.1] tracking-[0.42em] text-yellow" style={{ "--i": 1 } as CSSProperties}>
-                  Global
-                </span>
-              </span>
-              <span aria-hidden className="hero-word-clip block">
-                <span className="hero-word block text-[clamp(2.2rem,6vw,3.7rem)] font-semibold leading-[1.1] tracking-tight" style={{ "--i": 2 } as CSSProperties}>
-                  Singapore
+              <span aria-hidden className="hero-word-clip mt-3 block">
+                <span className="hero-word block text-[clamp(2.1rem,5.6vw,3.6rem)] font-extrabold leading-[1.05] tracking-tight text-[#6d6d6d]" style={{ "--i": 1 } as CSSProperties}>
+                  Global Singapore
                 </span>
               </span>
             </h1>
@@ -263,7 +246,7 @@ function Landing() {
                     className="group grid grid-cols-[1fr_auto] items-baseline gap-x-4 py-3 sm:grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)_7rem] sm:py-3.5"
                   >
                     <span className="text-[15px] text-muted-foreground sm:text-base">{from}</span>
-                    <span className="ledger-arrow hidden h-px self-center bg-yellow sm:block" aria-hidden />
+                    <span className="ledger-arrow hidden h-px self-center bg-navy/25 sm:block" aria-hidden />
                     <span className="col-start-1 text-lg font-semibold leading-snug text-navy sm:col-start-auto sm:text-xl">
                       <span className="sm:hidden" aria-hidden>→ </span>
                       {to}
@@ -279,10 +262,11 @@ function Landing() {
         </div>
 
         {/* Cohort marquee: the names (logos once supplied) glide across the foot of the hero */}
-        <div className="marquee relative border-t border-navy/10 bg-white/60 py-5" aria-hidden>
+        <div className="bg-brand-band" aria-hidden>
+        <div className="marquee relative py-5">
           <div className="marquee-track">
             {[...companies, ...companies].map((c, i) => (
-              <span key={`${c.slug}-${i}`} className="mx-6 inline-flex shrink-0 items-center gap-6 font-display text-2xl font-semibold text-navy/70">
+              <span key={`${c.slug}-${i}`} className="mx-6 inline-flex shrink-0 items-center gap-6 font-display text-2xl font-bold text-navy">
                 {STARTUP_LOGOS[c.slug] ? (
                   <span className="inline-flex h-12 w-36 items-center justify-center rounded-lg bg-white/95 px-4">
                     <img src={STARTUP_LOGOS[c.slug]} alt="" className="max-h-7 max-w-full object-contain" />
@@ -290,10 +274,11 @@ function Landing() {
                 ) : (
                   c.name
                 )}
-                <span className="h-1.5 w-1.5 rounded-full bg-yellow" />
+                <span className="h-2 w-2 bg-white" />
               </span>
             ))}
           </div>
+        </div>
         </div>
       </section>
 
@@ -359,7 +344,7 @@ function Landing() {
           <div className="mt-10 grid grid-cols-2 gap-3 [perspective:1200px] sm:gap-4 lg:grid-cols-4">
             {companies.map((c, i) => (
               <article key={c.slug} data-reveal style={{ "--rd": `${(i % 4) * 70}ms` } as CSSProperties} data-tilt className="card-startup tilt group flex flex-col overflow-hidden rounded-xl">
-                <Link to="/companies/$slug" params={{ slug: c.slug }} className="relative block aspect-[3/2] overflow-hidden bg-hero-gradient">
+                <Link to="/companies/$slug" params={{ slug: c.slug }} className="relative block aspect-[3/2] overflow-hidden bg-brand-gradient">
                   {STARTUP_IMAGES[c.slug] ? (
                     <img
                       src={STARTUP_IMAGES[c.slug]}
@@ -368,10 +353,14 @@ function Landing() {
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
                   ) : (
-                    // No product photo yet: the "serves" line from the hero, set large.
+                    // No product photo yet: KV application card with the "serves" line from the hero.
                     <>
-                      <span aria-hidden className="dotgrid absolute inset-0" />
-                      <span className="absolute inset-0 flex items-end p-3 font-display text-lg font-semibold leading-tight text-white sm:p-4 sm:text-xl">
+                      <NodePattern
+                        name={CARD_PATTERNS[i % CARD_PATTERNS.length]}
+                        color="#ffffff"
+                        className="absolute right-3 top-3 h-[52%] w-auto transition duration-500 group-hover:scale-105 sm:right-4 sm:top-4"
+                      />
+                      <span className="absolute inset-x-0 bottom-0 p-3 font-display text-base font-bold leading-tight text-navy sm:p-4 sm:text-xl">
                         {LEDGER[c.slug]?.[1] ?? c.sector}
                       </span>
                     </>

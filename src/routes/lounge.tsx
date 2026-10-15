@@ -53,10 +53,10 @@ const BAR_COLORS: Record<string, string> = {
   "General interest": "bg-slate-400",
 };
 
-// Forest palette — kept within one family so a full wall of avatars reads
-// as one surface rather than a rainbow.
+// Charcoal palette (FIN:NECT 2026 KV black) — kept within one family so a
+// full wall of avatars reads as one surface rather than a rainbow.
 const AVATAR_COLORS = [
-  "#0F2F2A", "#1E6B4F", "#2F8F6A", "#3E6B5C", "#4A7A3F", "#24574A", "#5B7F2E", "#2C4F45",
+  "#1E1E1E", "#2B2B2B", "#383838", "#454545", "#525252", "#303030", "#3D3D3D", "#262626",
 ];
 
 function avatarColor(name: string): string {

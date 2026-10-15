@@ -1,19 +1,15 @@
-// FIN:NECT wordmark after the 2025 banner: charcoal letters, gold colon.
-// `compact`: hides "Global Singapore 2026" on phones, for crowded headers.
+import { FinnectLogo } from "@/components/Brand";
+
+// FIN:NECT 2026 logo with the programme name set after it in grey, as in
+// the KV's "Program Identity" row (FIN:NECT Challenge / Demoday …).
+// `compact`: hides "Singapore 2026" on phones, for crowded headers.
 export function Wordmark({ light = false, compact = false }: { light?: boolean; compact?: boolean }) {
   return (
-    <span className={`inline-flex items-baseline gap-2 font-display font-extrabold tracking-tight ${light ? "text-white" : "text-navy"}`}>
-      <span className="inline-flex items-center text-[17px] leading-none sm:text-lg">
-        FIN
-        <span className="mx-[0.08em] inline-flex flex-col gap-[0.14em]" aria-hidden>
-          <span className="colon-dot" />
-          <span className="colon-dot" />
-        </span>
-        <span className="sr-only">:</span>
-        NECT
+    <span className={`inline-flex items-center gap-2 font-display ${light ? "text-white" : "text-navy"}`}>
+      <FinnectLogo className="h-[17px] w-auto shrink-0 sm:h-[19px]" />
+      <span className={`text-[15px] font-bold leading-none tracking-tight sm:text-base ${light ? "text-white/60" : "text-[#6d6d6d]"}`}>
+        Global<span className={compact ? "max-sm:hidden" : ""}> Singapore 2026</span>
       </span>
-      <span className={`text-xs font-semibold tracking-[0.18em] text-yellow ${compact ? "max-sm:hidden" : ""}`}>Global</span>
-      <span className={`text-xs font-medium ${light ? "text-white/70" : "text-muted-foreground"} ${compact ? "max-sm:hidden" : ""}`}>Singapore 2026</span>
     </span>
   );
 }

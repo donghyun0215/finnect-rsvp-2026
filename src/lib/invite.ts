@@ -22,7 +22,8 @@ import {
 } from "@/data/timeslots";
 
 // ── per-event copy and colours ──
-const C = { brand: "#5b3df5", accent: "#c6f432", ink: "#15122b", muted: "#55516e", line: "#dedaf0" };
+// FIN:NECT 2026 KV: black, yellow #FFE300 (fills and on-dark text only), grey
+const C = { brand: "#1e1e1e", accent: "#ffe300", ink: "#1e1e1e", muted: "#6d6d6d", line: "#e6e6e6" };
 const HOST_LINE = "Korea Fintech Support Center · Sponsored by KakaoBank";
 const DATES = "Thursday, 19 November 2026 · Singapore FinTech Festival week";
 const SUBJECT = `Invitation to ${EVENT_NAME} (19 Nov, Singapore)`;
@@ -63,7 +64,7 @@ export function buildInvite(team = false): { subject: string; html: string; text
     `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:14px;"><tr><td style="background:${C.brand};border-radius:2px;"><a href="${href}" style="display:block;padding:11px 16px;${F}font-size:12px;font-weight:bold;letter-spacing:0.7px;color:#ffffff;text-decoration:none;text-transform:uppercase;">${label}&nbsp;&nbsp;→</a></td></tr></table>`;
   const card = (kicker: string, rows: [string, string][], venue: string, address: string, cta: string) => `
 <tr><td style="padding:22px 36px 0;">
- <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${C.line};border-left:5px solid ${C.brand};"><tr><td style="padding:16px 18px;">
+ <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${C.line};border-left:5px solid ${C.accent};"><tr><td style="padding:16px 18px;">
   <div style="${F}font-size:11px;letter-spacing:1.2px;font-weight:bold;color:${C.brand};text-transform:uppercase;">${esc(kicker)}</div>
   <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;">
    ${rows.map(([t, w]) => `<tr><td style="padding:3px 14px 3px 0;${F}font-size:13px;font-weight:bold;color:${C.brand};white-space:nowrap;vertical-align:top;">${esc(t)}</td><td style="padding:3px 0;${F}font-size:14px;color:${C.ink};">${esc(w)}</td></tr>`).join("")}
@@ -107,6 +108,7 @@ ${intro.map((l) => `<p style="${P}">${l}</p>`).join("\n")}
  <div style="${F}padding-top:14px;font-size:26px;line-height:30px;letter-spacing:-0.6px;font-weight:800;color:#ffffff;">${esc(EVENT_NAME_LINE1)}<br>${esc(EVENT_NAME_LINE2)}</div>
  <div style="${F}padding-top:6px;font-size:13px;font-weight:bold;color:${C.accent};">${esc(DATES)}</div>
 </td></tr>
+<tr><td style="height:6px;line-height:6px;font-size:0;background-color:#b6e014;background-image:linear-gradient(90deg,#00ccff,#6fdb6a 30%,#b6e014 62%,#ffe300);">&nbsp;</td></tr>
 ${ORDER.map((k) => blocks[k]).join("")}
 <tr><td style="padding:22px 36px 24px;">
  <div style="${F}font-size:11px;letter-spacing:1.4px;font-weight:bold;color:${C.brand};text-transform:uppercase;">Featuring</div>

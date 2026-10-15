@@ -2,9 +2,8 @@
 @source "../src";
 @import "tw-animate-css";
 
-/* Typefaces load from Google Fonts in __root.tsx: Poppins for headlines
-   (closest open match to the 2025 FIN:NECT banner lettering) and Figtree
-   for running text. */
+/* Typeface: Pretendard (the FIN:NECT 2026 KV's Korean face; its Latin also
+   stands in for the KV's licensed ABC Diatype). Loaded in __root.tsx. */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -38,52 +37,51 @@
   --color-lichen: var(--light-blue);
   --color-yellow: var(--yellow);
   --color-yellow-foreground: var(--yellow-foreground);
-  --font-sans: "Figtree", system-ui, sans-serif;
-  --font-display: "Poppins", "Figtree", system-ui, sans-serif;
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --font-display: "Pretendard Variable", Pretendard, system-ui, sans-serif;
 }
 
 :root {
   --radius: 0.75rem;
-  /* FIN:NECT — temporary theme from the 2025 FIN:NECT Global Singapore
-     banner (12 Oct): white ground with soft grey curves, charcoal lettering,
-     gold colon and gold faceted triangles. Swap for the 2026 CI when it
-     arrives — every colour on the site comes from these tokens.
-     Charcoal #2F2F2F · Gold #E5B80B · Paper #F7F7F5. Dark bands (about,
-     profile and RSVP headers) use charcoal with gold accents. */
-  --background: #f7f7f5;
-  --foreground: #2f2f2f;
+  /* FIN:NECT 2026 key visual (Krow Studio): every colour on the site comes
+     from these tokens. Black #1E1E1E · Yellow #FFE300 · Grey #6D6D6D ·
+     Light #F2F2F2, plus the cyan→lime→yellow brand gradient. Yellow is a
+     fill colour only: never yellow text on white. */
+  --background: #ffffff;
+  --foreground: #1e1e1e;
   --card: #ffffff;
-  --card-foreground: #2f2f2f;
+  --card-foreground: #1e1e1e;
   --popover: #ffffff;
-  --popover-foreground: #2f2f2f;
-  --primary: #2f2f2f;
+  --popover-foreground: #1e1e1e;
+  --primary: #1e1e1e;
   --primary-foreground: #ffffff;
-  --primary-glow: #555555;
-  --navy: #2f2f2f;
-  --light-blue: #ecd77f;
-  --yellow: #e5b80b;
-  --yellow-foreground: #1f1f1f;
-  --gold-text: #9a7b00;
-  --secondary: #efefec;
-  --secondary-foreground: #2f2f2f;
-  --muted: #f0f0ed;
-  --muted-foreground: #5f5f5c;
-  --accent: #fbf3d2;
-  --accent-foreground: #2f2f2f;
+  --primary-glow: #3a3a3a;
+  --navy: #1e1e1e;
+  --light-blue: #ffe300;
+  --yellow: #ffe300;
+  --yellow-foreground: #1e1e1e;
+  --gold-text: #6d6d6d;
+  --secondary: #f2f2f2;
+  --secondary-foreground: #1e1e1e;
+  --muted: #f2f2f2;
+  --muted-foreground: #6d6d6d;
+  --accent: #fff7b3;
+  --accent-foreground: #1e1e1e;
   --destructive: #c2410c;
   --destructive-foreground: #ffffff;
-  --border: #e2e2dd;
-  --input: #d4d4ce;
-  --ring: #e5b80b;
+  --border: #e6e6e6;
+  --input: #d4d4d4;
+  --ring: #ffe300;
 
-  --gradient-hero: radial-gradient(120% 90% at 85% 0%, #3d3d3b 0%, #2b2b2a 45%, #1e1e1d 100%);
-  /* the banner's white ground with large, pale grey sweeps */
-  --gradient-paper: radial-gradient(70% 90% at 100% 100%, #ececea 0 38%, transparent 38.2%), radial-gradient(55% 70% at 8% 108%, #f0f0ee 0 45%, transparent 45.2%), #fbfbfa;
+  --gradient-hero: radial-gradient(120% 90% at 85% 0%, #2c2c2c 0%, #1e1e1e 50%, #171717 100%);
+  /* the KV gradient: cyan from the top, lime through the middle, yellow pooling bottom-right */
+  --gradient-brand: radial-gradient(70% 85% at 62% -8%, #00ccff 0%, rgb(0 204 255 / 0) 72%), radial-gradient(75% 90% at 102% 108%, #ffe300 0%, rgb(255 227 0 / 0) 70%), linear-gradient(180deg, #8edd3c 0%, #c3e20f 55%, #e9e200 100%);
+  --gradient-paper: #ffffff;
   --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
-  --gradient-wave: linear-gradient(180deg, transparent 0%, #efefec 100%);
-  --shadow-elegant: 0 18px 40px -22px rgb(31 31 31 / 0.4);
+  --gradient-wave: linear-gradient(180deg, transparent 0%, #f2f2f2 100%);
+  --shadow-elegant: 0 18px 40px -22px rgb(30 30 30 / 0.4);
   --shadow-card: 0 1px 0 rgb(31 31 31 / 0.04), 0 10px 26px -18px rgb(31 31 31 / 0.3);
-  --shadow-glow: 0 0 0 4px rgb(229 184 11 / 0.35);
+  --shadow-glow: 0 0 0 4px rgb(255 227 0 / 0.45);
 }
 
 @layer base {
@@ -121,7 +119,7 @@
 }
 
 @utility btn-hero {
-  /* Gold CTA (banner colon colour), charcoal text */
+  /* Yellow CTA (KV symbol colour), black text */
   background: var(--yellow);
   color: var(--yellow-foreground);
   box-shadow: 0 12px 30px -12px color-mix(in oklab, var(--yellow) 60%, transparent);
@@ -178,13 +176,22 @@
   background: var(--gradient-hero);
 }
 
+@utility bg-brand-gradient {
+  background: var(--gradient-brand);
+}
+
+/* thin bands (hero marquee): the KV gradient laid out horizontally */
+@utility bg-brand-band {
+  background: linear-gradient(90deg, #00ccff 0%, #6fdb6a 30%, #b6e014 62%, #ffe300 100%);
+}
+
 @utility bg-wave-fade {
   background: var(--gradient-wave);
 }
 
 
 /* Home hero: ledger rows arrive once on load, each arrow drawing left to
-   right; gold triangles drift behind. */
+   right; the KV symbol rises behind. */
 .hero-title {
   letter-spacing: -0.03em;
   text-wrap: balance;
@@ -202,11 +209,12 @@
   position: absolute;
   right: -1px;
   top: -3px;
-  border-left: 6px solid var(--yellow);
+  border-left: 6px solid rgb(30 30 30 / 0.25);
   border-top: 3.5px solid transparent;
   border-bottom: 3.5px solid transparent;
 }
 .ledger-row a:hover .ledger-arrow { background: var(--navy); }
+.ledger-row a:hover .ledger-arrow::after { border-left-color: var(--navy); }
 @keyframes ledger-in {
   from { opacity: 0; transform: translateY(6px); }
 }
@@ -217,17 +225,18 @@
   .ledger-row, .ledger-row .ledger-arrow { animation: none; }
 }
 
-/* Hero art: the banner's gold faceted triangles, drifting slowly (pointer
-   parallax via useHeroParallax). Ambient only. */
+/* Hero art: the KV stair symbol and node patterns (pointer parallax via
+   useHeroParallax). Ambient only. */
 .dotgrid {
   background-image: radial-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1.4px);
   background-size: 28px 28px;
   mask-image: radial-gradient(90% 80% at 75% 30%, #000 30%, transparent 85%);
 }
-.facet { animation: facet-float 12s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 10px 14px rgb(154 123 0 / 0.25)); }
-.facet-slow { animation-duration: 17s; animation-delay: -5s; }
-@keyframes facet-float { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(-10px, 14px, 0) rotate(7deg); } }
-.colon-dot { display: inline-block; width: 0.2em; height: 0.2em; border-radius: 9999px; background: var(--yellow); }
+/* KV node patterns: cells pop in one by one when .node-pop is on the svg. */
+.node-pop .node-cell { transform-box: fill-box; transform-origin: center; animation: node-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) calc(300ms + var(--i, 0) * 60ms) both; }
+@keyframes node-in { from { transform: scale(0); opacity: 0; } }
+.hero-symbol { animation: symbol-rise 1.1s cubic-bezier(0.16, 1, 0.3, 1) 250ms both; }
+@keyframes symbol-rise { from { opacity: 0; transform: translate3d(-24px, 24px, 0); } }
 
 /* Scroll reveal (as on the CMK site). Hidden state applies only after JS
    adds .reveal-ready, so SSR / no-JS visitors always see content. */
@@ -240,7 +249,7 @@
   transition-delay: var(--rd, 0ms);
 }
 @media (prefers-reduced-motion: reduce) {
-  .facet { animation: none; }
+  .node-pop .node-cell, .hero-symbol { animation: none; }
   [data-reveal] { transition: none; }
   .reveal-ready [data-reveal]:not(.is-visible) { opacity: 1; transform: none; }
 }
@@ -263,7 +272,7 @@
 
 /* Ledger rows: hover extends the arrow and lights the destination. */
 .ledger-row a { transition: background 0.3s ease; border-radius: 0.5rem; }
-.ledger-row a:hover { background: rgb(229 184 11 / 0.08); }
+.ledger-row a:hover { background: rgb(255 227 0 / 0.14); }
 .ledger-row .ledger-arrow { transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease; }
 .ledger-row a:hover .ledger-arrow { transform: scaleX(1.25); }
 
@@ -275,7 +284,7 @@
 
 /* Tilt cards: 3D lean toward the pointer plus a travelling sheen. */
 .tilt { position: relative; transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease; transform-style: preserve-3d; }
-.tilt::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: radial-gradient(360px circle at var(--px, 50%) var(--py, 50%), rgb(229 184 11 / 0.14), transparent 60%); opacity: 0; transition: opacity 0.3s ease; }
+.tilt::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; background: radial-gradient(360px circle at var(--px, 50%) var(--py, 50%), rgb(255 227 0 / 0.16), transparent 60%); opacity: 0; transition: opacity 0.3s ease; }
 .tilt:hover::after { opacity: 1; }
 .card-startup.tilt:hover { transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px); }
 
