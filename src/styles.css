@@ -418,3 +418,68 @@
 .startup-row .colon i { transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
 .startup-row:hover .colon i:first-child { transform: translateY(-2px); }
 .startup-row:hover .colon i:last-child { transform: translateY(2px); }
+
+/* ── Startup profile ── */
+/* three headline numbers as yellow nodes climbing the KV stair */
+.stat-node {
+  background: var(--yellow); padding: 1.1rem 1.25rem 1.2rem; border-radius: 3px;
+  animation: stat-in .8s cubic-bezier(.34, 1.56, .64, 1) calc(450ms + var(--i) * 140ms) both;
+}
+@media (min-width: 1024px) {
+  .stat-stair { grid-template-columns: 1fr; }
+  .stat-node { margin-left: calc((2 - var(--i)) * 2.5rem); }
+}
+@keyframes stat-in { from { opacity: 0; transform: translate(-18px, 18px) scale(.92); } to { opacity: 1; transform: none; } }
+
+.mark-yellow { background: linear-gradient(transparent 62%, rgb(255 227 0 / .9) 62%); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.reveal-on [data-reveal] .mark-yellow { background-repeat: no-repeat; background-size: 0% 100%; transition: background-size 1s cubic-bezier(.65, 0, .35, 1) .6s; }
+.reveal-on [data-reveal].is-in .mark-yellow { background-size: 100% 100%; }
+
+.fix-arrow { display: block; position: relative; width: 3rem; height: 3rem; background: var(--navy); }
+.fix-arrow::after {
+  content: ""; position: absolute; inset: 0; margin: auto; width: 0; height: 0;
+  border-left: 12px solid var(--yellow); border-top: 9px solid transparent; border-bottom: 9px solid transparent; transform: translateX(2px);
+}
+
+/* tabs */
+.tab-node {
+  border-radius: 3px; padding: .65rem 1.1rem; font-weight: 700; font-size: .9rem; color: var(--navy);
+  border: 1.5px solid rgb(30 30 30 / .2); background: transparent; transition: background-color .2s, border-color .2s, color .2s, box-shadow .2s;
+}
+.tab-node:hover { border-color: var(--navy); }
+.tab-node.is-on { background: var(--navy); border-color: var(--navy); color: #fff; box-shadow: 4px 4px 0 0 var(--yellow); }
+.tab-node:focus-visible { outline: 2px solid #00ccff; outline-offset: 3px; }
+.feature-card { background: #fff; padding: 1.4rem 1.4rem 1.6rem; border-radius: 3px; animation: card-in .55s cubic-bezier(.16, 1, .3, 1) calc(var(--i) * 90ms) both; }
+@keyframes card-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* lists that arrive item by item */
+.reveal-on [data-reveal="list"] > * { opacity: 0; transform: translateY(18px); transition: opacity .6s, transform .6s cubic-bezier(.16, 1, .3, 1); transition-delay: calc(var(--i, 0) * 100ms); }
+.reveal-on [data-reveal="list"].is-in > * { opacity: 1; transform: none; }
+
+/* "meet them if you are…" cards */
+.ask-card {
+  background: #fff; border: 1.5px solid rgb(30 30 30 / .12); border-radius: 3px; padding: 1.5rem;
+  transition: transform .3s cubic-bezier(.16, 1, .3, 1), box-shadow .3s, border-color .3s;
+}
+.ask-card:hover, .ask-card:focus-visible { transform: translate(-4px, -4px); box-shadow: 8px 8px 0 0 var(--yellow); border-color: var(--navy); }
+.ask-card:focus-visible { outline: 2px solid #00ccff; outline-offset: 3px; }
+.ask-cta { display: inline-flex; align-items: center; gap: .5rem; }
+.ask-cta::after { content: ""; width: .6rem; height: .6rem; background: var(--yellow); outline: 1px solid rgb(30 30 30 / .25); transition: transform .3s; }
+.ask-card:hover .ask-cta::after { transform: translateX(4px); }
+
+/* next-startup card */
+.next-card { border-radius: 3px; transition: border-color .25s, background-color .25s; }
+.next-card:hover { border-color: var(--yellow); background: rgb(255 255 255 / .04); }
+.next-arrow { position: relative; width: 2.5rem; height: 2.5rem; flex-shrink: 0; background: var(--yellow); transition: transform .3s cubic-bezier(.16, 1, .3, 1); }
+.next-arrow::after { content: ""; position: absolute; inset: 0; margin: auto; width: 0; height: 0; border-left: 10px solid var(--navy); border-top: 7px solid transparent; border-bottom: 7px solid transparent; transform: translateX(2px); }
+.next-card:hover .next-arrow { transform: translateX(6px); }
+
+/* sticky profile bar */
+.sticky-bar { transform: translateY(-100%); transition: transform .35s cubic-bezier(.16, 1, .3, 1); }
+.sticky-bar.is-on { transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-node, .feature-card { animation: none; }
+  .sticky-bar { transition: none; }
+}
+.sticky-bar:not(.is-on) { visibility: hidden; transition: transform .35s cubic-bezier(.16, 1, .3, 1), visibility 0s .35s; }
