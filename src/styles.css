@@ -296,3 +296,53 @@
   .parallax-1, .parallax-2, .parallax-3, .parallax-dome, .magnet { translate: 0 0; }
   .tilt { transform: none; }
 }
+
+/* ── 2026 revamp: node vocabulary from the KV (squares, stair, colon) ── */
+.btn-node, .btn-node-ghost, .btn-node-dark, .btn-node-line {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  border-radius: 3px; padding: .8rem 1.25rem; font-weight: 700; font-size: .95rem;
+  line-height: 1; white-space: nowrap; transition: background-color .15s, color .15s, border-color .15s, box-shadow .15s;
+}
+.btn-node { background: var(--yellow); color: var(--navy); box-shadow: 4px 4px 0 0 #00ccff; }
+.btn-node:hover { box-shadow: 6px 6px 0 0 #00ccff; }
+.btn-node-ghost { color: #fff; border: 1.5px solid rgb(255 255 255 / .35); }
+.btn-node-ghost:hover { border-color: var(--yellow); color: var(--yellow); }
+.btn-node-dark { background: var(--navy); color: #fff; }
+.btn-node-dark:hover { background: #000; color: var(--yellow); }
+.btn-node-line { color: var(--navy); border: 1.5px solid rgb(30 30 30 / .3); padding: .7rem 1.1rem; font-size: .875rem; }
+.btn-node-line:hover { border-color: var(--navy); background: #fff; }
+.startup-row .btn-node-dark { padding: .7rem 1.1rem; font-size: .875rem; }
+:is(.btn-node, .btn-node-ghost, .btn-node-dark, .btn-node-line, .board-node, .nav-link):focus-visible {
+  outline: 2px solid #00ccff; outline-offset: 3px;
+}
+
+.nav-link { padding: .4rem .35rem; color: rgb(255 255 255 / .75); border-radius: 3px; }
+@media (min-width: 380px) { .nav-link { padding: .4rem .5rem; } }
+.nav-link:hover { color: var(--yellow); }
+
+/* the brand colon: two stacked squares */
+.colon i { display: block; width: .32em; height: .32em; background: var(--yellow); }
+.startup-row .colon i { background: var(--navy); }
+
+.board-cell, .board-node { aspect-ratio: 1; border-radius: 2px; }
+.board-cell { background: rgb(255 255 255 / .05); }
+.board-node {
+  position: relative; display: block; background: rgb(255 227 0 / .28);
+  transition: background-color .35s, transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s;
+  animation: node-in .6s cubic-bezier(.16,1,.3,1) calc(500ms + var(--i) * 70ms) both;
+}
+.board-node:hover { background: rgb(255 227 0 / .6); }
+.board-node.is-lit { background: var(--yellow); transform: translate(-3px, -3px); box-shadow: 3px 3px 0 0 #00ccff; }
+.board-num { position: absolute; left: 7px; top: 5px; font-size: 11px; font-weight: 700; color: rgb(30 30 30 / .0); font-variant-numeric: tabular-nums; transition: color .35s; }
+.board-node.is-lit .board-num, .board-node:hover .board-num { color: var(--navy); }
+@keyframes node-in { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .board-node { animation: none; transition: none; }
+}
+
+/* Booking, lounge and schedule pages share the RSVP template; square them
+   off so they speak the KV's node language instead of the template's pills. */
+.fn-square :is(.rounded-full, .rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md):not([role="radio"], [role="switch"], [role="switch"] *) {
+  border-radius: 3px;
+}

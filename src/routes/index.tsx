@@ -1,25 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type CSSProperties } from "react";
 import { Wordmark } from "@/components/Wordmark";
-import { FinnectLogo, FinnectSymbol, NodePattern, type PatternName } from "@/components/Brand";
+import { FinnectLogo, NodePattern } from "@/components/Brand";
 import fckLogo from "@/assets/logos/fintech-center-korea.png";
 import fckLogoWhite from "@/assets/logos/fintech-center-korea-white.png";
 import kakaobankLogo from "@/assets/logos/kakaobank.png";
 import kakaobankLogoWhite from "@/assets/logos/kakaobank-white.png";
+import tenityLogoWhite from "@/assets/logos/tenity-white.png";
 import { JUDGES } from "@/data/speakers";
 import { companies } from "@/data/companies";
-import { STARTUP_IMAGES, STARTUP_LOGOS } from "@/data/companyImages";
+import { STARTUP_LOGOS } from "@/data/companyImages";
+import { Pair, PAIRS } from "@/components/Pair";
 import {
   EVENT_ADDRESS,
   EVENT_DATE,
-  EVENT_DAY_SHORT,
   EVENT_MAP_URL,
   EVENT_NAME,
   EVENT_TIME,
   EVENT_VENUE,
   CREDITS,
+  DEMO_AGENDA,
+  TIMESLOTS,
   MEETUP_ADDRESS,
-  MEETUP_DAY_SHORT,
   MEETUP_MAP_URL,
   MEETUP_TIME,
   MEETUP_VENUE,
@@ -34,18 +36,12 @@ const ORGANIZER_EMAIL = "support@lodestart.ai";
 const FCK_SITE = "https://www.fintech.or.kr";
 const KAKAOBANK_SITE = "https://www.kakaobank.com";
 
-// The page's one idea: who each startup serves, and what it gives them.
-// Wording condensed from each company's own English service overview.
-const LEDGER: Record<string, [from: string, to: string]> = {
-  "276holdings": ["SME suppliers", "settle-now, pay-later finance"],
-  devd: ["Tenants & landlords", "rent paid by card"],
-  marinachain: ["Shipping companies", "maritime carbon & finance data"],
-  bigtechplus: ["Homeowners & lenders", "verified property collateral"],
-  sionic: ["Financial institutions", "no-code AI agents"],
-  aizen: ["Lenders & mobility platforms", "AI credit data"],
-  canopy: ["Employees", "payroll-based financial wellness"],
-  crosshub: ["Payment providers", "voice-AI authentication"],
-};
+
+// Logos drawn as a mark with small text under it read tiny at wordmark height.
+const SQUARE_MARKS = new Set(["276holdings", "bigtechplus"]);
+
+// The node board: eight startups set on the KV's stair, rising left to right.
+const STAIR: [x: number, y: number][] = [[0, 4], [1, 4], [1, 3], [2, 3], [2, 2], [3, 2], [3, 1], [4, 1]];
 
 function ContactOrganizer() {
   const [copied, setCopied] = useState(false);
@@ -64,7 +60,7 @@ function ContactOrganizer() {
         type="button"
         onClick={handleCopy}
         title={ORGANIZER_EMAIL}
-        className="rounded-full border border-navy/25 px-3 py-1.5 text-xs font-semibold text-navy transition hover:bg-navy/5 sm:px-4 sm:py-2 sm:text-sm"
+        className="rounded-[3px] border border-white/30 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-yellow hover:text-yellow sm:px-4 sm:py-2 sm:text-sm"
       >
         {copied ? "Email copied" : "Contact"}
       </button>
@@ -92,334 +88,238 @@ function Place({ venue, address, map }: { venue: string; address: string; map: s
   );
 }
 
-// Scroll reveal: marks [data-reveal] elements visible as they enter.
-function useReveal() {
-  useEffect(() => {
-    const els = document.querySelectorAll<HTMLElement>("[data-reveal]");
-    if (!("IntersectionObserver" in window)) return;
-    document.documentElement.classList.add("reveal-ready");
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && (e.target.classList.add("is-visible"), io.unobserve(e.target))),
-      { rootMargin: "0px 0px -8% 0px" },
-    );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, []);
-}
 
-// Pointer parallax for the hero art and scroll parallax for the dome:
-// writes --mx/--my (−1..1) and --sy (px) on #top; CSS does the moving.
-function useHeroParallax() {
-  useEffect(() => {
-    const hero = document.getElementById("top");
-    if (!hero || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let raf = 0, mx = 0, my = 0;
-    const paint = () => {
-      hero.style.setProperty("--mx", mx.toFixed(3));
-      hero.style.setProperty("--my", my.toFixed(3));
-      hero.style.setProperty("--sy", `${Math.min(scrollY, 900) * 0.25}px`);
-      raf = 0;
-    };
-    const queue = () => { if (!raf) raf = requestAnimationFrame(paint); };
-    const onMove = (e: PointerEvent) => { mx = (e.clientX / innerWidth) * 2 - 1; my = (e.clientY / innerHeight) * 2 - 1; queue(); };
-    addEventListener("pointermove", onMove, { passive: true });
-    addEventListener("scroll", queue, { passive: true });
-    return () => { removeEventListener("pointermove", onMove); removeEventListener("scroll", queue); cancelAnimationFrame(raf); };
-  }, []);
-}
 
-// 3D tilt + light sheen for [data-tilt] cards, magnetic pull for [data-magnet].
-function useTiltAndMagnet() {
+// Hero: the eight startups as nodes on the KV stair. One is "lit" at a time
+// (auto-advancing until the visitor points at one); the readout names it.
+function NodeBoard() {
+  const [active, setActive] = useState(0);
+  const [held, setHeld] = useState(false);
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches || matchMedia("(hover: none)").matches) return;
-    const onMove = (e: PointerEvent) => {
-      const t = (e.target as HTMLElement).closest<HTMLElement>("[data-tilt],[data-magnet]");
-      if (!t) return;
-      const r = t.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
-      if (t.hasAttribute("data-tilt")) {
-        t.style.setProperty("--rx", `${(-y * 6).toFixed(2)}deg`); t.style.setProperty("--ry", `${(x * 8).toFixed(2)}deg`);
-        t.style.setProperty("--px", `${((x + 0.5) * 100).toFixed(1)}%`); t.style.setProperty("--py", `${((y + 0.5) * 100).toFixed(1)}%`);
-      } else {
-        t.style.setProperty("--tx", `${(x * 14).toFixed(1)}px`); t.style.setProperty("--ty", `${(y * 10).toFixed(1)}px`);
-      }
-    };
-    const onLeave = (e: PointerEvent) => {
-      const t = (e.target as HTMLElement).closest<HTMLElement>("[data-tilt],[data-magnet]");
-      if (t) ["--rx", "--ry", "--tx", "--ty"].forEach((v) => t.style.removeProperty(v));
-    };
-    addEventListener("pointermove", onMove, { passive: true });
-    addEventListener("pointerout", onLeave, { passive: true });
-    return () => { removeEventListener("pointermove", onMove); removeEventListener("pointerout", onLeave); };
-  }, []);
-}
-
-// Hero art from the FIN:NECT 2026 KV: the big stair symbol (connection and
-// growth) rising from the bottom-right, and two node patterns in the margins.
-// Kept below and beside the copy so it never sits on text.
-function HeroArt() {
+    if (held || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setActive((i) => (i + 1) % companies.length), 2600);
+    return () => clearInterval(t);
+  }, [held]);
+  const lit = companies[active];
+  const [who, what] = PAIRS[lit.slug] ?? ["", lit.sector];
+  const at = new Map(STAIR.map(([x, y], i) => [`${x},${y}`, i]));
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      {/* climbs out from behind the gradient band, below the CTAs */}
-      <div className="parallax-1 absolute -bottom-12 -left-16 w-[min(52vw,300px)] lg:-left-10">
-        <FinnectSymbol className="hero-symbol h-auto w-full" />
+    <div className="w-full max-w-[320px] sm:max-w-[400px] lg:max-w-[460px]" onMouseLeave={() => setHeld(false)}>
+      <div className="board grid grid-cols-5 gap-2.5 sm:gap-3" role="list" aria-label="The eight startups">
+        {Array.from({ length: 25 }, (_, k) => {
+          const x = k % 5, y = Math.floor(k / 5);
+          const i = at.get(`${x},${y}`);
+          if (i === undefined) return <span key={k} aria-hidden className="board-cell" />;
+          const c = companies[i];
+          return (
+            <Link
+              key={k}
+              role="listitem"
+              to="/companies/$slug"
+              params={{ slug: c.slug }}
+              aria-label={`${c.name}: ${(PAIRS[c.slug] ?? ["", c.sector]).join(" — ")}`}
+              onMouseEnter={() => { setHeld(true); setActive(i); }}
+              onFocus={() => { setHeld(true); setActive(i); }}
+              className={`board-node ${i === active ? "is-lit" : ""}`}
+              style={{ "--i": i } as CSSProperties}
+            >
+              <span className="board-num">{i + 1}</span>
+            </Link>
+          );
+        })}
       </div>
-      <div className="parallax-2 absolute bottom-28 right-[4%] hidden w-12 text-yellow lg:block">
-        <NodePattern name="demoday" className="node-pop h-auto w-full" />
-      </div>
-      <div className="parallax-3 absolute right-[3%] top-24 hidden w-10 text-navy/10 xl:block">
-        <NodePattern name="connect" className="node-pop h-auto w-full" />
+      <div className="mt-6 min-h-[7.5rem] border-t border-white/15 pt-5" aria-live="polite">
+        <div className="flex items-center gap-4">
+          {STARTUP_LOGOS[lit.slug] && (
+            <span className="inline-flex h-11 w-[8.5rem] shrink-0 items-center justify-center rounded-[3px] bg-white px-3">
+              <img src={STARTUP_LOGOS[lit.slug]} alt="" className={`${SQUARE_MARKS.has(lit.slug) ? "max-h-10" : "max-h-7"} max-w-full object-contain`} />
+            </span>
+          )}
+          <div className="min-w-0">
+            <div className="text-lg font-bold text-white">{lit.name}</div>
+            <div className="text-xs text-white/50">{lit.sector}</div>
+          </div>
+        </div>
+        <p className="mt-3 text-[15px] leading-snug sm:text-base"><Pair who={who} what={what} dark /></p>
       </div>
     </div>
   );
 }
 
-// Startup cards without a product photo: the KV "Application" card —
-// brand gradient with a white node pattern — cycling the four icons.
-const CARD_PATTERNS: PatternName[] = ["challenge", "school", "demoday", "connect"];
+// One shared clock for the day: 08:30–17:30, both sessions placed to scale.
+const DAY_START = 8.5, DAY_END = 17.5;
+const pct = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return ((h + m / 60 - DAY_START) / (DAY_END - DAY_START)) * 100;
+};
+
+function DayRuler() {
+  const ticks = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+  return (
+    <div aria-hidden className="relative hidden h-20 md:block">
+      <div className="absolute inset-x-0 top-9 h-[6px] bg-brand-band" />
+      {ticks.map((t) => (
+        <span key={t} className="absolute top-0 -translate-x-1/2 text-[11px] tabular-nums text-[#6d6d6d]" style={{ left: `${pct(t)}%` }}>
+          {t}
+          <span className="mx-auto mt-[22px] block h-3 w-px bg-navy/20" />
+        </span>
+      ))}
+      {/* the two sessions as solid spans on the ruler */}
+      <span className="absolute top-[30px] flex h-5 items-center bg-navy px-2 text-[11px] font-semibold text-white" style={{ left: `${pct("09:00")}%`, width: `${pct("12:30") - pct("09:00")}%` }}>Demo Day</span>
+      <span className="absolute top-[56px] text-[11px] text-[#6d6d6d]" style={{ left: `${pct("12:30")}%` }}>Lunch and networking</span>
+      {TIMESLOTS.map((t) => {
+        const [a, b] = t.time.split("–").map((v) => v.trim());
+        return <span key={t.id} className="absolute top-[30px] flex h-5 items-center bg-yellow px-2 text-[11px] font-semibold text-navy ring-1 ring-navy/10" style={{ left: `${pct(a)}%`, width: `${pct(b) - pct(a)}%` }}>{t.label}</span>;
+      })}
+    </div>
+  );
+}
 
 function Landing() {
-  useReveal();
-  useHeroParallax();
-  useTiltAndMagnet();
   return (
     <div className="min-h-screen">
-      {/* HERO — the 2026 KV lockup, then the ledger */}
-      <section id="top" className="relative isolate overflow-hidden bg-background text-navy">
-        <HeroArt />
-        {/* Phones: wordmark row, then the menu row (four items never fit
-            beside the wordmark at 390px); from md they share one line. */}
+      {/* HERO — black ground of the KV cover; the startups as nodes */}
+      <section id="top" className="relative isolate overflow-hidden bg-navy text-white">
         <header className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
           <a href="#top" className="min-w-0">
-            <Wordmark />
+            <Wordmark light />
           </a>
-          <nav className="-mx-2 flex items-center gap-1 text-sm font-semibold md:mx-0 md:gap-2">
-            <a href="#startups" className="rounded-full px-2 py-1.5 text-navy/75 hover:text-navy md:px-3 md:py-2">Startups</a>
-            {JUDGES.length > 0 && <a href="#judges" className="rounded-full px-2 py-1.5 text-navy/75 hover:text-navy md:px-3 md:py-2">Judges</a>}
-            <a href="#about" className="rounded-full px-2 py-1.5 text-navy/75 hover:text-navy md:px-3 md:py-2">About</a>
-            <a href="/lounge" className="rounded-full px-2 py-1.5 text-navy/75 hover:text-navy md:px-3 md:py-2">Lounge</a>
+          <nav className="-mx-1.5 flex items-center gap-0 text-[12.5px] font-semibold min-[380px]:text-[13px] sm:text-sm md:mx-0 md:gap-2">
+            <a href="#rsvp" className="nav-link">RSVP</a>
+            <a href="#startups" className="nav-link">Startups</a>
+            <a href="#about" className="nav-link">About</a>
+            <a href="/lounge" className="nav-link whitespace-nowrap">Networking Lounge</a>
             <span className="ml-auto md:ml-1"><ContactOrganizer /></span>
           </nav>
         </header>
 
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 pb-32 pt-8 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:pb-44 lg:pt-14">
-          <div className="lg:pt-4">
-            <p className="hero-in text-sm font-semibold text-gold">Fintech Demo Day · {EVENT_DAY_SHORT} 2026 · Singapore FinTech Festival week</p>
-            {/* The KV lockup: logo, then the programme name in grey (KV "Program Identity") */}
-            <h1 className="mt-6 font-display text-navy" aria-label="FIN:NECT Global Singapore">
-              <span aria-hidden className="hero-word-clip block">
-                <span className="hero-word" style={{ "--i": 0 } as CSSProperties}>
-                  <FinnectLogo className="h-[clamp(2.6rem,7.4vw,4.6rem)] w-auto" />
-                </span>
+        <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 pb-20 pt-10 sm:px-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-20 lg:pb-28 lg:pt-16">
+          <div>
+            <p className="hero-in text-sm text-white/60">{EVENT_DATE} · Singapore FinTech Festival week</p>
+            <h1 className="mt-6" aria-label="FIN:NECT Global Singapore">
+              <span aria-hidden className="hero-in block [--i:1]">
+                <FinnectLogo className="h-[clamp(2.8rem,8.4vw,5.6rem)] w-auto text-white" />
               </span>
-              <span aria-hidden className="hero-word-clip mt-3 block">
-                <span className="hero-word block text-[clamp(2.1rem,5.6vw,3.6rem)] font-extrabold leading-[1.05] tracking-tight text-[#6d6d6d]" style={{ "--i": 1 } as CSSProperties}>
-                  Global Singapore
-                </span>
+              <span aria-hidden className="hero-in mt-4 block text-[clamp(2rem,5.4vw,3.6rem)] font-extrabold leading-[1.02] tracking-tight text-white/45 [--i:2]">
+                Global Singapore
               </span>
             </h1>
-            <p className="hero-in [--i:5] mt-6 max-w-md text-[1.0625rem] leading-relaxed text-muted-foreground">
-              Korean fintechs selected by the Korea Fintech Support Center and sponsored by KakaoBank, in Singapore to
-              meet investors, financial institutions and partners. Watch them pitch in the morning, then sit down with
-              the ones that fit.
+            <p className="hero-in mt-8 max-w-[34rem] text-[1.0625rem] leading-relaxed text-white/75 [--i:3]">
+              Eight Korean fintechs, selected by the Korea Fintech Support Center and sponsored by KakaoBank. See them
+              pitch in the morning, then meet the ones that fit your business in the afternoon.
             </p>
-            <div className="hero-in [--i:6] mt-8 flex flex-wrap gap-3">
-              <Link to="/book" search={{ day: "7" }} data-magnet className="btn-hero magnet rounded-full px-6 py-3.5 text-sm font-semibold">
-                RSVP for the Demo Day
-              </Link>
+            <div className="hero-in mt-9 flex flex-wrap gap-3 [--i:4]">
+              <Link to="/book" search={{ day: "7" }} className="btn-node">RSVP for the Demo Day</Link>
               {ONE_ON_ONE_OPEN && (
-                <Link to="/book" search={{ day: "5" }} data-magnet className="btn-outline-dark magnet rounded-full px-6 py-3.5 text-sm font-semibold">
-                  Book a 1:1 meeting
-                </Link>
+                <Link to="/book" search={{ day: "5" }} className="btn-node-ghost">Book a 1:1 meeting</Link>
               )}
             </div>
           </div>
+          <div className="hero-in flex justify-center [--i:2] lg:justify-end">
+            <NodeBoard />
+          </div>
+        </div>
+        <div aria-hidden className="h-2 bg-brand-band" />
+      </section>
 
-          <ol className="ledger border-t border-navy/15 lg:mt-6" aria-label="Who each startup serves">
-            {companies.map((c, i) => {
-              const [from, to] = LEDGER[c.slug] ?? ["", c.sector];
+      {/* THE DAY — one ruler, two sessions */}
+      <section id="rsvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">{EVENT_DATE.replace(" 2026", "")}</h2>
+          <p className="max-w-sm text-[15px] text-[#6d6d6d]">Come for the morning, the afternoon or both. Each needs its own RSVP.</p>
+        </div>
+
+        <div className="mt-12"><DayRuler /></div>
+
+        <div className="mt-4 grid gap-10 md:mt-8 md:grid-cols-2 md:gap-14">
+          <article className="border-t-4 border-navy pt-6">
+            <p className="text-sm font-semibold text-[#6d6d6d]">Morning, with Tenity</p>
+            <h3 className="mt-1 text-2xl font-bold text-navy">Demo Day <span className="tabular-nums text-[#6d6d6d]">{EVENT_TIME}</span></h3>
+            <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
+              {DEMO_AGENDA.map(([t, item]) => (
+                <li key={t} className="grid grid-cols-[7.5rem_1fr] gap-3 py-2.5 text-sm">
+                  <span className="tabular-nums text-[#6d6d6d]">{t}</span>
+                  <span className="text-navy">{item}</span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-5"><Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} /></div>
+            <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">RSVP for the Demo Day</Link>
+          </article>
+
+          <article className="border-t-4 border-yellow pt-6">
+            <p className="text-sm font-semibold text-[#6d6d6d]">Afternoon</p>
+            <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="tabular-nums text-[#6d6d6d]">{MEETUP_TIME}</span></h3>
+            <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
+              {TIMESLOTS.map((t) => (
+                <li key={t.id} className="grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2.5 text-sm">
+                  <span className="tabular-nums text-[#6d6d6d]">{t.time}</span>
+                  <span className="flex items-center gap-2 text-navy"><span aria-hidden className="h-2.5 w-2.5 bg-yellow ring-1 ring-navy/15" />{t.label}: a startup of your choice</span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-5"><Place venue={MEETUP_VENUE} address={MEETUP_ADDRESS} map={MEETUP_MAP_URL} /></div>
+            {ONE_ON_ONE_OPEN ? (
+              <Link to="/book" search={{ day: "5" }} className="btn-node-dark mt-7">Book a 1:1 meeting</Link>
+            ) : (
+              <p className="mt-7 text-sm text-[#6d6d6d]">Booking opens soon.</p>
+            )}
+          </article>
+        </div>
+      </section>
+
+      {/* STARTUPS — a directory, one row per company */}
+      <section id="startups" className="bg-secondary">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 className="text-3xl font-bold text-navy md:text-[2.6rem]">The startups</h2>
+            <NodePattern name="connect" className="hidden h-10 w-10 text-yellow sm:block" />
+          </div>
+          <ul className="mt-10 border-t border-navy/15">
+            {companies.map((c) => {
+              const [who, what] = PAIRS[c.slug] ?? ["", c.sector];
               return (
-                <li key={c.slug} style={{ "--d": `${120 + i * 70}ms` } as CSSProperties} className="ledger-row border-b border-navy/15">
-                  <Link
-                    to="/companies/$slug"
-                    params={{ slug: c.slug }}
-                    className="group grid grid-cols-[1fr_auto] items-baseline gap-x-4 py-3 sm:grid-cols-[minmax(0,1fr)_3.5rem_minmax(0,1fr)_7rem] sm:py-3.5"
-                  >
-                    <span className="text-[15px] text-muted-foreground sm:text-base">{from}</span>
-                    <span className="ledger-arrow hidden h-px self-center bg-navy/25 sm:block" aria-hidden />
-                    <span className="col-start-1 text-lg font-semibold leading-snug text-navy sm:col-start-auto sm:text-xl">
-                      <span className="sm:hidden" aria-hidden>→ </span>
-                      {to}
-                    </span>
-                    <span className="col-start-2 row-span-2 row-start-1 self-center text-right text-xs font-semibold text-gold transition group-hover:text-navy sm:col-start-auto sm:row-auto sm:text-sm">
-                      {c.name}
-                    </span>
+                <li key={c.slug} className="startup-row group grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-4 border-b border-navy/15 py-6 md:grid-cols-[11rem_minmax(0,1fr)_auto] md:items-center md:gap-8">
+                  <Link to="/companies/$slug" params={{ slug: c.slug }} className="flex h-14 w-full items-center justify-center self-start rounded-[3px] bg-white px-2.5 md:h-16 md:w-40 md:self-auto md:px-4 shadow-[0_1px_0_rgb(30_30_30/0.06)]" aria-label={c.name}>
+                    {STARTUP_LOGOS[c.slug] ? (
+                      <img src={STARTUP_LOGOS[c.slug]} alt="" className={`${SQUARE_MARKS.has(c.slug) ? "max-h-12" : "max-h-9"} max-w-full object-contain`} />
+                    ) : (
+                      <span className="text-lg font-bold text-navy">{c.name}</span>
+                    )}
                   </Link>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-3">
+                      <Link to="/companies/$slug" params={{ slug: c.slug }} className="text-xl font-bold text-navy hover:underline">{c.name}</Link>
+                      <span className="text-xs text-[#6d6d6d]">{c.sector}</span>
+                    </div>
+                    <p className="mt-1.5 text-[15px] leading-snug"><Pair who={who} what={what} /></p>
+                    <p className="mt-1.5 line-clamp-2 max-w-3xl text-sm leading-relaxed text-[#6d6d6d]">{c.tagline}</p>
+                  </div>
+                  <div className="col-span-2 flex gap-2 md:col-span-1 md:flex-col md:items-stretch">
+                    <Link to="/companies/$slug" params={{ slug: c.slug }} className="btn-node-line">View profile</Link>
+                    {ONE_ON_ONE_OPEN && (
+                      <Link to="/book" search={{ day: "5", company: c.slug }} className="btn-node-dark">Book a 1:1</Link>
+                    )}
+                  </div>
                 </li>
               );
             })}
-          </ol>
-        </div>
-
-        {/* Cohort marquee: the names (logos once supplied) glide across the foot of the hero */}
-        <div className="bg-brand-band" aria-hidden>
-        <div className="marquee relative py-5">
-          <div className="marquee-track">
-            {[...companies, ...companies].map((c, i) => (
-              <span key={`${c.slug}-${i}`} className="mx-6 inline-flex shrink-0 items-center gap-6 font-display text-2xl font-bold text-navy">
-                {STARTUP_LOGOS[c.slug] ? (
-                  <span className="inline-flex h-12 w-36 items-center justify-center rounded-lg bg-white/95 px-4">
-                    <img src={STARTUP_LOGOS[c.slug]} alt="" className="max-h-7 max-w-full object-contain" />
-                  </span>
-                ) : (
-                  c.name
-                )}
-                <span className="h-2 w-2 bg-white" />
-              </span>
-            ))}
-          </div>
-        </div>
+          </ul>
         </div>
       </section>
 
-      {/* JOIN — two days. One big line per card says what matters (day + time);
-          everything else is small. Details repeat on the RSVP page. */}
-      <section id="rsvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
-        <h2 data-reveal className="max-w-xl text-3xl font-bold text-navy md:text-4xl">{EVENT_DATE.replace(" 2026", "")}</h2>
-        <p className="mt-3 max-w-xl text-muted-foreground">
-          For investors, financial institutions and ecosystem partners. Join the morning, the afternoon or both.
-        </p>
-
-        <div data-reveal className="mt-10 grid gap-px rounded-2xl border border-border bg-border shadow-[var(--shadow-card)] [perspective:1200px] md:grid-cols-2">
-          <article data-tilt className="tilt flex flex-col bg-card p-6 sm:p-8">
-            <h3 className="text-xl font-semibold text-muted-foreground">Morning · Demo Day</h3>
-            <p className="mt-2 font-display text-[clamp(1.9rem,4.2vw,2.75rem)] font-bold leading-none tracking-tight text-navy">
-              {EVENT_TIME}
-            </p>
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              IR pitches, then three rounds of 20-minute VC 1:1 meetings, run with Tenity.
-            </p>
-            <div className="mt-4">
-              <Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} />
-            </div>
-            <div className="mt-auto pt-7">
-              <Link to="/book" search={{ day: "7" }} className="inline-flex rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-                RSVP for the Demo Day
-              </Link>
-            </div>
-          </article>
-
-          <article data-tilt className="tilt flex flex-col bg-card p-6 sm:p-8">
-            <h3 className="text-xl font-semibold text-muted-foreground">Afternoon · 1:1 business meetings</h3>
-            <p className="mt-2 font-display text-[clamp(1.9rem,4.2vw,2.75rem)] font-bold leading-none tracking-tight text-navy">
-              {MEETUP_TIME}
-            </p>
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Three rounds with the startups you pick, after lunch.
-            </p>
-            <div className="mt-4">
-              <Place venue={MEETUP_VENUE} address={MEETUP_ADDRESS} map={MEETUP_MAP_URL} />
-            </div>
-            <div className="mt-auto pt-7">
-              {ONE_ON_ONE_OPEN ? (
-                <Link to="/book" search={{ day: "5" }} className="inline-flex rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-                  Book a 1:1 meeting
-                </Link>
-              ) : (
-                <span className="text-sm text-muted-foreground">Booking opens soon.</span>
-              )}
-            </div>
-          </article>
-        </div>
-      </section>
-
-      {/* STARTUPS */}
-      <section id="startups" className="border-t border-border bg-secondary/50">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
-          <h2 data-reveal className="text-3xl font-bold text-navy md:text-4xl">The startups</h2>
-          <p className="mt-3 max-w-2xl text-muted-foreground">
-            Open a profile for more, or book a 1:1 straight away.
-          </p>
-
-          <div className="mt-10 grid grid-cols-2 gap-3 [perspective:1200px] sm:gap-4 lg:grid-cols-4">
-            {companies.map((c, i) => (
-              <article key={c.slug} data-reveal style={{ "--rd": `${(i % 4) * 70}ms` } as CSSProperties} data-tilt className="card-startup tilt group flex flex-col overflow-hidden rounded-xl">
-                <Link to="/companies/$slug" params={{ slug: c.slug }} className="relative block aspect-[3/2] overflow-hidden bg-brand-gradient">
-                  {STARTUP_IMAGES[c.slug] ? (
-                    <img
-                      src={STARTUP_IMAGES[c.slug]}
-                      alt={`${c.name}: ${c.sector}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    // No product photo yet: KV application card with the "serves" line from the hero.
-                    <>
-                      <NodePattern
-                        name={CARD_PATTERNS[i % CARD_PATTERNS.length]}
-                        color="#ffffff"
-                        className="absolute right-3 top-3 h-[52%] w-auto transition duration-500 group-hover:scale-105 sm:right-4 sm:top-4"
-                      />
-                      <span className="absolute inset-x-0 bottom-0 p-3 font-display text-base font-bold leading-tight text-navy sm:p-4 sm:text-xl">
-                        {LEDGER[c.slug]?.[1] ?? c.sector}
-                      </span>
-                    </>
-                  )}
-                </Link>
-                <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
-                  <Link to="/companies/$slug" params={{ slug: c.slug }} className="flex h-8 items-center" title={c.name}>
-                    {STARTUP_LOGOS[c.slug] ? (
-                      <img src={STARTUP_LOGOS[c.slug]} alt={c.name} className="max-h-7 max-w-[120px] object-contain object-left sm:max-h-8 sm:max-w-[150px]" />
-                    ) : (
-                      <span className="font-display text-lg font-bold text-navy">{c.name}</span>
-                    )}
-                  </Link>
-                  <div className="text-xs font-semibold text-primary">{c.sector}</div>
-                  <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground sm:text-[13px]">{c.tagline}</p>
-                  <div className="mt-auto flex flex-col gap-2 pt-2">
-                    <Link
-                      to="/companies/$slug"
-                      params={{ slug: c.slug }}
-                      className="rounded-full border border-primary px-3 py-2 text-center text-xs font-semibold text-primary hover:bg-primary/10"
-                    >
-                      View profile
-                    </Link>
-                    {ONE_ON_ONE_OPEN && (
-                      <Link
-                        to="/book"
-                        search={{ day: "5", company: c.slug }}
-                        className="rounded-full bg-primary px-3 py-2 text-center text-xs font-semibold text-primary-foreground hover:bg-primary/90"
-                      >
-                        Book a 1:1 meeting
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* JUDGES — hidden while the list in src/data/speakers.ts is empty.
-          Same shape as the CMK site: centred, greyscale portraits. */}
+      {/* JUDGES — hidden while the list in src/data/speakers.ts is empty */}
       {JUDGES.length > 0 && (
-        <section id="judges" className="relative isolate overflow-hidden bg-hero-gradient text-white">
+        <section id="judges" className="bg-navy text-white">
           <div className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 md:py-24">
-            <p data-reveal className="text-sm font-semibold text-yellow">Demo Day · {EVENT_DAY_SHORT}</p>
-            <h2 data-reveal className="mt-2 text-3xl font-bold md:text-5xl">Who You'll Meet</h2>
-            <div className="mt-12 grid grid-cols-2 justify-items-center gap-x-6 gap-y-10 md:grid-cols-4">
-              {JUDGES.map((j, i) => (
-                <div key={j.name} data-reveal style={{ "--rd": `${i * 90}ms` } as CSSProperties} className="group flex flex-col items-center text-center">
-                  <img
-                    src={j.photo}
-                    alt={j.name}
-                    loading="lazy"
-                    className="h-32 w-32 rounded-full object-cover ring-4 ring-white/90 grayscale transition duration-500 group-hover:scale-105 group-hover:ring-yellow md:h-40 md:w-40"
-                  />
-                  <div className="mt-4 font-display text-lg font-bold uppercase tracking-wide text-yellow">{j.name}</div>
-                  {j.title && <div className="mt-1 max-w-[15rem] text-sm leading-snug text-white/85">{j.title}</div>}
-                  <div className="mt-0.5 max-w-[15rem] text-balance text-sm font-semibold leading-snug">{j.org}</div>
+            <h2 className="text-3xl font-bold md:text-5xl">Who you'll meet</h2>
+            <div className="mt-12 flex flex-wrap justify-center gap-10">
+              {JUDGES.map((j) => (
+                <div key={j.name} className="flex w-40 flex-col items-center text-center md:w-56">
+                  <img src={j.photo} alt={j.name} loading="lazy" className="h-32 w-32 object-cover grayscale md:h-40 md:w-40" />
+                  <div className="mt-4 text-lg font-bold text-yellow">{j.name}</div>
+                  {j.title && <div className="mt-1 text-sm text-white/80">{j.title}</div>}
+                  <div className="mt-0.5 text-sm font-semibold">{j.org}</div>
                 </div>
               ))}
             </div>
@@ -427,36 +327,36 @@ function Landing() {
         </section>
       )}
 
-      {/* HOST + SPONSOR — names only until logos are supplied */}
-      <section id="about" className="relative isolate overflow-hidden bg-hero-gradient text-white">
-        <div aria-hidden className="dotgrid pointer-events-none absolute inset-0 -z-10" />
-        <div data-reveal className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
+      {/* ABOUT — host, sponsor, Demo Day partner */}
+      <section id="about" className="relative isolate overflow-hidden bg-navy text-white">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <h2 className="max-w-2xl text-2xl font-bold md:text-3xl">About FIN:NECT Global</h2>
-          <p className="mt-4 max-w-2xl leading-relaxed text-white/80">
+          <p className="mt-4 max-w-2xl leading-relaxed text-white/75">
             A Korea Fintech Support Center programme that helps Korean fintech companies preparing for Singapore and
             global markets find local partners and investment. The cohort spends 17–21 November in Singapore during
             Singapore FinTech Festival week, with the Demo Day, 1:1 business meetings and visits to fintech institutions.
           </p>
-
-          <div className="mt-12 grid gap-10 border-t border-white/15 pt-10 md:grid-cols-2">
+          <div className="mt-12 grid gap-10 border-t border-white/15 pt-10 md:grid-cols-3">
             <div>
-              <p className="text-sm font-medium text-lichen">Hosted by</p>
-              <a href={FCK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex">
+              <p className="text-sm text-white/50">Hosted by</p>
+              <a href={FCK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex h-12 items-center">
                 <img src={fckLogoWhite} alt="Korea Fintech Support Center (Fintech Center Korea)" className="h-12 w-auto" />
               </a>
-              <p className="mt-4 text-sm leading-relaxed text-white/75">
-                Korea's public support centre for fintech companies, running programmes that help them grow at home
-                and enter global markets.
-              </p>
+              <p className="mt-4 text-sm leading-relaxed text-white/70">Korea's public support centre for fintech companies, helping them grow at home and enter global markets.</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-lichen">Sponsored by</p>
-              <a href={KAKAOBANK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex">
-                <img src={kakaobankLogoWhite} alt="KakaoBank" className="h-10 w-auto" />
+              <p className="text-sm text-white/50">Sponsored by</p>
+              <a href={KAKAOBANK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex h-12 items-center">
+                <img src={kakaobankLogoWhite} alt="KakaoBank" className="h-9 w-auto" />
               </a>
-              <p className="mt-4 text-sm leading-relaxed text-white/75">
-                Korea's leading internet-only bank, sponsoring the FIN:NECT programme.
-              </p>
+              <p className="mt-4 text-sm leading-relaxed text-white/70">Korea's leading internet-only bank, sponsoring the FIN:NECT programme.</p>
+            </div>
+            <div>
+              <p className="text-sm text-white/50">Demo Day partner</p>
+              <a href="https://www.tenity.com" target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex h-12 items-center">
+                <img src={tenityLogoWhite} alt="Tenity" className="h-8 w-auto" />
+              </a>
+              <p className="mt-4 text-sm leading-relaxed text-white/70">Global fintech innovation platform running the morning Demo Day with investors at 80RR Fintech Hub.</p>
             </div>
           </div>
         </div>
@@ -470,7 +370,7 @@ function Landing() {
             <img src={kakaobankLogo} alt="KakaoBank" className="h-6 w-auto" />
           </div>
           <div>
-            <a href={`mailto:${ORGANIZER_EMAIL}`} className="font-semibold text-primary hover:underline">{ORGANIZER_EMAIL}</a>
+            <a href={`mailto:${ORGANIZER_EMAIL}`} className="font-semibold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">{ORGANIZER_EMAIL}</a>
           </div>
           <div className="w-full border-t border-border pt-6 text-xs">
             © {EVENT_NAME}. {CREDITS}.

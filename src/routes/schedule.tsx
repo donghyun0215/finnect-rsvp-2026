@@ -113,7 +113,7 @@ function SchedulePage() {
   const track = TRACK_META.find((t) => t.id === trackId)!;
 
   return (
-    <div className="min-h-screen bg-secondary/40">
+    <div className="fn-square min-h-screen bg-secondary/40">
       {/* Nav — logo only, deliberately no site links (unlisted page) */}
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">

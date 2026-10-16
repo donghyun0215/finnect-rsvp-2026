@@ -1,8 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Wordmark } from "@/components/Wordmark";
-import { getCompanyBySlug, TRACKS } from "@/data/companies";
+import { getCompanyBySlug } from "@/data/companies";
 import { EVENT_DATE, EVENT_VENUE, ONE_ON_ONE_OPEN, MEETUP_DATE, EVENT_NAME, CREDITS } from "@/data/timeslots";
 import { STARTUP_LOGOS } from "@/data/companyImages";
+import { Pair, PAIRS } from "@/components/Pair";
 
 export const Route = createFileRoute("/companies/$slug")({
   component: CompanyOnePager,
@@ -23,280 +24,168 @@ export const Route = createFileRoute("/companies/$slug")({
     <div className="flex min-h-screen items-center justify-center bg-background px-4 text-center">
       <div>
         <h1 className="text-3xl font-bold text-navy">Company not found</h1>
-        <Link to="/" className="mt-4 inline-block text-primary hover:underline">
-          ← Back to all startups
+        <Link to="/" hash="startups" className="btn-node-dark mt-6">
+          All startups
         </Link>
       </div>
     </div>
   ),
 });
 
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">{children}</div>
-  );
-}
-
-function Bullets({ items, compact = false }: { items: string[]; compact?: boolean }) {
-  return (
-    <ul className={compact ? "mt-2.5 space-y-1.5" : "mt-3 space-y-2"}>
-      {items.map((item, i) => (
-        <li key={i} className="flex gap-2.5 text-[13px] leading-relaxed text-foreground/85">
-          <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full bg-primary" />
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-// Empty sections are skipped: profiles fill in as one-pagers arrive.
-function InfoCard({ title, items }: { title: string; items: string[] }) {
+// Profile as a spec sheet: one ruled row per section, label left, points
+// right. Empty sections are skipped: profiles fill in as one-pagers arrive.
+function Row({ title, items }: { title: string; items: string[] }) {
   if (!items.length) return null;
   return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-      <Eyebrow>{title}</Eyebrow>
-      <Bullets items={items} compact />
+    <div className="grid gap-3 border-t border-navy/15 py-6 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-10">
+      <h2 className="text-sm font-bold text-navy">{title}</h2>
+      <ul className="space-y-2">
+        {items.map((item, i) => (
+          <li key={i} className="flex gap-3 text-[15px] leading-relaxed text-navy/85">
+            <span aria-hidden className="mt-[0.6rem] h-1.5 w-1.5 shrink-0 bg-navy" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 function CompanyOnePager() {
   const company = Route.useLoaderData();
-  const track = TRACKS[company.track];
   const logo = STARTUP_LOGOS[company.slug];
-  const meetTarget = "/book" as const;
   const onePager = company.onepager ?? null;
   const irDeck = company.irdeck ?? null;
   // Only cohort companies take 1:1 bookings.
   const hasMeetups = ONE_ON_ONE_OPEN && company.track === "track1";
-  const bookLabel = hasMeetups ? "Book a 1:1 Meeting" : "RSVP for Demo Day";
+  const bookLabel = hasMeetups ? "Book a 1:1 meeting" : "RSVP for the Demo Day";
   const bookSearch = hasMeetups ? { day: "5" as const, company: company.slug } : { day: "7" as const };
+  const pair = PAIRS[company.slug];
+  const site = company.website?.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   return (
     <div className="min-h-screen bg-background">
-      {/* NAV */}
-      <header className="sticky top-0 z-30 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
+      <section className="bg-navy text-white">
+        <header className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center">
-            <Wordmark compact />
+            <Wordmark light compact />
           </Link>
-          <nav className="flex shrink-0 items-center">
-            <Link
-              to="/"
-              hash="startups"
-              className="rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-navy transition hover:bg-muted sm:px-4 sm:py-2 sm:text-sm"
-            >
-              All startups
-            </Link>
-          </nav>
-        </div>
-      </header>
+          <Link to="/" hash="startups" className="nav-link shrink-0 text-sm font-semibold">
+            All startups
+          </Link>
+        </header>
 
-      {/* COMPACT HERO */}
-      <section className="relative isolate overflow-hidden bg-hero-gradient text-primary-foreground">
-        <div
-          className="absolute inset-0 -z-10 opacity-25"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 15% 20%, color-mix(in oklab, var(--primary-glow) 50%, transparent), transparent 45%), radial-gradient(circle at 85% 80%, color-mix(in oklab, var(--primary) 60%, transparent), transparent 45%)",
-          }}
-        />
-        <div className="mx-auto max-w-6xl px-5 pb-14 pt-7 sm:px-6 md:pb-16 md:pt-8">
-          <div className="text-[11px] font-medium text-primary-foreground/75">
-            {track.title} · {track.dates}
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <div className="mx-auto max-w-6xl px-4 pb-12 pt-8 sm:px-6 md:pb-16 md:pt-12">
+          <div className="grid gap-8 md:grid-cols-[auto_minmax(0,1fr)] md:items-center md:gap-10">
             {logo && (
-              <div className="inline-flex items-center rounded-lg bg-white px-4 py-2.5 shadow-elegant">
-                <img src={logo} alt={`${company.name} logo`} className="h-7 w-auto object-contain sm:h-8" />
+              <div className="flex h-24 w-full max-w-[15rem] items-center justify-center rounded-[3px] bg-white px-6 shadow-[6px_6px_0_0_#ffe300] md:h-32 md:w-60">
+                <img src={logo} alt={`${company.name} logo`} className="max-h-14 max-w-full object-contain md:max-h-[4.5rem]" />
               </div>
             )}
-            <h1 className="bg-gradient-to-r from-white to-light-blue bg-clip-text text-3xl font-bold leading-[1.05] text-transparent sm:text-4xl">
-              {company.displayName}
-            </h1>
-            <span className="hidden items-center gap-2 text-xs font-medium md:flex">
-              <span className="rounded-full bg-primary-foreground/15 px-3 py-1">{company.sector}</span>
-              <span className="rounded-full bg-primary-foreground/15 px-3 py-1">{company.stage}</span>
-            </span>
+            <div className="min-w-0">
+              <p className="text-sm text-white/55">{company.sector} · {company.stage}</p>
+              <h1 className="mt-2 text-4xl font-extrabold tracking-tight md:text-6xl">{company.displayName}</h1>
+              {pair && <p className="mt-4 text-base md:text-lg"><Pair who={pair[0]} what={pair[1]} dark /></p>}
+            </div>
           </div>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-primary-foreground/90 sm:text-base">
-            {company.tagline}
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            <Link
-              to={meetTarget}
-              search={bookSearch}
-              className="btn-hero inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold"
-            >
-              {bookLabel}
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </Link>
+          <p className="mt-8 max-w-3xl text-[1.0625rem] leading-relaxed text-white/80">{company.tagline}</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/book" search={bookSearch} className="btn-node">{bookLabel}</Link>
             {onePager && (
-              <a
-                href={onePager}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline-hero inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold"
-              >
-                ⬇ One-Pager (PDF)
-              </a>
+              <a href={onePager} target="_blank" rel="noopener noreferrer" className="btn-node-ghost">One-pager (PDF)</a>
             )}
             {irDeck && (
-              <a
-                href={irDeck}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline-hero inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold"
-              >
-                ⬇ IR Deck (PDF)
-              </a>
-            )}
-            {!onePager && !irDeck && (
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 px-5 py-2.5 text-sm font-semibold text-primary-foreground/70">
-                One-pager coming soon
-              </span>
+              <a href={irDeck} target="_blank" rel="noopener noreferrer" className="btn-node-ghost">IR deck (PDF)</a>
             )}
             {company.website && (
-              <a
-                href={company.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-outline-hero inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold"
-              >
-                Website ↗
-              </a>
+              <a href={company.website} target="_blank" rel="noopener noreferrer" className="btn-node-ghost">Website</a>
             )}
           </div>
+          {!onePager && !irDeck && <p className="mt-4 text-sm text-white/50">The one-pager will be posted here soon.</p>}
         </div>
-        <svg
-          className="absolute bottom-0 left-0 right-0 h-8 w-full text-background"
-          viewBox="0 0 1440 40"
-          preserveAspectRatio="none"
-          fill="currentColor"
-        >
-          <path d="M0 20 Q 360 40 720 20 T 1440 20 L1440 40 L0 40 Z" />
-        </svg>
+        <div aria-hidden className="h-2 bg-brand-band" />
       </section>
 
-      {/* DENSE CONTENT GRID */}
-      <section className="mx-auto max-w-6xl px-5 py-8 sm:px-6 md:py-10">
-        <div className="grid gap-4 md:grid-cols-3">
-          <InfoCard title="Problem" items={company.problem} />
-          <InfoCard title="Solution" items={company.solution} />
-          <InfoCard title="Key Features" items={company.keyFeatures} />
-          <InfoCard title="Target Audience" items={company.targetAudience} />
-          <InfoCard title="Business Model" items={company.businessModel} />
-          <InfoCard title="Seeking in Singapore" items={company.seekingOpportunities} />
-        </div>
+      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 md:py-14">
+        <Row title="Problem" items={company.problem} />
+        <Row title="Solution" items={company.solution} />
+        <Row title="Key features" items={company.keyFeatures} />
+        <Row title="Who it's for" items={company.targetAudience} />
+        <Row title="Business model" items={company.businessModel} />
+        <Row title="Looking for in Singapore" items={company.seekingOpportunities} />
+        <div className="border-t border-navy/15" />
       </section>
 
-      {/* SNAPSHOT — compact dark band */}
       {company.businessSnapshot.length > 0 && (
-      <section className="bg-hero-gradient text-primary-foreground">
-        <div className="mx-auto max-w-6xl px-5 py-8 sm:px-6 md:py-10">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary-foreground/80">
-            Business Snapshot — Traction & Milestones
+        <section className="bg-navy text-white">
+          <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-14">
+            <h2 className="text-2xl font-bold">Traction</h2>
+            <ul className="mt-6 grid gap-x-10 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+              {company.businessSnapshot.map((item, i) => (
+                <li key={i} className="flex gap-3 text-[15px] leading-relaxed text-white/85">
+                  <span aria-hidden className="mt-[0.45rem] h-2.5 w-2.5 shrink-0 bg-yellow" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {company.businessSnapshot.map((item, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-primary-foreground/20 bg-primary-foreground/10 p-3.5 text-[13px] leading-relaxed backdrop-blur-sm"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
       )}
 
-      {/* TEAM + CONTACT */}
-      <section className="mx-auto max-w-6xl px-5 py-8 sm:px-6 md:py-10">
+      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-14">
         {company.team.length > 0 && (
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <Eyebrow>Team</Eyebrow>
-            <h2 className="mt-1 text-xl font-bold text-navy">Who You'll Meet</h2>
-          </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px] text-foreground/85">
-            {company.website && (
-              <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                {company.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-              </a>
-            )}
-            {company.email && (
-              <a href={`mailto:${company.email}`} className="hover:underline">
-                {company.email}
-              </a>
-            )}
-            {company.phone && <span>{company.phone}</span>}
-          </div>
-        </div>
+          <>
+            <h2 className="text-2xl font-bold text-navy">Who you'll meet</h2>
+            <ul className="mt-6 grid gap-x-10 border-t border-navy/15 sm:grid-cols-2 lg:grid-cols-3">
+              {company.team.map((member) => (
+                <li key={member.name} className="border-b border-navy/15 py-5">
+                  <div className="flex items-center gap-3">
+                    <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] bg-yellow text-sm font-bold text-navy">
+                      {member.name.split(" ").slice(0, 2).map((w) => w[0]).join("")}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate font-bold text-navy">{member.name}</div>
+                      <div className="text-sm text-[#6d6d6d]">{member.role}</div>
+                    </div>
+                  </div>
+                  {member.bio.length > 0 && (
+                    <ul className="mt-3 space-y-1">
+                      {member.bio.map((line, i) => (
+                        <li key={i} className="text-[13px] leading-relaxed text-[#6d6d6d]">{line}</li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </>
         )}
-        {company.team.length > 0 && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {company.team.map((member) => (
-            <div key={member.name} className="card-startup rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
-                  {member.name
-                    .split(" ")
-                    .slice(0, 2)
-                    .map((w) => w[0])
-                    .join("")}
-                </div>
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-bold text-navy">{member.name}</div>
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-primary">{member.role}</div>
-                </div>
-              </div>
-              <ul className="mt-2.5 space-y-1">
-                {member.bio.map((line, i) => (
-                  <li key={i} className="text-[11px] leading-relaxed text-muted-foreground">
-                    {line}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
+        {(site || company.email || company.phone) && (
+          <p className="mt-6 flex flex-wrap gap-x-6 gap-y-1 text-sm text-navy">
+            {site && <a href={company.website} target="_blank" rel="noopener noreferrer" className="underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">{site}</a>}
+            {company.email && <a href={`mailto:${company.email}`} className="underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">{company.email}</a>}
+            {company.phone && <span>{company.phone}</span>}
+          </p>
         )}
 
-        {/* INLINE CTA + FOOTER */}
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card px-6 py-5 shadow-sm">
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-5 bg-secondary px-6 py-6">
           <div>
-            <div className="text-base font-bold text-navy">Meet {company.name} in Singapore</div>
-            <div className="text-xs text-muted-foreground">
-              Private 1:1 · {ONE_ON_ONE_OPEN ? MEETUP_DATE : `Showcase · ${EVENT_DATE} · ${EVENT_VENUE}`}
+            <div className="text-lg font-bold text-navy">Meet {company.name} in Singapore</div>
+            <div className="mt-0.5 text-sm text-[#6d6d6d]">
+              {hasMeetups ? `Private 1:1 meeting · ${MEETUP_DATE}` : `Demo Day · ${EVENT_DATE} · ${EVENT_VENUE}`}
             </div>
           </div>
           <div className="flex flex-wrap gap-2.5">
-            <Link
-              to={meetTarget}
-              search={bookSearch}
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-            >
-              {bookLabel}
-            </Link>
-            <Link
-              to="/"
-              hash="startups"
-              className="inline-flex items-center gap-2 rounded-full border border-primary bg-background px-5 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
-            >
-              ← All Startups
-            </Link>
+            <Link to="/book" search={bookSearch} className="btn-node-dark">{bookLabel}</Link>
+            <Link to="/" hash="startups" className="btn-node-line">All startups</Link>
           </div>
         </div>
       </section>
 
       <footer className="border-t border-border bg-background">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 sm:px-6">
           <Wordmark />
-          <div className="text-xs text-muted-foreground">© {EVENT_NAME} · {CREDITS}</div>
+          <div className="text-xs text-muted-foreground">© {EVENT_NAME}. {CREDITS}.</div>
         </div>
       </footer>
     </div>
