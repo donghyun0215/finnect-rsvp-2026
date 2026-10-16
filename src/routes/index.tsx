@@ -148,36 +148,126 @@ function NodeBoard() {
 
 // One shared clock for the day: 08:30–17:30, both sessions placed to scale.
 const DAY_START = 8.5, DAY_END = 17.5;
-const pct = (hhmm: string) => {
+const toH = (hhmm: string) => {
   const [h, m] = hhmm.split(":").map(Number);
-  return ((h + m / 60 - DAY_START) / (DAY_END - DAY_START)) * 100;
+  return h + m / 60;
 };
+const pct = (hhmm: string) => ((toH(hhmm) - DAY_START) / (DAY_END - DAY_START)) * 100;
+const span = (range: string) => range.split("–").map((v) => toH(v.trim())) as [number, number];
+const within = (h: number | null, range: string) => {
+  if (h === null) return false;
+  const [a, b] = span(range);
+  return h >= a && h < b;
+};
+const fmt = (h: number) => `${String(Math.floor(h)).padStart(2, "0")}:${String(Math.round((h % 1) * 60)).padStart(2, "0")}`;
 
-function DayRuler() {
+// What is happening at hour h, in the words of the agenda.
+function whatsOn(h: number): [where: "am" | "pm" | null, what: string] {
+  for (const [t, item] of DEMO_AGENDA) if (within(h, t)) return ["am", item];
+  const first = span(TIMESLOTS[0].time)[0];
+  if (h < 9) return [null, "Doors open at 80RR Fintech Hub"];
+  if (h < first) return [null, "Lunch and networking"];
+  for (const t of TIMESLOTS) if (within(h, t.time)) return ["pm", `${t.label}: 1:1 with a startup of your choice`];
+  if (h < span(TIMESLOTS[TIMESLOTS.length - 1].time)[1]) return ["pm", "Short break between rounds"];
+  return [null, "That's a wrap"];
+}
+
+function DayRuler({ at, onScrub }: { at: number | null; onScrub: (h: number | null) => void }) {
   const ticks = ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+  const f = at === null ? 0 : ((at - DAY_START) / (DAY_END - DAY_START)) * 100;
+  const what = at === null ? null : whatsOn(at)[1];
   return (
-    <div aria-hidden className="relative hidden h-20 md:block">
-      <div className="absolute inset-x-0 top-9 h-[6px] bg-brand-band" />
-      {ticks.map((t) => (
-        <span key={t} className="absolute top-0 -translate-x-1/2 text-[11px] tabular-nums text-[#6d6d6d]" style={{ left: `${pct(t)}%` }}>
+    <div
+      aria-hidden
+      data-reveal="ruler"
+      className="ruler relative hidden h-24 cursor-crosshair select-none md:block"
+      onMouseMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+        const h = DAY_START + x * (DAY_END - DAY_START);
+        onScrub(Math.round(h * 12) / 12); // snap to 5 minutes
+      }}
+      onMouseLeave={() => onScrub(null)}
+    >
+      <div className="ruler-band absolute inset-x-0 top-9 h-[6px] bg-brand-band" />
+      {ticks.map((t, i) => (
+        <span key={t} className="ruler-tick absolute top-0 -translate-x-1/2 text-[11px] tabular-nums text-[#6d6d6d]" style={{ left: `${pct(t)}%`, "--d": `${i * 60}ms` } as CSSProperties}>
           {t}
           <span className="mx-auto mt-[22px] block h-3 w-px bg-navy/20" />
         </span>
       ))}
-      {/* the two sessions as solid spans on the ruler */}
-      <span className="absolute top-[30px] flex h-5 items-center bg-navy px-2 text-[11px] font-semibold text-white" style={{ left: `${pct("09:00")}%`, width: `${pct("12:30") - pct("09:00")}%` }}>Demo Day</span>
-      <span className="absolute top-[56px] text-[11px] text-[#6d6d6d]" style={{ left: `${pct("12:30")}%` }}>Lunch and networking</span>
-      {TIMESLOTS.map((t) => {
+      <span className="ruler-seg absolute top-[30px] flex h-5 items-center bg-navy px-2 text-[11px] font-semibold text-white" style={{ left: `${pct("09:00")}%`, width: `${pct("12:30") - pct("09:00")}%`, "--d": "350ms" } as CSSProperties}>Demo Day</span>
+      <span className="ruler-tick absolute top-[56px] text-[11px] text-[#6d6d6d]" style={{ left: `${pct("12:30")}%`, "--d": "700ms" } as CSSProperties}>Lunch and networking</span>
+      {TIMESLOTS.map((t, i) => {
         const [a, b] = t.time.split("–").map((v) => v.trim());
-        return <span key={t.id} className="absolute top-[30px] flex h-5 items-center bg-yellow px-2 text-[11px] font-semibold text-navy ring-1 ring-navy/10" style={{ left: `${pct(a)}%`, width: `${pct(b) - pct(a)}%` }}>{t.label}</span>;
+        return <span key={t.id} className="ruler-seg absolute top-[30px] flex h-5 items-center bg-yellow px-2 text-[11px] font-semibold text-navy ring-1 ring-navy/10" style={{ left: `${pct(a)}%`, width: `${pct(b) - pct(a)}%`, "--d": `${800 + i * 140}ms` } as CSSProperties}>{t.label}</span>;
       })}
+      {at !== null && (
+        <span className="pointer-events-none absolute top-[22px] bottom-0 w-px bg-navy" style={{ left: `${f}%` }}>
+          <span className={`absolute top-[52px] whitespace-nowrap rounded-[3px] bg-navy px-2.5 py-1.5 text-xs text-white shadow-[3px_3px_0_0_#ffe300] ${f > 70 ? "right-2" : "left-2"}`}>
+            <b className="tabular-nums text-yellow">{fmt(at)}</b> <span className="ml-1">{what}</span>
+          </span>
+        </span>
+      )}
     </div>
   );
 }
 
+// Scroll choreography: elements marked data-reveal play once as they enter.
+// A thin brand-gradient bar tracks progress down the page; the hero board
+// drifts against the scroll. Skipped entirely under reduced motion.
+function useScrollMotion() {
+  useEffect(() => {
+    const bar = document.getElementById("scroll-progress");
+    const board = document.getElementById("hero-board");
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let io: IntersectionObserver | undefined;
+    if (!still) {
+      document.documentElement.classList.add("reveal-on");
+      io = new IntersectionObserver(
+        (entries) => {
+          let n = 0; // things entering together play one after another
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            (e.target as HTMLElement).style.setProperty("--stagger", `${n++ * 110}ms`);
+            e.target.classList.add("is-in");
+            io?.unobserve(e.target);
+          }
+        },
+        { rootMargin: "0px 0px -10% 0px", threshold: 0.12 },
+      );
+      document.querySelectorAll("[data-reveal]").forEach((el) => io!.observe(el));
+    }
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        if (bar) bar.style.transform = `scaleX(${max > 0 ? y / max : 0})`;
+        if (board && !still) board.style.transform = `translate3d(0, ${Math.min(y, 900) * -0.14}px, 0)`;
+      });
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      io?.disconnect();
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      document.documentElement.classList.remove("reveal-on");
+    };
+  }, []);
+}
+
 function Landing() {
+  useScrollMotion();
+  const [at, setAt] = useState<number | null>(null);
+  const hot = at === null ? null : whatsOn(at)[0];
   return (
     <div className="min-h-screen">
+      <div aria-hidden className="fixed inset-x-0 top-0 z-50 h-[3px]">
+        <div id="scroll-progress" className="h-full origin-left scale-x-0 bg-brand-band" />
+      </div>
       {/* HERO — black ground of the KV cover; the startups as nodes */}
       <section id="top" className="relative isolate overflow-hidden bg-navy text-white">
         <header className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between">
@@ -216,7 +306,9 @@ function Landing() {
             </div>
           </div>
           <div className="hero-in flex justify-center [--i:2] lg:justify-end">
-            <NodeBoard />
+            <div id="hero-board" className="flex w-full justify-center will-change-transform lg:justify-end">
+              <NodeBoard />
+            </div>
           </div>
         </div>
         <div aria-hidden className="h-2 bg-brand-band" />
@@ -225,45 +317,49 @@ function Landing() {
       {/* THE DAY — one ruler, two sessions */}
       <section id="rsvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">{EVENT_DATE.replace(" 2026", "")}</h2>
-          <p className="max-w-sm text-[15px] text-[#6d6d6d]">Come for the morning, the afternoon or both. Each needs its own RSVP.</p>
+          <h2 data-reveal="wipe" className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">{EVENT_DATE.replace(" 2026", "")}</h2>
+          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for the morning, the afternoon or both. Each needs its own RSVP.</p>
         </div>
 
-        <div className="mt-12"><DayRuler /></div>
+        <div className="mt-12"><DayRuler at={at} onScrub={setAt} /></div>
 
         <div className="mt-4 grid gap-10 md:mt-8 md:grid-cols-2 md:gap-14">
-          <article className="border-t-4 border-navy pt-6">
+          <article data-reveal="session" data-hot={hot === "am" || undefined} className="session flex flex-col pt-6 [--bar:var(--navy)]">
             <p className="text-sm font-semibold text-[#6d6d6d]">Morning, with Tenity</p>
             <h3 className="mt-1 text-2xl font-bold text-navy">Demo Day <span className="tabular-nums text-[#6d6d6d]">{EVENT_TIME}</span></h3>
             <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
-              {DEMO_AGENDA.map(([t, item]) => (
-                <li key={t} className="grid grid-cols-[7.5rem_1fr] gap-3 py-2.5 text-sm">
+              {DEMO_AGENDA.map(([t, item], i) => (
+                <li key={t} className={`agenda-row grid grid-cols-[7.5rem_1fr] gap-3 py-2.5 text-sm ${within(at, t) ? "is-now" : ""}`} style={{ "--i": i } as CSSProperties}>
                   <span className="tabular-nums text-[#6d6d6d]">{t}</span>
                   <span className="text-navy">{item}</span>
                 </li>
               ))}
             </ol>
-            <div className="mt-5"><Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} /></div>
-            <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">RSVP for the Demo Day</Link>
+            <div className="mt-auto pt-5">
+              <Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} />
+              <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">RSVP for the Demo Day</Link>
+            </div>
           </article>
 
-          <article className="border-t-4 border-yellow pt-6">
+          <article data-reveal="session" data-hot={hot === "pm" || undefined} className="session flex flex-col pt-6 [--bar:var(--yellow)] [--d:150ms]">
             <p className="text-sm font-semibold text-[#6d6d6d]">Afternoon</p>
             <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="tabular-nums text-[#6d6d6d]">{MEETUP_TIME}</span></h3>
             <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
-              {TIMESLOTS.map((t) => (
-                <li key={t.id} className="grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2.5 text-sm">
+              {TIMESLOTS.map((t, i) => (
+                <li key={t.id} className={`agenda-row grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2.5 text-sm ${within(at, t.time) ? "is-now" : ""}`} style={{ "--i": i } as CSSProperties}>
                   <span className="tabular-nums text-[#6d6d6d]">{t.time}</span>
                   <span className="flex items-center gap-2 text-navy"><span aria-hidden className="h-2.5 w-2.5 bg-yellow ring-1 ring-navy/15" />{t.label}: a startup of your choice</span>
                 </li>
               ))}
             </ol>
-            <div className="mt-5"><Place venue={MEETUP_VENUE} address={MEETUP_ADDRESS} map={MEETUP_MAP_URL} /></div>
-            {ONE_ON_ONE_OPEN ? (
-              <Link to="/book" search={{ day: "5" }} className="btn-node-dark mt-7">Book a 1:1 meeting</Link>
-            ) : (
-              <p className="mt-7 text-sm text-[#6d6d6d]">Booking opens soon.</p>
-            )}
+            <div className="mt-auto pt-5">
+              <Place venue={MEETUP_VENUE} address={MEETUP_ADDRESS} map={MEETUP_MAP_URL} />
+              {ONE_ON_ONE_OPEN ? (
+                <Link to="/book" search={{ day: "5" }} className="btn-node-dark mt-7">Book a 1:1 meeting</Link>
+              ) : (
+                <p className="mt-7 text-sm text-[#6d6d6d]">Booking opens soon.</p>
+              )}
+            </div>
           </article>
         </div>
       </section>
@@ -272,22 +368,22 @@ function Landing() {
       <section id="startups" className="bg-secondary">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="text-3xl font-bold text-navy md:text-[2.6rem]">The startups</h2>
+            <h2 data-reveal="wipe" className="text-3xl font-bold text-navy md:text-[2.6rem]">The startups</h2>
             <NodePattern name="connect" className="hidden h-10 w-10 text-yellow sm:block" />
           </div>
           <ul className="mt-10 border-t border-navy/15">
             {companies.map((c) => {
               const [who, what] = PAIRS[c.slug] ?? ["", c.sector];
               return (
-                <li key={c.slug} className="startup-row group grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-4 border-b border-navy/15 py-6 md:grid-cols-[11rem_minmax(0,1fr)_auto] md:items-center md:gap-8">
-                  <Link to="/companies/$slug" params={{ slug: c.slug }} className="flex h-14 w-full items-center justify-center self-start rounded-[3px] bg-white px-2.5 md:h-16 md:w-40 md:self-auto md:px-4 shadow-[0_1px_0_rgb(30_30_30/0.06)]" aria-label={c.name}>
+                <li key={c.slug} data-reveal="row" className="startup-row group grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-4 gap-y-4 border-b border-navy/15 py-6 md:grid-cols-[11rem_minmax(0,1fr)_auto] md:items-center md:gap-8">
+                  <Link to="/companies/$slug" params={{ slug: c.slug }} className="logo-tile flex h-14 w-full items-center justify-center self-start rounded-[3px] bg-white px-2.5 md:h-16 md:w-40 md:self-auto md:px-4 shadow-[0_1px_0_rgb(30_30_30/0.06)]" aria-label={c.name}>
                     {STARTUP_LOGOS[c.slug] ? (
                       <img src={STARTUP_LOGOS[c.slug]} alt="" className={`${SQUARE_MARKS.has(c.slug) ? "max-h-12" : "max-h-9"} max-w-full object-contain`} />
                     ) : (
                       <span className="text-lg font-bold text-navy">{c.name}</span>
                     )}
                   </Link>
-                  <div className="min-w-0">
+                  <div className="row-body min-w-0">
                     <div className="flex flex-wrap items-baseline gap-x-3">
                       <Link to="/companies/$slug" params={{ slug: c.slug }} className="text-xl font-bold text-navy hover:underline">{c.name}</Link>
                       <span className="text-xs text-[#6d6d6d]">{c.sector}</span>
@@ -295,7 +391,7 @@ function Landing() {
                     <p className="mt-1.5 text-[15px] leading-snug"><Pair who={who} what={what} /></p>
                     <p className="mt-1.5 line-clamp-2 max-w-3xl text-sm leading-relaxed text-[#6d6d6d]">{c.tagline}</p>
                   </div>
-                  <div className="col-span-2 flex gap-2 md:col-span-1 md:flex-col md:items-stretch">
+                  <div className="row-actions col-span-2 flex gap-2 md:col-span-1 md:flex-col md:items-stretch">
                     <Link to="/companies/$slug" params={{ slug: c.slug }} className="btn-node-line">View profile</Link>
                     {ONE_ON_ONE_OPEN && (
                       <Link to="/book" search={{ day: "5", company: c.slug }} className="btn-node-dark">Book a 1:1</Link>
@@ -330,13 +426,13 @@ function Landing() {
       {/* ABOUT — host, sponsor, Demo Day partner */}
       <section id="about" className="relative isolate overflow-hidden bg-navy text-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
-          <h2 className="max-w-2xl text-2xl font-bold md:text-3xl">About FIN:NECT Global</h2>
-          <p className="mt-4 max-w-2xl leading-relaxed text-white/75">
+          <h2 data-reveal="wipe" className="max-w-2xl text-2xl font-bold md:text-3xl">About FIN:NECT Global</h2>
+          <p data-reveal="rise" className="mt-4 max-w-2xl leading-relaxed text-white/75 [--d:300ms]">
             A Korea Fintech Support Center programme that helps Korean fintech companies preparing for Singapore and
             global markets find local partners and investment. The cohort spends 17–21 November in Singapore during
             Singapore FinTech Festival week, with the Demo Day, 1:1 business meetings and visits to fintech institutions.
           </p>
-          <div className="mt-12 grid gap-10 border-t border-white/15 pt-10 md:grid-cols-3">
+          <div data-reveal="stagger" className="mt-12 grid gap-10 border-t border-white/15 pt-10 md:grid-cols-3">
             <div>
               <p className="text-sm text-white/50">Hosted by</p>
               <a href={FCK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex h-12 items-center">
