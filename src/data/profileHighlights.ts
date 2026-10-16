@@ -35,7 +35,7 @@ export const HIGHLIGHTS: Record<string, Highlight> = {
     stats: [
       ["1st", "OpenAI SF 2024 and K-Startup Grand Challenge"],
       ["Top 8", "Global Shell StartUp Engine 2024"],
-      ["4", "regimes filed: IMO DCS, CII, EU MRV, FuelEU"],
+      ["4", "regimes covered: IMO DCS, CII, EU MRV, FuelEU"],
     ],
     problem: "Emissions data starts as hand-typed emails and ends as a year-end scramble.",
     fix: "Crews CC MarinaChain on their Noon Reports, and AI prepares the compliance filings.",
@@ -44,16 +44,16 @@ export const HIGHLIGHTS: Record<string, Highlight> = {
   bigtechplus: {
     stats: [
       ["KRW 7.77B", "2025 revenue (about USD 5.5M)"],
-      ["10", "banks, insurers and platforms live, incl. KakaoBank"],
+      ["10", "financial groups and platforms live, incl. KakaoBank"],
       ["KRW 5.7B", "Series A, 2025"],
     ],
-    problem: "Korea's largest household asset is still checked by hand from paper registers.",
+    problem: "Korea's largest household asset is still checked by hand from official registers.",
     fix: "Property data APIs that let banks verify rights and value inside the loan flow.",
     asks: ["Banks, lenders and insurers", "Proptech and real estate platforms", "Strategic investors and data partners"],
   },
   sionic: {
     stats: [
-      ["3", "markets live: Korea, Japan, Thailand"],
+      ["3", "markets: Korea, Japan and a delivery in Thailand"],
       ["5+", "partner-led contracts in Japan in year one"],
       ["4", "platform languages, incl. Japanese and Thai"],
     ],
@@ -73,8 +73,8 @@ export const HIGHLIGHTS: Record<string, Highlight> = {
   },
   canopy: {
     stats: [
-      ["30,000+", "users across 50+ enterprise clients"],
-      ["40x", "growth in advances in 1H 2026"],
+      ["30,000+", "users, plus 50+ enterprise clients"],
+      ["40x", "growth in cumulative advances, 1H 2026"],
       ["83%", "user retention"],
     ],
     problem: "Value is earned every day, but wages arrive once a month.",
