@@ -7,10 +7,13 @@ import fckLogoWhite from "@/assets/logos/fintech-center-korea-white.png";
 import kakaobankLogo from "@/assets/logos/kakaobank.png";
 import kakaobankLogoWhite from "@/assets/logos/kakaobank-white.png";
 import tenityLogoWhite from "@/assets/logos/tenity-white.png";
+import myscLogoWhite from "@/assets/logos/mysc-white.png";
+import lodestartLogoWhite from "@/assets/logos/lodestart-white.png";
 import { JUDGES } from "@/data/speakers";
 import { companies } from "@/data/companies";
 import { STARTUP_LOGOS } from "@/data/companyImages";
 import { Pair, PAIRS } from "@/components/Pair";
+import { Sessions } from "@/components/Sessions";
 import { useScrollMotion } from "@/lib/useScrollMotion";
 import {
   EVENT_ADDRESS,
@@ -27,6 +30,7 @@ import {
   MEETUP_TIME,
   MEETUP_VENUE,
   ONE_ON_ONE_OPEN,
+  meetupDay,
 } from "@/data/timeslots";
 
 export const Route = createFileRoute("/")({
@@ -39,10 +43,13 @@ const KAKAOBANK_SITE = "https://www.kakaobank.com";
 
 
 // Logos drawn as a mark with small text under it read tiny at wordmark height.
-const SQUARE_MARKS = new Set(["276holdings", "bigtechplus"]);
+const SQUARE_MARKS = new Set(["276holdings", "bigtechplus", "atones"]);
 
-// The node board: eight startups set on the KV's stair, rising left to right.
-const STAIR: [x: number, y: number][] = [[0, 4], [1, 4], [1, 3], [2, 3], [2, 2], [3, 2], [3, 1], [4, 1]];
+// The node board: the startups set on the KV's stair, rising left to right
+// (one step across, one step up). Sized from the cohort, so 12 → 7 × 6.
+const STAIR: [x: number, y: number][] = companies.map((_, i) => [Math.ceil(i / 2), Math.ceil(companies.length / 2) - 1 - Math.floor(i / 2)]);
+const BOARD_COLS = Math.max(...STAIR.map(([x]) => x)) + 1;
+const BOARD_ROWS = Math.ceil(companies.length / 2);
 
 function ContactOrganizer() {
   const [copied, setCopied] = useState(false);
@@ -91,7 +98,7 @@ function Place({ venue, address, map }: { venue: string; address: string; map: s
 
 
 
-// Hero: the eight startups as nodes on the KV stair. One is "lit" at a time
+// Hero: the startups as nodes on the KV stair. One is "lit" at a time
 // (auto-advancing until the visitor points at one); the readout names it.
 function NodeBoard() {
   const [active, setActive] = useState(0);
@@ -106,9 +113,9 @@ function NodeBoard() {
   const at = new Map(STAIR.map(([x, y], i) => [`${x},${y}`, i]));
   return (
     <div className="w-full max-w-[320px] sm:max-w-[400px] lg:max-w-[460px]" onMouseLeave={() => setHeld(false)}>
-      <div className="board grid grid-cols-5 gap-2.5 sm:gap-3" role="list" aria-label="The eight startups">
-        {Array.from({ length: 25 }, (_, k) => {
-          const x = k % 5, y = Math.floor(k / 5);
+      <div className="board grid gap-2 sm:gap-2.5" style={{ gridTemplateColumns: `repeat(${BOARD_COLS}, minmax(0, 1fr))` }} role="list" aria-label={`The ${companies.length} startups`}>
+        {Array.from({ length: BOARD_COLS * BOARD_ROWS }, (_, k) => {
+          const x = k % BOARD_COLS, y = Math.floor(k / BOARD_COLS);
           const i = at.get(`${x},${y}`);
           if (i === undefined) return <span key={k} aria-hidden className="board-cell" />;
           const c = companies[i];
@@ -131,11 +138,13 @@ function NodeBoard() {
       </div>
       <div className="mt-6 min-h-[7.5rem] border-t border-white/15 pt-5" aria-live="polite">
         <div className="flex items-center gap-4">
-          {STARTUP_LOGOS[lit.slug] && (
-            <span className="inline-flex h-11 w-[8.5rem] shrink-0 items-center justify-center rounded-[3px] bg-white px-3">
+          <span className="inline-flex h-11 w-[8.5rem] shrink-0 items-center justify-center rounded-[3px] bg-white px-3">
+            {STARTUP_LOGOS[lit.slug] ? (
               <img src={STARTUP_LOGOS[lit.slug]} alt="" className={`${SQUARE_MARKS.has(lit.slug) ? "max-h-10" : "max-h-7"} max-w-full object-contain`} />
-            </span>
-          )}
+            ) : (
+              <span className="text-sm font-extrabold tracking-tight text-navy">{lit.name}</span>
+            )}
+          </span>
           <div className="min-w-0">
             <div className="text-lg font-bold text-white">{lit.name}</div>
             <div className="text-xs text-white/50">{lit.sector}</div>
@@ -146,6 +155,10 @@ function NodeBoard() {
     </div>
   );
 }
+
+// The ruler and the Thursday card show Thursday's rounds; Friday has its own card.
+const THU_SLOTS = TIMESLOTS.filter((t) => t.day === "thu");
+const FRI_SLOTS = TIMESLOTS.filter((t) => t.day === "fri");
 
 // One shared clock for the day: 08:30–17:30, both sessions placed to scale.
 const DAY_START = 8.5, DAY_END = 17.5;
@@ -165,11 +178,11 @@ const fmt = (h: number) => `${String(Math.floor(h)).padStart(2, "0")}:${String(M
 // What is happening at hour h, in the words of the agenda.
 function whatsOn(h: number): [where: "am" | "pm" | null, what: string] {
   for (const [t, item] of DEMO_AGENDA) if (within(h, t)) return ["am", item];
-  const first = span(TIMESLOTS[0].time)[0];
+  const first = span(THU_SLOTS[0].time)[0];
   if (h < 9) return [null, "Doors open at 80RR Fintech Hub"];
   if (h < first) return [null, "Lunch and networking"];
-  for (const t of TIMESLOTS) if (within(h, t.time)) return ["pm", `${t.label}: 1:1 with a startup of your choice`];
-  if (h < span(TIMESLOTS[TIMESLOTS.length - 1].time)[1]) return ["pm", "Short break between rounds"];
+  for (const t of THU_SLOTS) if (within(h, t.time)) return ["pm", `${t.label}: 1:1 with a startup of your choice`];
+  if (h < span(THU_SLOTS[THU_SLOTS.length - 1].time)[1]) return ["pm", "Short break between rounds"];
   return [null, "That's a wrap"];
 }
 
@@ -199,7 +212,7 @@ function DayRuler({ at, onScrub }: { at: number | null; onScrub: (h: number | nu
       ))}
       <span className="ruler-seg absolute top-[30px] flex h-5 items-center bg-navy px-2 text-[11px] font-semibold text-white" style={{ left: `${pct("09:00")}%`, width: `${pct("12:30") - pct("09:00")}%`, "--d": "350ms" } as CSSProperties}>Demo Day</span>
       <span className="ruler-tick absolute top-[56px] text-[11px] text-[#6d6d6d]" style={{ left: `${pct("12:30")}%`, "--d": "700ms" } as CSSProperties}>Lunch and networking</span>
-      {TIMESLOTS.map((t, i) => {
+      {THU_SLOTS.map((t, i) => {
         const [a, b] = t.time.split("–").map((v) => v.trim());
         return <span key={t.id} className="ruler-seg absolute top-[30px] flex h-5 items-center bg-yellow px-2 text-[11px] font-semibold text-navy ring-1 ring-navy/10" style={{ left: `${pct(a)}%`, width: `${pct(b) - pct(a)}%`, "--d": `${800 + i * 140}ms` } as CSSProperties}>{t.label}</span>;
       })}
@@ -240,18 +253,19 @@ function Landing() {
 
         <div className="mx-auto grid max-w-7xl items-center gap-14 px-4 pb-20 pt-10 sm:px-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-20 lg:pb-28 lg:pt-16">
           <div>
-            <p className="hero-in text-sm text-white/60">{EVENT_DATE} · Singapore FinTech Festival week</p>
-            <h1 className="mt-6" aria-label="FIN:NECT Global Singapore">
+            <p className="hero-in text-sm text-white/60">19–20 November 2026 · Singapore FinTech Festival week</p>
+            <h1 className="mt-6" aria-label="FIN:NECT Global Demoday Singapore 2026">
               <span aria-hidden className="hero-in block [--i:1]">
                 <FinnectLogo className="h-[clamp(2.8rem,8.4vw,5.6rem)] w-auto text-white" />
               </span>
-              <span aria-hidden className="hero-in mt-4 block text-[clamp(2rem,5.4vw,3.6rem)] font-extrabold leading-[1.02] tracking-tight text-white/45 [--i:2]">
-                Global Singapore
+              <span aria-hidden className="hero-in mt-4 block max-w-[13ch] text-[clamp(2rem,5.4vw,3.6rem)] font-extrabold leading-[1.02] tracking-tight text-white/45 [--i:2]">
+                Global Demoday Singapore 2026
               </span>
             </h1>
             <p className="hero-in mt-8 max-w-[34rem] text-[1.0625rem] leading-relaxed text-white/75 [--i:3]">
-              Eight Korean fintechs, selected by the Korea Fintech Support Center and sponsored by KakaoBank. See them
-              pitch in the morning, then meet the ones that fit your business in the afternoon.
+              Twelve Korean fintechs in Singapore with the Korea Fintech Support Center's FIN:NECT programme, sponsored
+              by KakaoBank. See the Demo Day on Thursday morning, then meet the ones that fit your business at a 1:1 on
+              Thursday or Friday afternoon.
             </p>
             <div className="hero-in mt-9 flex flex-wrap gap-3 [--i:4]">
               <Link to="/book" search={{ day: "7" }} className="btn-node">RSVP for the Demo Day</Link>
@@ -273,7 +287,7 @@ function Landing() {
       <section id="rsvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 data-reveal="wipe" className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">{EVENT_DATE.replace(" 2026", "")}</h2>
-          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for the morning, the afternoon or both. Each needs its own RSVP.</p>
+          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for the Demo Day, a 1:1 or both. The Demo Day and the 1:1 meetings each have their own RSVP.</p>
         </div>
 
         <div className="mt-12"><DayRuler at={at} onScrub={setAt} /></div>
@@ -300,7 +314,7 @@ function Landing() {
             <p className="text-sm font-semibold text-[#6d6d6d]">Afternoon</p>
             <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="tabular-nums text-[#6d6d6d]">{MEETUP_TIME}</span></h3>
             <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
-              {TIMESLOTS.map((t, i) => (
+              {THU_SLOTS.map((t, i) => (
                 <li key={t.id} className={`agenda-row grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2.5 text-sm ${within(at, t.time) ? "is-now" : ""}`} style={{ "--i": i } as CSSProperties}>
                   <span className="tabular-nums text-[#6d6d6d]">{t.time}</span>
                   <span className="flex items-center gap-2 text-navy"><span aria-hidden className="h-2.5 w-2.5 bg-yellow ring-1 ring-navy/15" />{t.label}: a startup of your choice</span>
@@ -310,7 +324,39 @@ function Landing() {
             <div className="mt-auto pt-5">
               <Place venue={MEETUP_VENUE} address={MEETUP_ADDRESS} map={MEETUP_MAP_URL} />
               {ONE_ON_ONE_OPEN ? (
-                <Link to="/book" search={{ day: "5" }} className="btn-node-dark mt-7">Book a 1:1 meeting</Link>
+                <Link to="/book" search={{ day: "5", on: "thu" }} className="btn-node-dark mt-7">Book a Thursday 1:1</Link>
+              ) : (
+                <p className="mt-7 text-sm text-[#6d6d6d]">Booking opens soon.</p>
+              )}
+            </div>
+          </article>
+        </div>
+
+        {/* FRIDAY — a second afternoon of 1:1s, set under Thursday's afternoon */}
+        <div className="mt-16 grid gap-10 border-t border-navy/15 pt-12 md:mt-20 md:grid-cols-2 md:gap-14">
+          <div>
+            <h2 data-reveal="wipe" className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">{meetupDay("fri").date.replace(" 2026", "")}</h2>
+            <p data-reveal="rise" className="mt-4 max-w-sm text-[15px] text-[#6d6d6d] [--d:300ms]">
+              A second afternoon of 1:1 meetings, for anyone who can't make Thursday and for two startups who are only
+              meeting guests on Friday.
+            </p>
+          </div>
+          <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--yellow)]">
+            <p className="text-sm font-semibold text-[#6d6d6d]">Afternoon</p>
+            <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="text-[#6d6d6d]">time TBC</span></h3>
+            <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
+              {FRI_SLOTS.map((t, i) => (
+                <li key={t.id} className="agenda-row grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2.5 text-sm" style={{ "--i": i } as CSSProperties}>
+                  <span className="tabular-nums text-[#6d6d6d]">{t.time}</span>
+                  <span className="flex items-center gap-2 text-navy"><span aria-hidden className="h-2.5 w-2.5 bg-yellow ring-1 ring-navy/15" />{t.label}: a startup of your choice</span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-auto pt-5">
+              <p className="text-sm text-[#6d6d6d]">Exact times are being confirmed. Book a round now and we'll email you the time.</p>
+              <div className="mt-3"><Place venue={meetupDay("fri").venue} address={meetupDay("fri").address} map={meetupDay("fri").mapUrl} /></div>
+              {ONE_ON_ONE_OPEN ? (
+                <Link to="/book" search={{ day: "5", on: "fri" }} className="btn-node-dark mt-7">Book a Friday 1:1</Link>
               ) : (
                 <p className="mt-7 text-sm text-[#6d6d6d]">Booking opens soon.</p>
               )}
@@ -345,6 +391,7 @@ function Landing() {
                     </div>
                     <p className="mt-1.5 text-[15px] leading-snug"><Pair who={who} what={what} /></p>
                     <p className="mt-1.5 line-clamp-2 max-w-3xl text-sm leading-relaxed text-[#6d6d6d]">{c.tagline}</p>
+                    <Sessions slug={c.slug} className="mt-3" />
                   </div>
                   <div className="row-actions col-span-2 flex gap-2 md:col-span-1 md:flex-col md:items-stretch">
                     <Link to="/companies/$slug" params={{ slug: c.slug }} className="btn-node-line">View profile</Link>
@@ -378,7 +425,7 @@ function Landing() {
         </section>
       )}
 
-      {/* ABOUT — host, sponsor, Demo Day partner */}
+      {/* ABOUT — host, sponsor, partners */}
       <section id="about" className="relative isolate overflow-hidden bg-navy text-white">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-20">
           <h2 data-reveal="wipe" className="max-w-2xl text-2xl font-bold md:text-3xl">About FIN:NECT Global</h2>
@@ -387,7 +434,7 @@ function Landing() {
             global markets find local partners and investment. The cohort spends 17–21 November in Singapore during
             Singapore FinTech Festival week, with the Demo Day, 1:1 business meetings and visits to fintech institutions.
           </p>
-          <div data-reveal="stagger" className="mt-12 grid gap-10 border-t border-white/15 pt-10 md:grid-cols-3">
+          <div data-reveal="stagger" className="mt-12 grid gap-10 border-t border-white/15 pt-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.35fr)]">
             <div>
               <p className="text-sm text-white/50">Hosted by</p>
               <a href={FCK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex h-12 items-center">
@@ -398,16 +445,18 @@ function Landing() {
             <div>
               <p className="text-sm text-white/50">Sponsored by</p>
               <a href={KAKAOBANK_SITE} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex h-12 items-center">
-                <img src={kakaobankLogoWhite} alt="KakaoBank" className="h-9 w-auto" />
+                <img src={kakaobankLogoWhite} alt="KakaoBank" className="h-8 w-auto" />
               </a>
               <p className="mt-4 text-sm leading-relaxed text-white/70">Korea's leading internet-only bank, sponsoring the FIN:NECT programme.</p>
             </div>
             <div>
-              <p className="text-sm text-white/50">Demo Day partner</p>
-              <a href="https://www.tenity.com" target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex h-12 items-center">
-                <img src={tenityLogoWhite} alt="Tenity" className="h-8 w-auto" />
-              </a>
-              <p className="mt-4 text-sm leading-relaxed text-white/70">Global fintech innovation platform running the morning Demo Day with investors at 80RR Fintech Hub.</p>
+              <p className="text-sm text-white/50">Partners</p>
+              <ul className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <li><a href="https://www.mysc.co.kr" target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center"><img src={myscLogoWhite} alt="MYSC" className="h-[22px] w-auto" /></a></li>
+                <li><a href="https://www.lodestart.ai" target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center"><img src={lodestartLogoWhite} alt="LodestarT" className="h-7 w-auto" /></a></li>
+                <li><a href="https://www.tenity.com" target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center"><img src={tenityLogoWhite} alt="Tenity" className="h-6 w-auto" /></a></li>
+              </ul>
+              <p className="mt-4 text-sm leading-relaxed text-white/70">MYSC runs the FIN:NECT programme, LodestarT the Singapore programme and 1:1 meetings, and Tenity the Demo Day with investors at 80RR Fintech Hub.</p>
             </div>
           </div>
         </div>

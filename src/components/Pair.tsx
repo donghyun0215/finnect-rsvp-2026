@@ -10,6 +10,10 @@ export const PAIRS: Record<string, [who: string, what: string]> = {
   aizen: ["EV riders & lenders", "bankable credit from EV data"],
   canopy: ["Employees", "earned wages on demand"],
   crosshub: ["International visitors", "ID-linked travel payments"],
+  ztosigma: ["Field B2B businesses", "an AI that remembers every deal"],
+  elevenliter: ["Pet insurers", "underwriting from a photo"],
+  atones: ["Card holders & shops", "one bill, split across cards"],
+  moneyguard: ["Creditors", "money promises that collect themselves"],
 };
 
 // A "who : what" pairing with the brand colon as two yellow nodes.

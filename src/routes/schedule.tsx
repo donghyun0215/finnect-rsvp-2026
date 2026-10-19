@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Wordmark } from "@/components/Wordmark";
 import { useEffect, useState } from "react";
 import { companies, MEETUP_COMPANIES } from "@/data/companies";
-import { CREDITS, DEMO_AGENDA, EVENT_VENUE, MEETUP_DAY_SHORT, MEETUP_TIME, MEETUP_VENUE, TIMESLOTS, isSlotOffered, EVENT_NAME } from "@/data/timeslots";
+import { CREDITS, DEMO_AGENDA, EVENT_VENUE, MEETUP_DATES_SHORT, MEETUP_VENUE, TIMESLOTS, isSlotOffered, EVENT_NAME, meetupDay } from "@/data/timeslots";
 import { fetchMeetingRoster, type RosterEntry } from "@/lib/booking.server";
 import { LoadingNote } from "@/components/Spinner";
 import { absUrl } from "@/lib/url";
@@ -71,15 +71,17 @@ const DAYS: ScheduleDay[] = [
       { time: "08:30", title: "Group arrival at the venue", venue: EVENT_VENUE },
       ...DEMO_AGENDA.map(([time, title]) => ({ time, title, highlight: /pitching|VC 1:1/.test(title) })),
       { time: "From 12:30", title: "Networking near the venue (TBC)" },
-      ...TIMESLOTS.map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: MEETUP_VENUE, highlight: true })),
+      ...TIMESLOTS.filter((t) => t.day === "thu").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: MEETUP_VENUE, highlight: true })),
     ],
   },
   {
-    date: "11/20", dow: "Fri", theme: "Institution Visits",
+    date: "11/20", dow: "Fri", theme: "Institution Visits & 1:1 Meetings",
     items: [
       { time: "9:00 – 12:00", title: "Visits to fintech institutions (from SFA, DAA, SDX, OCBC, UOB — TBC)", highlight: true },
       { time: "12:00 – 14:00", title: "Lunch" },
-      { time: "14:00 – 19:00", title: "Own B2B meetings & hustle time" },
+      // Friday 1:1 rounds added 20 Oct (MYSC); times follow the morning visits.
+      ...TIMESLOTS.filter((t) => t.day === "fri").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: MEETUP_VENUE, highlight: true })),
+      { time: "Rest of the afternoon", title: "Own B2B meetings & hustle time" },
       { time: "19:00", title: "Dinner (free)" },
     ],
   },
@@ -576,9 +578,9 @@ function MeetingRoster() {
       ) : (
         <>
           <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
-            <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-primary-foreground">{MEETUP_DAY_SHORT}</span>
+            <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-primary-foreground">{MEETUP_DATES_SHORT}</span>
             <span className="text-sm font-semibold text-navy">1:1 Business Meetings</span>
-            <span className="text-xs text-muted-foreground">{MEETUP_VENUE} · {MEETUP_TIME}</span>
+            <span className="text-xs text-muted-foreground">{MEETUP_VENUE} · afternoons</span>
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             {ordered.map((c) => {
@@ -597,7 +599,7 @@ function MeetingRoster() {
                           <div className="text-[11px] font-bold text-primary">{t.label}</div>
                           <div className="text-[10px] tabular-nums text-muted-foreground">{t.time}</div>
                         </div>
-                        <Line e={byKey.get(`${c.slug}:${t.id}`)} company={c.name} when={`${t.label} · ${t.time} · ${MEETUP_DAY_SHORT}`} />
+                        <Line e={byKey.get(`${c.slug}:${t.id}`)} company={c.name} when={`${t.label} · ${t.time} · ${meetupDay(t.day).short}`} />
                       </li>
                     ))}
                   </ul>

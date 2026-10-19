@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { companies, getCompanyBySlug, type Company } from "@/data/companies";
 import { HIGHLIGHTS } from "@/data/profileHighlights";
 import { useScrollMotion } from "@/lib/useScrollMotion";
-import { EVENT_DATE, EVENT_VENUE, ONE_ON_ONE_OPEN, MEETUP_DATE, EVENT_NAME, CREDITS } from "@/data/timeslots";
+import { EVENT_DATE, EVENT_VENUE, ONE_ON_ONE_OPEN, EVENT_NAME, CREDITS, companySessions } from "@/data/timeslots";
+import { Sessions } from "@/components/Sessions";
 import { STARTUP_LOGOS } from "@/data/companyImages";
 import { Pair, PAIRS } from "@/components/Pair";
 
@@ -190,11 +191,13 @@ function Profile({ company }: { company: Company }) {
 
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-14 pt-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-end lg:gap-16 lg:pb-20 lg:pt-12">
           <div>
-            {logo && (
-              <div className="hero-in flex h-20 w-48 items-center justify-center rounded-[3px] bg-white px-5 shadow-[6px_6px_0_0_#ffe300] md:h-24 md:w-56">
+            <div className="hero-in flex h-20 w-48 items-center justify-center rounded-[3px] bg-white px-5 shadow-[6px_6px_0_0_#ffe300] md:h-24 md:w-56">
+              {logo ? (
                 <img src={logo} alt={`${company.name} logo`} className="max-h-12 max-w-full object-contain md:max-h-14" />
-              </div>
-            )}
+              ) : (
+                <span className="text-xl font-extrabold tracking-tight text-navy">{company.name}</span>
+              )}
+            </div>
             <p className="hero-in mt-8 text-sm text-white/55 [--i:1]">{company.sector} · {company.stage}</p>
             <h1 className="hero-in mt-2 text-[clamp(2.4rem,6vw,4.25rem)] font-extrabold leading-[1.02] tracking-tight [--i:1]">{company.displayName}</h1>
             {pair && <p className="hero-in mt-4 text-lg md:text-xl [--i:2]"><Pair who={pair[0]} what={pair[1]} dark /></p>}
@@ -206,6 +209,10 @@ function Profile({ company }: { company: Company }) {
               {company.website && <a href={company.website} target="_blank" rel="noopener noreferrer" className="btn-node-ghost">Website</a>}
             </div>
             {!onePager && !irDeck && <p className="mt-4 text-sm text-white/50">The one-pager will be posted here soon.</p>}
+            <div className="hero-in mt-8 border-t border-white/15 pt-5 [--i:5]">
+              <p className="text-sm text-white/50">Meet them at</p>
+              <Sessions slug={company.slug} dark className="mt-2 text-sm" />
+            </div>
           </div>
 
           {hl && (
@@ -324,7 +331,7 @@ function Profile({ company }: { company: Company }) {
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 md:items-center md:py-16">
           <div>
             <h2 className="text-2xl font-bold md:text-3xl">Meet {company.name} in Singapore</h2>
-            <p className="mt-2 text-white/60">{hasMeetups ? `Private 1:1 meeting · ${MEETUP_DATE}` : `Demo Day · ${EVENT_DATE} · ${EVENT_VENUE}`}</p>
+            <p className="mt-2 text-white/60">{hasMeetups ? `Private 1:1 meeting · ${companySessions(company.slug).includes("thu") ? "Thu 19 or Fri 20 Nov, afternoon" : "Fri 20 Nov, afternoon"}` : `Demo Day · ${EVENT_DATE} · ${EVENT_VENUE}`}</p>
             <Link to="/book" search={bookSearch} className="btn-node mt-6">{bookLabel}</Link>
           </div>
           <Link to="/companies/$slug" params={{ slug: next.slug }} className="next-card group flex items-center gap-5 border border-white/15 p-5">

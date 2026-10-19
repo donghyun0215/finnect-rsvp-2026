@@ -12,8 +12,8 @@ import {
   EVENT_TIME,
   EVENT_VENUE,
   MEETUP_ADDRESS,
-  MEETUP_DATE,
-  MEETUP_TIME,
+  MEETUP_DATES,
+  MEETUP_DAYS,
   MEETUP_VENUE,
   ONE_ON_ONE_OPEN,
   PROGRAM,
@@ -25,10 +25,10 @@ import {
 // FIN:NECT 2026 KV: black, yellow #FFE300 (fills and on-dark text only), grey
 const C = { brand: "#1e1e1e", accent: "#ffe300", ink: "#1e1e1e", muted: "#6d6d6d", line: "#e6e6e6" };
 const HOST_LINE = "Korea Fintech Support Center · Sponsored by KakaoBank";
-const DATES = "Thursday, 19 November 2026 · Singapore FinTech Festival week";
-const SUBJECT = `Invitation to ${EVENT_NAME} (19 Nov, Singapore)`;
+const DATES = "19–20 November 2026 · Singapore FinTech Festival week";
+const SUBJECT = `Invitation to ${EVENT_NAME} (19–20 Nov, Singapore)`;
 const PITCH =
-  "Korean fintech startups, selected by the Korea Fintech Support Center, are coming to Singapore during Singapore FinTech Festival week to meet investors, financial institutions and partners.";
+  "Twelve Korean fintech startups are coming to Singapore with the Korea Fintech Support Center's FIN:NECT programme during Singapore FinTech Festival week, to meet investors, financial institutions and partners.";
 // One line per startup for the "Featuring" list (falls back to the site tagline).
 const LINES: Record<string, string> = {
   "276holdings": "AI credit-scored supply-chain finance (Settle Now, Pay Later) for SMEs",
@@ -39,6 +39,10 @@ const LINES: Record<string, string> = {
   aizen: "AI credit and data services for lenders and mobility platforms in Southeast Asia",
   canopy: "Payroll-data-driven financial wellness platform for employees",
   crosshub: "Voice-AI authentication and payments",
+  ztosigma: "Agentic AI that connects calls, transactions and payments for B2B field businesses",
+  elevenliter: "AI pet-insurance underwriting from smartphone photos",
+  atones: "Split one payment across several credit cards with a single QR scan",
+  moneyguard: "Automated recovery of personal loans and unpaid payments",
 };
 const ORDER: ("demo" | "meetup")[] = ["demo", "meetup"]; // chronological
 
@@ -58,7 +62,9 @@ export function buildInvite(team = false): { subject: string; html: string; text
   ];
   const [h1, m1, h2, m2] = (TIMESLOTS[0]?.time.match(/\d+/g) ?? []).map(Number);
   const mins = (h2 * 60 + m2) - (h1 * 60 + m1);
-  const rounds = `Private ${mins}-minute meetings with the startups you choose (${TIMESLOTS.length} rounds)`;
+  const perDay = TIMESLOTS.filter((t) => t.day === "thu").length;
+  const rounds = `Private ${mins}-minute meetings with the startups you choose (${perDay} rounds)`;
+  const meetRows: [string, string][] = MEETUP_DAYS.map((d) => [d.id === "fri" ? "Fri, time TBC" : `Thu ${d.time}`, rounds]);
 
   const btn = (href: string, label: string) =>
     `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:14px;"><tr><td style="background:${C.brand};border-radius:2px;"><a href="${href}" style="display:block;padding:11px 16px;${F}font-size:12px;font-weight:bold;letter-spacing:0.7px;color:#ffffff;text-decoration:none;text-transform:uppercase;">${label}&nbsp;&nbsp;→</a></td></tr></table>`;
@@ -77,7 +83,7 @@ export function buildInvite(team = false): { subject: string; html: string; text
   const blocks = {
     demo: card(`Demo Day · ${EVENT_DATE}`, demoRows, EVENT_VENUE, EVENT_ADDRESS, btn(`${SITE}/book?day=7`, "RSVP for the Demo Day")),
     meetup: ONE_ON_ONE_OPEN
-      ? card(`1:1 Business Meetings · ${MEETUP_DATE}`, [[MEETUP_TIME, rounds]], MEETUP_VENUE, MEETUP_ADDRESS, btn(`${SITE}/book?day=5`, "Book a 1:1 meeting"))
+      ? card(`1:1 Business Meetings · ${MEETUP_DATES}`, meetRows, MEETUP_VENUE, MEETUP_ADDRESS, btn(`${SITE}/book?day=5`, "Book a 1:1 meeting"))
       : "",
   };
 
@@ -90,7 +96,7 @@ export function buildInvite(team = false): { subject: string; html: string; text
     "I hope this email finds you well.",
     `${I} delighted to invite you to <b>${esc(EVENT_NAME)}</b> in Singapore. ${esc(PITCH)}`,
     ONE_ON_ONE_OPEN
-      ? `They will pitch at the Demo Day on <b>${esc(EVENT_DATE)}</b>, and you are welcome to book private 1:1 meetings with the ones that interest you ${(EVENT_DATE as string) === MEETUP_DATE ? "that afternoon" : `on <b>${esc(MEETUP_DATE)}</b>`}.`
+      ? `The Demo Day is on the morning of <b>${esc(EVENT_DATE)}</b>, and you are welcome to book private 1:1 meetings with the startups that interest you on <b>Thursday or Friday afternoon</b>.`
       : `They will pitch at the Demo Day on <b>${esc(EVENT_DATE)}</b>.`,
     `It would mean a great deal to have you with us. Please find the details below, and ${my} be grateful if you could RSVP at your earliest convenience.`,
   ];
@@ -122,7 +128,7 @@ ${ORDER.map((k) => blocks[k]).join("")}
   const plain = (s: string) => s.replace(/<[^>]+>/g, "");
   const demoText = [`DEMO DAY · ${EVENT_DATE}`, ...demoRows.map(([t, w]) => `${t}  ${w}`), `${EVENT_VENUE}, ${EVENT_ADDRESS}`, `RSVP: ${SITE}/book?day=7`];
   const meetText = ONE_ON_ONE_OPEN
-    ? [`1:1 BUSINESS MEETINGS · ${MEETUP_DATE}`, `${MEETUP_TIME}  ${rounds}`, `${MEETUP_VENUE}, ${MEETUP_ADDRESS}`, `Book: ${SITE}/book?day=5`]
+    ? [`1:1 BUSINESS MEETINGS · ${MEETUP_DATES}`, ...meetRows.map(([t, w]) => `${t}  ${w}`), `${MEETUP_VENUE}, ${MEETUP_ADDRESS}`, `Book: ${SITE}/book?day=5`]
     : [];
   const text = [
     "{{GREETING}}",

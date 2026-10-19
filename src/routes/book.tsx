@@ -16,7 +16,8 @@ import {
   getSlotInfo,
   isSlotOffered,
   ONE_ON_ONE_OPEN,
-  MEETUP_DATE, MEETUP_DAY_SHORT, MEETUP_TIME, EVENT_NAME, MEETUP_VENUE, MEETUP_MAP_URL } from "@/data/timeslots";
+  EVENT_NAME, MEETUP_DATES, MEETUP_DATES_SHORT, MEETUP_DAYS, slotName, companySessions,
+  type MeetupDayId } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import {
   createRsvp,
@@ -37,6 +38,8 @@ const searchSchema = z.object({
   // the first, so submit merges with the existing RSVP (see handleSubmit).
   // TanStack parses ?day=5 as a number, so coerce before the enum check.
   day: z.preprocess((v) => (v == null ? v : String(v)), z.enum(["5", "7"])).optional(),
+  // Which afternoon's rounds the 1:1 picker opens on (Thu 19 / Fri 20 Nov).
+  on: z.enum(["thu", "fri"]).optional(),
 });
 
 export const Route = createFileRoute("/book")({
@@ -84,11 +87,18 @@ const emptyForm: FormState = {
 };
 
 function RsvpPage() {
-  const { company: preselectSlug, day: dayParam } = Route.useSearch();
+  const { company: preselectSlug, day: dayParam, on: onParam } = Route.useSearch();
   const navigate = Route.useNavigate();
   // Company deep-links come from startup cards → they are 1:1 requests.
   const day: "5" | "7" = dayParam ?? (preselectSlug ? "5" : "7");
   const setDay = (d: "5" | "7") => navigate({ search: (prev) => ({ ...prev, day: d }), replace: true });
+
+  // Which afternoon the picker shows. Picks are kept per round id, so
+  // switching days never drops a pick made on the other day.
+  const [mday, setMday] = useState<MeetupDayId>(
+    onParam ?? (preselectSlug && !companySessions(preselectSlug).includes("thu") ? "fri" : "thu"),
+  );
+  const daySlots = TIMESLOTS.filter((t) => t.day === mday);
 
   // availability
   const [booked, setBooked] = useState<Set<BookedKey>>(new Set());
@@ -211,6 +221,7 @@ function RsvpPage() {
             !prev[t.id],
         );
         if (!openSlot) return prev;
+        setMday(openSlot.day);
         return { ...prev, [openSlot.id]: preselectSlug };
       });
     }
@@ -386,20 +397,20 @@ function RsvpPage() {
             {day === "5" ? "RSVP · 1:1 business meetings" : "RSVP · Demo Day"}
           </div>
           <h1 className="mt-2 text-4xl font-bold leading-none sm:text-5xl">
-            <span className="sm:hidden">{day === "5" ? MEETUP_DAY_SHORT : EVENT_DAY_SHORT}</span>
-            <span className="hidden sm:inline">{day === "5" ? MEETUP_DATE : EVENT_DATE}</span>
+            <span className="sm:hidden">{day === "5" ? MEETUP_DATES_SHORT : EVENT_DAY_SHORT}</span>
+            <span className="hidden sm:inline">{day === "5" ? MEETUP_DATES_SHORT : EVENT_DATE}</span>
           </h1>
           <div className="mt-2 font-display text-2xl font-semibold text-yellow">
-            {day === "5" ? MEETUP_TIME : EVENT_TIME}
+            {day === "5" ? `Thu ${MEETUP_DAYS[0].time} · Fri afternoon, time TBC` : EVENT_TIME}
           </div>
           <p className="mt-2 text-sm text-primary-foreground/85 sm:text-base">
             {day === "5" ? (
               <>
-                {MEETUP_MAP_URL ? (
-                  <a href={MEETUP_MAP_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-white">
-                    {MEETUP_VENUE}
+                {MEETUP_DAYS[0].mapUrl ? (
+                  <a href={MEETUP_DAYS[0].mapUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-white">
+                    {MEETUP_DAYS[0].venue}
                   </a>
-                ) : MEETUP_VENUE}{" "}
+                ) : MEETUP_DAYS[0].venue}{" "}
                 · Private meetings with the startups of your choice
               </>
             ) : (
@@ -418,7 +429,7 @@ function RsvpPage() {
           <div className="mt-6 inline-flex rounded-full border border-primary-foreground/25 bg-primary-foreground/10 p-1 backdrop-blur-sm">
             {([
               ["7", "Morning · Demo Day"],
-              ["5", "Afternoon · 1:1 Meetings"],
+              ["5", "Afternoons · 1:1 Meetings"],
             ] as const).map(([d, label]) => (
               <button
                 key={d}
@@ -441,7 +452,7 @@ function RsvpPage() {
                 if (!c || !t) return null;
                 return (
                   <span key={timeslotId} className="rounded-full bg-primary-foreground/15 px-3 py-1">
-                    ✓ 1:1 {t.label} — {c.name}
+                    ✓ 1:1 {slotName(t)} — {c.name}
                   </span>
                 );
               })}
@@ -462,7 +473,7 @@ function RsvpPage() {
                     {submitted.bookings.some((b) => !b.ok) ? "RSVP received — please check below" : "Your RSVP is confirmed!"}
                   </DialogTitle>
                   <DialogDescription className="text-center">
-                    {`See you on ${(day === "5" ? MEETUP_DATE : EVENT_DATE).replace(" 2026", "")}.`}
+                    {day === "5" ? "See you in Singapore." : `See you on ${EVENT_DATE.replace(" 2026", "")}.`}
                   </DialogDescription>
                 </DialogHeader>
                 <ul className="space-y-1.5 rounded-xl bg-muted/60 p-4 text-sm text-navy">
@@ -474,13 +485,13 @@ function RsvpPage() {
                     const t = TIMESLOTS.find((x) => x.id === b.timeslotId);
                     return (
                       <li key={`m-${b.timeslotId}-${b.companySlug}`} className={b.ok ? "" : "text-red-700"}>
-                        {b.ok ? "✓" : "✕"} 1:1 {t?.label} · {t?.time} — {c?.name}
+                        {b.ok ? "✓" : "✕"} 1:1 {t ? slotName(t) : ""} · {t?.time} — {c?.name}
                         {!b.ok && b.message ? <div className="pl-4 text-xs">{b.message} Pick another startup and re-submit.</div> : null}
                       </li>
                     );
                   })}
                   {submitted.attend.meetups && submitted.bookings.length === 0 && (
-                    <li>✓ 1:1 Business Meetings ({MEETUP_DAY_SHORT}) — organizers will be in touch</li>
+                    <li>✓ 1:1 Business Meetings ({MEETUP_DATES_SHORT}) — organizers will be in touch</li>
                   )}
                 </ul>
                 <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-navy">
@@ -520,13 +531,13 @@ function RsvpPage() {
                 const t = TIMESLOTS.find((x) => x.id === b.timeslotId);
                 return (
                   <li key={`${b.timeslotId}-${b.companySlug}`} className={b.ok ? "" : "text-red-700"}>
-                    {b.ok ? "✓" : "✕"} 1:1 {t?.label} — {c?.name}
+                    {b.ok ? "✓" : "✕"} 1:1 {t ? slotName(t) : ""} — {c?.name}
                     {!b.ok && b.message ? ` (${b.message} Pick another startup below and re-submit.)` : ""}
                   </li>
                 );
               })}
               {submitted.attend.meetups && submitted.bookings.length === 0 && (
-                <li>✓ 1:1 Business Meetings ({MEETUP_DAY_SHORT}) — organizers will be in touch</li>
+                <li>✓ 1:1 Business Meetings ({MEETUP_DATES_SHORT}) — organizers will be in touch</li>
               )}
             </ul>
           </div>
@@ -544,7 +555,7 @@ function RsvpPage() {
               <h2 className="text-lg font-bold text-navy">{day === "5" ? "Pick Your Startups" : "Agenda"}</h2>
             </div>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              {day === "5" ? "One startup per round. Leave a round empty if you don't need it. Greyed-out slots are already taken." : "Run with Tenity at 80RR Fintech Hub."}
+              {day === "5" ? "Pick the afternoon, then one startup per round. You can book rounds on both days. Leave a round empty if you don't need it; greyed-out slots are taken." : "Run with Tenity at 80RR Fintech Hub."}
             </p>
 
             {day === "7" && (
@@ -588,7 +599,32 @@ function RsvpPage() {
             {/* 1:1 picker — appears when meetups checked and self-booking is open */}
             {ONE_ON_ONE_OPEN && attend.meetups && (
               <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.03] p-4 sm:p-5">
-                {loading && <LoadingNote text="Checking live availability…" className="text-xs font-semibold text-primary" />}
+                <div role="tablist" aria-label="Afternoon" className="grid grid-cols-2 gap-2">
+                  {MEETUP_DAYS.map((d) => {
+                    const picks = TIMESLOTS.filter((t) => t.day === d.id && (selections[t.id] || myBookings[t.id])).length;
+                    const on = mday === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={on}
+                        onClick={() => setMday(d.id)}
+                        className={`rounded-xl border px-4 py-3 text-left transition ${on ? "border-navy bg-navy text-white" : "border-border bg-card text-navy hover:border-navy/40"}`}
+                      >
+                        <span className="block text-sm font-bold">{d.short}</span>
+                        <span className={`block text-xs ${on ? "text-white/70" : "text-muted-foreground"}`}>
+                          {d.id === "fri" ? "Afternoon · time TBC" : d.time}
+                          {picks > 0 && <span className={`ml-2 font-semibold ${on ? "text-yellow" : "text-navy"}`}>· {picks} picked</span>}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {mday === "fri" && (
+                  <p className="mt-3 text-xs text-muted-foreground">Friday's exact round times are being confirmed. We'll email you the time of each meeting you book.</p>
+                )}
+                {loading && <LoadingNote text="Checking live availability…" className="mt-3 text-xs font-semibold text-primary" />}
                 {/* Phones: one card per startup, the rounds as full-width
                     buttons underneath — the table's round columns sat off-screen
                     at 360–390px with no hint that they scroll. */}
@@ -597,12 +633,12 @@ function RsvpPage() {
                     <div key={c.slug} className="rounded-xl border border-border bg-card p-3.5">
                       <div className="font-semibold text-navy">{c.name}</div>
                       <div className="text-xs text-muted-foreground">{c.sector}</div>
-                      <div className="mt-3 grid grid-cols-2 gap-2 min-[420px]:grid-cols-4">
-                        {TIMESLOTS.map((t) => {
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {daySlots.map((t) => {
                           if (!isSlotOffered(c.slug, t.id)) {
                             return (
-                              <div key={t.id} className="rounded-lg border border-dashed border-border px-1 py-2 text-center text-[11px] text-muted-foreground/50">
-                                —
+                              <div key={t.id} className="rounded-lg border border-dashed border-border px-1 py-2 text-center text-[11px] text-muted-foreground/60">
+                                {t.day === "thu" ? "Fri only" : "—"}
                               </div>
                             );
                           }
@@ -643,7 +679,7 @@ function RsvpPage() {
                     <thead>
                       <tr className="bg-secondary text-left text-navy">
                         <th className="p-3 font-semibold">Startup</th>
-                        {TIMESLOTS.map((t) => (
+                        {daySlots.map((t) => (
                           <th key={t.id} className="p-3 font-semibold">
                             {t.label}
                             <div className="text-xs font-normal text-muted-foreground">{t.time}</div>
@@ -658,12 +694,12 @@ function RsvpPage() {
                             <div className="font-semibold text-navy">{c.name}</div>
                             <div className="text-xs text-muted-foreground">{c.sector}</div>
                           </td>
-                          {TIMESLOTS.map((t) => {
+                          {daySlots.map((t) => {
                             if (!isSlotOffered(c.slug, t.id)) {
                               return (
                                 <td key={t.id} className="p-3">
-                                  <span className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground/40">
-                                    —
+                                  <span className="inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground/60">
+                                    {t.day === "thu" ? "Friday only" : "—"}
                                   </span>
                                 </td>
                               );
@@ -793,7 +829,7 @@ function RsvpPage() {
             </div>
             {attend.meetups && !ONE_ON_ONE_OPEN && (
               <div className="mt-4 rounded-xl border border-primary/25 bg-primary/[0.03] p-4 text-sm text-navy">
-                Thanks for your interest in 1:1 meetings on {MEETUP_DATE.replace(" 2026", "")}. The organizers will contact you to
+                Thanks for your interest in 1:1 meetings on {MEETUP_DATES.replace(" 2026", "")}. The organizers will contact you to
                 match you with the startups that fit your goals.
               </div>
             )}

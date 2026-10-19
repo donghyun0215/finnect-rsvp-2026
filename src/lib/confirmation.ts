@@ -8,8 +8,7 @@ import {
   EVENT_ADDRESS,
   EVENT_MAP_URL,
   EVENT_VENUE,
-  MEETUP_ADDRESS,
-  MEETUP_MAP_URL,
+  MEETUP_DAYS,
   MEETUP_VENUE,
   EVENT_NAME,
   PROGRAM,
@@ -28,12 +27,12 @@ const COPY: Record<MailKind, { subject: string; headline: string; intro: string 
     intro: `Thank you for registering for the <b>${EVENT_TITLE}</b>. Here is your schedule:`,
   },
   week: {
-    subject: "Your schedule for FIN:NECT Global Singapore (Thu 19 Nov)",
+    subject: "Your schedule for FIN:NECT Global Demoday Singapore (19–20 Nov)",
     headline: "One week to go",
     intro: `The <b>${EVENT_TITLE}</b> is just one week away, and we're looking forward to seeing you. Here is your schedule:`,
   },
   "3day": {
-    subject: "Your schedule for the FIN:NECT Demo Day this week (Thu 19 Nov)",
+    subject: "Your schedule for the FIN:NECT Demo Day this week (19–20 Nov)",
     headline: "3 days to go",
     intro: `Only three days until the <b>${EVENT_TITLE}</b>. Here is a quick recap of your schedule:`,
   },
@@ -103,18 +102,23 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
     .sort((a, b) => (order.get(a.timeslot_id) ?? 0) - (order.get(b.timeslot_id) ?? 0))
     .map((m) => {
       const slot = TIMESLOTS.find((t) => t.id === m.timeslot_id)!;
-      return { round: slot.label, time: slot.time, company: getCompanyBySlug(m.company_id)?.name ?? m.company_id };
+      return { day: slot.day, round: slot.label, time: slot.time, company: getCompanyBySlug(m.company_id)?.name ?? m.company_id };
     });
+  // One block per afternoon that has meetings (Thu 19 / Fri 20 Nov).
+  const meetDays = MEETUP_DAYS.map((d) => ({ d, list: meetings.filter((m) => m.day === d.id) })).filter((x) => x.list.length);
   const demoDay: string[] = [];
   if (input.attendShowcase) demoDay.push(`Pitches & investor meetings ${programTime("showcase")}`);
   if (input.attendLunch) demoDay.push(`Networking dinner ${programTime("lunch")}`);
 
-  const meetupsCal = gcal(
-    "FIN:NECT · 1:1 Business Meetings",
-    "20261119T143000/20261119T171000",
-    `${MEETUP_VENUE}, ${MEETUP_ADDRESS}`,
-    ["Your 1:1 meetings:", ...meetings.map((m) => `• ${m.round} ${m.time} — ${m.company}`), "", `Manage: ${SITE}/book#manage`].join("\n"),
-  );
+  const meetupsCal = (d: (typeof MEETUP_DAYS)[number], list: typeof meetings) =>
+    gcal(
+      `FIN:NECT · 1:1 Business Meetings (${d.short})`,
+      d.cal,
+      `${d.venue}, ${d.address}`,
+      ["Your 1:1 meetings:", ...list.map((m) => `• ${m.round} ${m.time} — ${m.company}`), "", `Manage: ${SITE}/book#manage`].join("\n"),
+    );
+  const tbcNote = (d: (typeof MEETUP_DAYS)[number]) =>
+    d.id === "fri" ? "Friday's round times are being confirmed; we'll email them to you. " : "";
   const demoCal = gcal(
     "FIN:NECT · Singapore Demo Day",
     "20261119T090000/20261119T123000",
@@ -132,14 +136,14 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
     for (const d of demoDay) t.push(`• ${d}`);
     t.push(`${EVENT_VENUE}, ${EVENT_ADDRESS}`, ...(EVENT_MAP_URL ? [`Map: ${EVENT_MAP_URL}`] : []), "");
   }
-  if (meetings.length) {
-    t.push("THU 19 NOV (AFTERNOON) · 1:1 BUSINESS MEETINGS");
-    for (const m of meetings) t.push(`• ${m.round} · ${m.time} — ${m.company}`);
-    t.push(`${MEETUP_VENUE}, ${MEETUP_ADDRESS}`, ...(MEETUP_MAP_URL ? [`Map: ${MEETUP_MAP_URL}`] : []), "Please arrive 5–10 minutes before your first meeting.", "");
+  for (const { d, list } of meetDays) {
+    t.push(`${d.short.toUpperCase()} (AFTERNOON) · 1:1 BUSINESS MEETINGS`);
+    for (const m of list) t.push(`• ${m.round} · ${m.time} — ${m.company}`);
+    t.push(`${d.venue}, ${d.address}`, ...(d.mapUrl ? [`Map: ${d.mapUrl}`] : []), `${tbcNote(d)}Please arrive 5–10 minutes before your first meeting.`, "");
   }
   // "slots still open" only while booking is still useful (not on the eves)
   const nudge = (kind === "week" || kind === "3day") && meetings.length === 0;
-  if (nudge) t.push(`A few 1:1 meeting slots on Thu 19 Nov are still open: ${SITE}/book?day=5`, "");
+  if (nudge) t.push(`A few 1:1 meeting slots on Thu 19 and Fri 20 Nov are still open: ${SITE}/book?day=5`, "");
   const onTheDay = kind === "demo-eve";
   if (onTheDay) {
     t.push("ON THE DAY");
@@ -149,7 +153,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   t.push(`View or cancel your 1:1 meetings: ${SITE}/book#manage`);
   t.push(`Startup one-pagers: ${SITE}/#startups`, "");
   t.push("Need to change something? Re-submit the RSVP form with the same email, or simply reply to this email.", "");
-  if (!personal) t.push("Warm regards,", "LodestarT team, for FIN:NECT Global Singapore 2026");
+  if (!personal) t.push("Warm regards,", `LodestarT team, for ${EVENT_NAME}`);
 
   // ── HTML
   const F = "font-family:Arial,Helvetica,sans-serif;";
@@ -184,7 +188,7 @@ ${personalHtml}
   <tr><td style="background:#1e1e1e;padding:22px 32px;">
     <div style="${F}font-size:10px;letter-spacing:1px;font-weight:bold;color:#ffffff;text-transform:uppercase;">Korea Fintech Support Center | FIN:NECT Global</div>
     <div style="${F}padding-top:8px;font-size:24px;line-height:28px;font-weight:800;color:#ffffff;">${esc(copy.headline)}</div>
-    <div style="${F}padding-top:4px;font-size:13px;font-weight:bold;color:#ffe300;">Demo Day &amp; 1:1 Meetings · 19 November 2026</div>
+    <div style="${F}padding-top:4px;font-size:13px;font-weight:bold;color:#ffe300;">Demo Day &amp; 1:1 Meetings · 19–20 November 2026</div>
   </td></tr>
   <tr><td style="height:6px;line-height:6px;font-size:0;background-color:#b6e014;background-image:linear-gradient(90deg,#00ccff,#6fdb6a 30%,#b6e014 62%,#ffe300);">&nbsp;</td></tr>
   ${personal ? `<tr><td style="padding:20px 32px 0;"></td></tr>` : `<tr><td style="padding:24px 32px 16px;${F}font-size:15px;line-height:22px;color:#1e1e1e;">
@@ -192,14 +196,14 @@ ${personalHtml}
     ${copy.intro}
   </td></tr>`}
   ${demoDay.length ? block("Thu 19 Nov morning · Demo Day", demoDay.map(esc), EVENT_VENUE, EVENT_ADDRESS, EVENT_MAP_URL, demoCal) : ""}
-  ${meetings.length ? block("Thu 19 Nov afternoon · 1:1 Business Meetings", meetings.map((m) => `${esc(m.round)} · ${esc(m.time)} — ${esc(m.company)}`), MEETUP_VENUE, MEETUP_ADDRESS, MEETUP_MAP_URL, meetupsCal, "Please arrive 5–10 minutes before your first meeting.") : ""}
+  ${meetDays.map(({ d, list }) => block(`${d.short} afternoon · 1:1 Business Meetings`, list.map((m) => `${esc(m.round)} · ${esc(m.time)} — ${esc(m.company)}`), d.venue, d.address, d.mapUrl, meetupsCal(d, list), `${tbcNote(d)}Please arrive 5–10 minutes before your first meeting.`)).join("")}
   ${onTheDay ? `<tr><td style="padding:0 32px 16px;${F}font-size:14px;line-height:21px;color:#1e1e1e;">
     <div style="${F}font-size:11px;letter-spacing:1.2px;font-weight:bold;color:#1e1e1e;text-transform:uppercase;padding-bottom:6px;">On the day</div>
     <b>Check-in:</b> scan the QR code at the entrance and enter this email address to collect your name badge — please keep this email handy.<br>
     <b>Networking Lounge:</b> a private, attendee-only directory of everyone in the room, so conversations can continue after the event. ${link(`${SITE}/lounge`, "Open the lounge")}
   </td></tr>` : ""}
   ${nudge ? `<tr><td style="padding:0 32px 16px;${F}font-size:14px;line-height:21px;color:#1e1e1e;">
-    <div style="background:#fff7b3;border:1px solid #ffe300;padding:12px 14px;">A few <b>1:1 meeting slots on Thu 19 Nov</b> are still open — ${link(`${SITE}/book?day=5`, "book a meeting")}.</div>
+    <div style="background:#fff7b3;border:1px solid #ffe300;padding:12px 14px;">A few <b>1:1 meeting slots on Thu 19 and Fri 20 Nov</b> are still open — ${link(`${SITE}/book?day=5`, "book a meeting")}.</div>
   </td></tr>` : ""}
   <tr><td style="padding:4px 32px 22px;${F}font-size:14px;line-height:21px;color:#1e1e1e;">
     ${link(`${SITE}/book#manage`, "View or cancel your 1:1 meetings")}<br>
@@ -207,7 +211,7 @@ ${personalHtml}
     Need to change something? Re-submit the RSVP form with the same email, or simply reply to this email.
   </td></tr>
   ${personal ? "" : `<tr><td style="background:#f2f2f2;border-top:1px solid #e6e6e6;padding:18px 32px;${F}font-size:14px;line-height:20px;color:#1e1e1e;">
-    Warm regards,<br><strong style="color:#1e1e1e;">LodestarT team</strong><br><span style="font-size:12px;color:#6d6d6d;">for FIN:NECT Global Singapore 2026</span>
+    Warm regards,<br><strong style="color:#1e1e1e;">LodestarT team</strong><br><span style="font-size:12px;color:#6d6d6d;">for FIN:NECT Global Demoday Singapore 2026</span>
   </td></tr>`}
 </table></td></tr></table></body></html>`;
 

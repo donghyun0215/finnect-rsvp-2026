@@ -1,10 +1,13 @@
+export type MeetupDayId = "thu" | "fri";
+
 export interface Timeslot {
   id: string;
   label: string;
   time: string;
+  day: MeetupDayId;
 }
 
-// ── FIN:NECT Global Singapore 2026 (Korea Fintech Support Center) ──
+// ── FIN:NECT Global Demoday Singapore 2026 (Korea Fintech Support Center) ──
 // Everything event-specific lives in this file, so a confirmed venue or time
 // is a one-line change. Source: "[마스터파일] 핀테크지원센터_현지프로그램"
 // (26_세부 일정표, read 12 Oct), the ops table and the LodestarT × MYSC ops
@@ -16,9 +19,10 @@ export const SITE_URL = "https://finnect-rsvp-2026.vercel.app";
 // were listed as co-organisers on the 2025 page — add back if the centre wants.
 export const CREDITS = "Hosted by the Korea Fintech Support Center · Sponsored by KakaoBank";
 
-export const EVENT_NAME = "FIN:NECT Global Singapore 2026";
+// Title as MYSC set it (20 Oct): FIN:NECT logo + "Global Demoday Singapore 2026".
+export const EVENT_NAME = "FIN:NECT Global Demoday Singapore 2026";
 export const EVENT_NAME_SHORT = "FIN:NECT";
-export const EVENT_NAME_LINE1 = "FIN:NECT Global Singapore 2026";
+export const EVENT_NAME_LINE1 = "FIN:NECT Global Demoday Singapore 2026";
 export const EVENT_NAME_LINE2 = "Fintech Demo Day";
 
 export const EVENT_DATE = "Thursday, 19 November 2026";
@@ -33,28 +37,94 @@ export const EVENT_MAP_URL =
 // Public 1:1 self-booking, same model as KIMST/CMK.
 export const ONE_ON_ONE_OPEN = true;
 
-// 1:1 meetings Thu 19 Nov afternoon: rounds start 14:30 / 15:30 / 16:30
-// (ops table). ponytail: 40 min each like CMK until the length is confirmed;
-// how the afternoon B2B meetings are set up is still open (ops deck, 12 Oct).
+// 1:1 meetings on two afternoons.
+// Thu 19 Nov: rounds start 14:30 / 15:30 / 16:30 (ops table). ponytail: 40
+// min each like CMK until the length is confirmed.
+// Fri 20 Nov: added at MYSC's request (20 Oct). The times depend on the
+// Friday-morning fintech stakeholder visit LodestarT is still arranging, so
+// they read "time TBC" until that is fixed; set `time` on slot4–6 and the
+// Friday entry in MEETUP_DAYS once it is.
 // IDs are stable references stored in bookings — change labels/times
 // freely, never the ids.
 export const TIMESLOTS: Timeslot[] = [
-  { id: "slot1", label: "Round 1", time: "14:30 – 15:10" },
-  { id: "slot2", label: "Round 2", time: "15:30 – 16:10" },
-  { id: "slot3", label: "Round 3", time: "16:30 – 17:10" },
+  { id: "slot1", label: "Round 1", time: "14:30 – 15:10", day: "thu" },
+  { id: "slot2", label: "Round 2", time: "15:30 – 16:10", day: "thu" },
+  { id: "slot3", label: "Round 3", time: "16:30 – 17:10", day: "thu" },
+  { id: "slot4", label: "Round 1", time: "Time TBC", day: "fri" },
+  { id: "slot5", label: "Round 2", time: "Time TBC", day: "fri" },
+  { id: "slot6", label: "Round 3", time: "Time TBC", day: "fri" },
 ];
+
+export interface MeetupDay {
+  id: MeetupDayId;
+  date: string;
+  short: string;
+  /** Afternoon window, or a TBC note while it isn't fixed. */
+  time: string;
+  venue: string;
+  address: string;
+  mapUrl: string;
+  /** Google Calendar `dates` value for the whole afternoon (SGT). */
+  cal: string;
+}
+
+export const MEETUP_DAYS: MeetupDay[] = [
+  {
+    id: "thu",
+    date: "Thursday, 19 November 2026",
+    short: "Thu 19 Nov",
+    time: "14:30 – 17:10",
+    venue: "Venue to be announced",
+    address: "Singapore",
+    mapUrl: "",
+    cal: "20261119T143000/20261119T171000",
+  },
+  {
+    id: "fri",
+    date: "Friday, 20 November 2026",
+    short: "Fri 20 Nov",
+    time: "Afternoon, times to be confirmed",
+    venue: "Venue to be announced",
+    address: "Singapore",
+    mapUrl: "",
+    cal: "20261120T140000/20261120T180000",
+  },
+];
+export const meetupDay = (id: MeetupDayId): MeetupDay => MEETUP_DAYS.find((d) => d.id === id)!;
+/** "Thu 19 Nov · Round 1" — rounds repeat across the two days, so always name the day. */
+export const slotName = (t: Timeslot) => `${meetupDay(t.day).short} · ${t.label}`;
+
+// Thursday constants, kept for the home page's day ruler and older callers.
 export const MEETUP_TIME = "14:30 – 17:10";
 export const MEETUP_DATE = "Thursday, 19 November 2026";
 export const MEETUP_DAY_SHORT = "Thu 19 Nov";
 export const MEETUP_VENUE = "Venue to be announced";
 export const MEETUP_ADDRESS = "Singapore";
 export const MEETUP_MAP_URL = "";
+// Both afternoons, for headers and emails.
+export const MEETUP_DATES = "Thursday 19 and Friday 20 November 2026";
+export const MEETUP_DATES_SHORT = "Thu 19 & Fri 20 Nov";
 
-// Kept for API compatibility with the booking engine; every company offers
-// every round.
+// Which of the three sessions each company is at (MYSC, 20 Oct): the
+// 8 Demo Day companies, 지투시그마 and 앳원스 are at all three; 십일리터
+// and 머니가드서비스 only on Friday afternoon. "demo" is informational (the
+// Demo Day RSVP isn't per company); "thu"/"fri" gate the 1:1 rounds.
+export type Session = "demo" | "thu" | "fri";
+export const SESSION_LABELS: Record<Session, string> = {
+  demo: "Demo Day, Thu AM",
+  thu: "1:1, Thu PM",
+  fri: "1:1, Fri PM",
+};
+const FRIDAY_ONLY = new Set(["elevenliter", "moneyguard"]);
+export function companySessions(companySlug: string): Session[] {
+  return FRIDAY_ONLY.has(companySlug) ? ["fri"] : ["demo", "thu", "fri"];
+}
+
+// Kept for API compatibility with the booking engine.
 export const ROUND3_COMPANY_SLUGS: string[] = [];
-export function isSlotOffered(_companySlug: string, _timeslotId: string): boolean {
-  return true;
+export function isSlotOffered(companySlug: string, timeslotId: string): boolean {
+  const t = TIMESLOTS.find((x) => x.id === timeslotId);
+  return Boolean(t) && companySessions(companySlug).includes(t!.day);
 }
 
 export interface ProgramBlock {
@@ -82,8 +152,8 @@ export const PROGRAM: ProgramBlock[] = [
   {
     id: "meetups",
     title: "1:1 Business Meetings",
-    time: `${MEETUP_DAY_SHORT} · ${MEETUP_TIME}`,
-    description: "Private meetings with the startups of your choice, the same afternoon.",
+    time: `${MEETUP_DATES_SHORT}, afternoons`,
+    description: "Private meetings with the startups of your choice, on Thursday or Friday afternoon.",
   },
 ];
 
@@ -119,7 +189,7 @@ export interface SlotInfo {
 
 const slotIndex: Record<string, SlotInfo> = {};
 for (const t of TIMESLOTS) {
-  slotIndex[t.id] = { label: `1:1 ${t.label}`, time: t.time, context: `Business Meetings · ${MEETUP_DATE}` };
+  slotIndex[t.id] = { label: `1:1 ${slotName(t)}`, time: t.time, context: `Business Meetings · ${meetupDay(t.day).date}` };
 }
 
 export function getSlotInfo(id: string): SlotInfo {

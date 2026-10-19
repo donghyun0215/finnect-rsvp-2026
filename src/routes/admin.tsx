@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Wordmark } from "@/components/Wordmark";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { companies, MEETUP_COMPANIES } from "@/data/companies";
-import { EVENT_DATE, TIMESLOTS, getSlotInfo, isSlotOffered } from "@/data/timeslots";
+import { EVENT_DATE, TIMESLOTS, getSlotInfo, isSlotOffered, slotName } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
 import { updateContactUrl, adminSetCheckedIn, adminRenameAttendee } from "@/lib/booking.server";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
   head: () => ({
     meta: [
-      { title: "Admin — FIN:NECT Global Singapore 2026" },
+      { title: "Admin — FIN:NECT Global Demoday Singapore 2026" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -116,7 +116,7 @@ function AdminPage() {
     const t = TIMESLOTS.find((x) => x.id === b.timeslot_id);
     if (
       !confirm(
-        `Cancel ${b.full_name}'s booking with ${c?.name ?? b.company_id} (${t?.label ?? b.timeslot_id})?\n\nThe slot will reopen for others.`,
+        `Cancel ${b.full_name}'s booking with ${c?.name ?? b.company_id} (${t ? slotName(t) : b.timeslot_id})?\n\nThe slot will reopen for others.`,
       )
     )
       return;
@@ -376,7 +376,7 @@ function AdminPage() {
                 <th className="p-3 font-semibold">Startup</th>
                 {TIMESLOTS.map((t) => (
                   <th key={t.id} className="p-3 font-semibold">
-                    {t.label} <span className="font-normal text-muted-foreground">{t.time}</span>
+                    {slotName(t)} <span className="font-normal text-muted-foreground">{t.time}</span>
                   </th>
                 ))}
               </tr>

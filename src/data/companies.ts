@@ -5,7 +5,12 @@
 // sheet are internal and stay out. Ops deck (12 Oct): 12 companies — these
 // 8 selected, plus alumni 머니가드서비스 · 앳원스 and 전북창경 십일리터 ·
 // 지투시그마 (Tenity programme + visits; 전북 pair also get one online 1:1
-// with LodestarT). ponytail: those four join the site once their data lands.
+// with LodestarT). Those four were added on MYSC's request (20 Oct):
+// 십일리터 · 지투시그마 from their 전북창경 applications as summarised in the
+// master file (service overview, public milestones only); 앳원스 ·
+// 머니가드서비스 have no data in the master file yet, so their lines come from
+// press coverage (Money Today, Jan 2026; Hankyung, Aug 2025) and stay short.
+// All four one-pagers are due 21 Oct; replace these entries then.
 // IR decks are NOT published (CMK lesson, 7 Oct). Sector labels are ours.
 // Profile sections (16 Oct): from each company's FIN:NECT one-pager where
 // MYSC has finished it (6 of 8); DEVD and MarinaChain from their IR decks
@@ -474,6 +479,147 @@ export const companies: Company[] = [
       "Strategic partnerships and PoC opportunities.",
     ],
     onepager: "/onepagers/crosshub.pdf",
+  },
+  {
+    slug: "ztosigma",
+    name: "Z to Sigma",
+    displayName: "Z to Sigma",
+    tagline:
+      "Keeper AI: Agentic AI for B2B field businesses that connects calls, transactions, and payments to understand context and take the next action.",
+    sector: "Financial data & AI",
+    stage: "Pre-A",
+    track: "track1",
+    website: "",
+    email: "",
+    phone: "",
+    problem: [
+      "Manufacturing, equipment, maintenance and industrial-distribution businesses still run on phone calls, faxes, documents and handwritten notes.",
+      "Deal information is scattered, and the context of each customer lives in the memory of the owner and a few key staff.",
+    ],
+    solution: [
+      "Keeper AI connects call, transaction and settlement data, remembers the context of each deal, and decides and carries out the next task.",
+      "Offered to local B2B platforms, financial institutions and SaaS providers as an API and transaction-settlement module.",
+    ],
+    keyFeatures: [],
+    targetAudience: [
+      "Small and mid-sized manufacturing, equipment, maintenance and industrial-distribution companies.",
+      "B2B platforms, financial institutions and SaaS providers that want transaction-settlement data and AI.",
+    ],
+    businessModel: [],
+    businessSnapshot: [
+      "36,588 business sites on the platform in Korea, 1,493 of them paying.",
+      "1.3M+ transaction documents and about KRW 450B in transactions recorded.",
+      "Customer interviews with 35 Japanese companies at Japan IT Week 2025.",
+      "Exhibiting at Manufacturing World Osaka, October 2026.",
+    ],
+    team: [],
+    seekingOpportunities: [
+      "Executives and managers at field B2B companies (manufacturing, equipment, maintenance, industrial distribution) for interviews and product demos.",
+      "Local companies and institutions open to a PoC or business partnership.",
+      "VCs investing in AI, B2B SaaS, fintech or industrial tech, or in expansion across Korea, Japan and Southeast Asia.",
+    ],
+  },
+  {
+    slug: "elevenliter",
+    name: "Elevenliter",
+    displayName: "Elevenliter",
+    tagline:
+      "Lifet: An AI-powered pet insurance underwriting solution that analyzes smartphone photos to assess the presence and severity of progressive conditions, enabling insurers to evaluate risk and tailor premiums to each pet’s health status.",
+    sector: "Insurtech",
+    stage: "Series A",
+    track: "track1",
+    website: "",
+    email: "",
+    phone: "",
+    problem: [
+      "Pet insurers have little health data on the animals they cover, so it is hard to assess each pet's risk or price a policy to its condition.",
+    ],
+    solution: [
+      "Lifet's AI checks smartphone photos of a pet for progressive conditions and how far they have advanced.",
+      "Insurers use the result to assess risk and set premiums according to each pet's health.",
+    ],
+    keyFeatures: [],
+    targetAudience: [
+      "Pet insurers, reinsurers and insurance platforms.",
+      "Pet-care platforms and device makers that want AI health checks.",
+    ],
+    businessModel: [],
+    businessSnapshot: [
+      "Pet insurance co-developed and launched with DB Insurance in Korea.",
+      "AI checks supplied to Samsung Electronics' SmartThings Pet Care, launching in the US in September 2026.",
+      "Exhibited at CES 2024 (K-Startup pavilion), and at CES 2026 and VivaTech 2026 with Samsung Electronics.",
+      "19 patents filed in Korea and abroad, and 2 veterinary software-as-a-medical-device approvals.",
+    ],
+    team: [],
+    seekingOpportunities: [
+      "Global pet insurers interested in a PoC.",
+      "Insurers, reinsurers and insurtechs in Japan, the Americas and East Asia.",
+      "Investors and partners in insurance and fintech.",
+    ],
+  },
+  {
+    slug: "atones",
+    name: "Atones",
+    displayName: "Atones",
+    tagline:
+      "CandyPay: scan one QR code and split a single payment across several credit cards, in the amounts you choose.",
+    sector: "Payments",
+    stage: "FIN:NECT alumni",
+    track: "track1",
+    website: "",
+    email: "",
+    phone: "",
+    problem: [
+      "Many people hold several credit cards but miss each card's monthly spending target, and shops rarely let a customer split one bill across cards.",
+    ],
+    solution: [
+      "CandyPay lets a customer scan a QR code and pay one bill with several cards, choosing how much goes on each.",
+      "Candy AI recommends the card with the biggest benefit at the moment of payment.",
+    ],
+    keyFeatures: [],
+    targetAudience: [
+      "Consumers with several credit cards.",
+      "Small and offline merchants that want to accept split payments.",
+    ],
+    businessModel: [],
+    businessSnapshot: [
+      "Launched in August 2025.",
+      "2,000+ users and about KRW 220M in payments processed (January 2026).",
+    ],
+    team: [],
+    seekingOpportunities: [],
+  },
+  {
+    slug: "moneyguard",
+    name: "Money Guard Service",
+    displayName: "Money Guard",
+    tagline:
+      "A platform where creditors record a money promise, such as a personal loan or payment for goods and services, and the recovery steps follow automatically.",
+    sector: "Debt recovery",
+    stage: "FIN:NECT alumni",
+    track: "track1",
+    website: "",
+    email: "",
+    phone: "",
+    problem: [
+      "When a personal loan, a payment for goods or services, or child support goes unpaid, the creditor is usually left to chase it alone.",
+    ],
+    solution: [
+      "Creditors record the promise once on Money Guard, and the recovery process follows automatically.",
+      "Formal collection steps are handled through a linked credit-information company.",
+    ],
+    keyFeatures: [],
+    targetAudience: [
+      "Individuals and businesses owed money for loans, goods or services.",
+      "Parents recovering unpaid child support.",
+    ],
+    businessModel: [],
+    businessSnapshot: [
+      "Selected for TIPS, Korea's tech-startup programme, in December 2024.",
+      "Member company of Seoul Fintech Lab 2.",
+    ],
+    team: [],
+    seekingOpportunities: [],
   },
 ];
 

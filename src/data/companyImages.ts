@@ -9,6 +9,10 @@ import logoSionic from "@/assets/startups/logos/sionic.png";
 import logoAizen from "@/assets/startups/logos/aizen.png";
 import logoCanopy from "@/assets/startups/logos/canopy.png";
 import logoCrosshub from "@/assets/startups/logos/crosshub.png";
+import logoElevenliter from "@/assets/startups/logos/elevenliter.png";
+import logoAtones from "@/assets/startups/logos/atones.png";
+import logoMoneyguard from "@/assets/startups/logos/moneyguard.png";
+// Z to Sigma: no logo supplied yet (20 Oct) — the name is set as text.
 
 export const STARTUP_IMAGES: Record<string, string> = {};
 export const STARTUP_LOGOS: Record<string, string> = {
@@ -20,4 +24,7 @@ export const STARTUP_LOGOS: Record<string, string> = {
   aizen: logoAizen,
   canopy: logoCanopy,
   crosshub: logoCrosshub,
+  elevenliter: logoElevenliter,
+  atones: logoAtones,
+  moneyguard: logoMoneyguard,
 };

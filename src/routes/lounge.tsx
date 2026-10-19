@@ -32,7 +32,7 @@ export const Route = createFileRoute("/lounge")({
     typeof s.key === "string" && s.key ? { key: s.key } : {},
   head: () => ({
     meta: [
-      { title: "Virtual Networking Lounge — FIN:NECT Global Singapore 2026" },
+      { title: "Virtual Networking Lounge — FIN:NECT Global Demoday Singapore 2026" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: `Attendee networking lounge for the ${EVENT_NAME}.` },
     ],
