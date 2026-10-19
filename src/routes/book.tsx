@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Wordmark } from "@/components/Wordmark";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { companies, MEETUP_COMPANIES } from "@/data/companies";
 import {
@@ -16,8 +16,8 @@ import {
   getSlotInfo,
   isSlotOffered,
   ONE_ON_ONE_OPEN,
-  EVENT_NAME, MEETUP_DATES, MEETUP_DATES_SHORT, MEETUP_DAYS, slotName, companySessions,
-  type MeetupDayId } from "@/data/timeslots";
+  EVENT_NAME, MEETUP_DATES_SHORT, MEETUP_DAYS, meetupDay, slotName, companySessions } from "@/data/timeslots";
+import { STARTUP_LOGOS } from "@/data/companyImages";
 import { supabase } from "@/lib/supabase-client";
 import {
   createRsvp,
@@ -38,7 +38,8 @@ const searchSchema = z.object({
   // the first, so submit merges with the existing RSVP (see handleSubmit).
   // TanStack parses ?day=5 as a number, so coerce before the enum check.
   day: z.preprocess((v) => (v == null ? v : String(v)), z.enum(["5", "7"])).optional(),
-  // Which afternoon's rounds the 1:1 picker opens on (Thu 19 / Fri 20 Nov).
+  // Kept so home-page links with ?on=thu|fri stay valid; both afternoons
+  // now sit on one board, so it no longer changes the view.
   on: z.enum(["thu", "fri"]).optional(),
 });
 
@@ -87,18 +88,11 @@ const emptyForm: FormState = {
 };
 
 function RsvpPage() {
-  const { company: preselectSlug, day: dayParam, on: onParam } = Route.useSearch();
+  const { company: preselectSlug, day: dayParam } = Route.useSearch();
   const navigate = Route.useNavigate();
   // Company deep-links come from startup cards → they are 1:1 requests.
   const day: "5" | "7" = dayParam ?? (preselectSlug ? "5" : "7");
   const setDay = (d: "5" | "7") => navigate({ search: (prev) => ({ ...prev, day: d }), replace: true });
-
-  // Which afternoon the picker shows. Picks are kept per round id, so
-  // switching days never drops a pick made on the other day.
-  const [mday, setMday] = useState<MeetupDayId>(
-    onParam ?? (preselectSlug && !companySessions(preselectSlug).includes("thu") ? "fri" : "thu"),
-  );
-  const daySlots = TIMESLOTS.filter((t) => t.day === mday);
 
   // availability
   const [booked, setBooked] = useState<Set<BookedKey>>(new Set());
@@ -221,7 +215,6 @@ function RsvpPage() {
             !prev[t.id],
         );
         if (!openSlot) return prev;
-        setMday(openSlot.day);
         return { ...prev, [openSlot.id]: preselectSlug };
       });
     }
@@ -238,6 +231,10 @@ function RsvpPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
+    if (!form.primaryInterest) {
+      setFormError("Please choose what brings you here.");
+      return;
+    }
 
 
     const meetupSelections = attend.meetups
@@ -364,157 +361,138 @@ function RsvpPage() {
   }
 
   const myBookingCount = Object.keys(myBookings).length;
+  const pickedSlots = TIMESLOTS.filter((t) => selections[t.id] && !myBookings[t.id]);
+  const scheduleCount = pickedSlots.length + myBookingCount;
+  const thuSlots = TIMESLOTS.filter((t) => t.day === "thu");
+  const friSlots = TIMESLOTS.filter((t) => t.day === "fri");
+
+  // Crosshair for the picker: the row and round under the pointer.
+  const [hover, setHover] = useState<{ slug: string; slot: string } | null>(null);
+
+  // Mobile "continue" bar shows while the details form is off-screen.
+  const detailsRef = useRef<HTMLElement>(null);
+  const [detailsInView, setDetailsInView] = useState(false);
+  useEffect(() => {
+    const el = detailsRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setDetailsInView(e.isIntersecting), { rootMargin: "0px 0px -30% 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [day]);
+  const goToDetails = () => {
+    detailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => detailsRef.current?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true }), 500);
+  };
+
+  const field = "fn-field mt-1.5";
+
+  const showBar = day === "5" && ONE_ON_ONE_OPEN && pickedSlots.length > 0 && !detailsInView;
 
   return (
-    <div className="fn-square min-h-screen bg-background">
-      <header className="border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-          <Link to="/" className="flex items-center gap-3 min-w-0">
-            <Wordmark />
+    <div className={`min-h-screen bg-background ${showBar ? "max-lg:pb-20" : ""}`}>
+      {/* HERO — same black ground and nav as the home page */}
+      <section className="relative isolate overflow-hidden bg-navy text-white">
+        <header className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link to="/" className="min-w-0">
+            <Wordmark light compact />
           </Link>
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <Link
-              to="/lounge"
-              className="inline-flex items-center rounded-full bg-secondary px-3.5 py-1.5 text-xs font-semibold text-secondary-foreground transition hover:bg-accent sm:px-4 sm:text-sm"
-            >
-              Networking Lounge
-            </Link>
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1.5 rounded-full border border-primary px-3.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10 sm:px-4 sm:text-sm"
-            >
-              ← Home
-            </Link>
-          </div>
-        </div>
-      </header>
+          <nav className="flex shrink-0 items-center text-[13px] font-semibold sm:text-sm">
+            <Link to="/" hash="startups" className="nav-link">Startups</Link>
+            <Link to="/lounge" className="nav-link whitespace-nowrap">Networking Lounge</Link>
+          </nav>
+        </header>
 
-      {/* HERO */}
-      <section className="relative isolate overflow-hidden bg-hero-gradient text-primary-foreground">
-        <div aria-hidden className="dotgrid pointer-events-none absolute inset-0 -z-10" />
-        <div className="mx-auto max-w-5xl px-5 py-10 sm:px-6 sm:py-12">
-          <div className="text-sm font-semibold text-primary-foreground/70">
-            {day === "5" ? "RSVP · 1:1 business meetings" : "RSVP · Demo Day"}
-          </div>
-          <h1 className="mt-2 text-4xl font-bold leading-none sm:text-5xl">
-            <span className="sm:hidden">{day === "5" ? MEETUP_DATES_SHORT : EVENT_DAY_SHORT}</span>
-            <span className="hidden sm:inline">{day === "5" ? MEETUP_DATES_SHORT : EVENT_DATE}</span>
+        <div className="mx-auto max-w-6xl px-4 pb-12 pt-8 sm:px-6 md:pb-16 md:pt-12">
+          <h1 className="hero-in max-w-3xl text-[clamp(2.1rem,5.6vw,3.9rem)] font-extrabold leading-[1.02] tracking-tight">
+            {day === "5" ? "Pick your 1:1 meetings" : "RSVP for the Demo Day"}
           </h1>
-          <div className="mt-2 font-display text-2xl font-semibold text-yellow">
-            {day === "5" ? `Thu ${MEETUP_DAYS[0].time} · Fri afternoon, time TBC` : EVENT_TIME}
-          </div>
-          <p className="mt-2 text-sm text-primary-foreground/85 sm:text-base">
-            {day === "5" ? (
-              <>
-                {MEETUP_DAYS[0].mapUrl ? (
-                  <a href={MEETUP_DAYS[0].mapUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-white">
-                    {MEETUP_DAYS[0].venue}
-                  </a>
-                ) : MEETUP_DAYS[0].venue}{" "}
-                · Private meetings with the startups of your choice
-              </>
-            ) : (
-              <>
-                {EVENT_MAP_URL ? (
-                  <a href={EVENT_MAP_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 transition hover:text-white">
-                    {EVENT_VENUE}
-                  </a>
-                ) : EVENT_VENUE}{" "}
-                · {EVENT_ADDRESS}
-              </>
-            )}
+          <p className="hero-in mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white/70 [--i:1]">
+            {day === "5"
+              ? "Private meetings with the startups of your choice, on Thursday and Friday afternoon. One startup per round; book as many rounds as you like."
+              : "IR pitches from Korean fintechs, then their meetings with investors, run with Tenity on Thursday morning."}
           </p>
 
-          {/* Day toggle */}
-          <div className="mt-6 inline-flex rounded-full border border-primary-foreground/25 bg-primary-foreground/10 p-1 backdrop-blur-sm">
+          {/* The two sign-ups, as the home page's two sessions */}
+          <div role="tablist" aria-label="What are you registering for?" className="hero-in mt-9 grid gap-3 sm:grid-cols-2 [--i:2]">
             {([
-              ["7", "Morning · Demo Day"],
-              ["5", "Afternoons · 1:1 Meetings"],
-            ] as const).map(([d, label]) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setDay(d)}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition sm:text-sm ${
-                  day === d ? "bg-yellow text-yellow-foreground shadow-sm" : "text-primary-foreground/85 hover:bg-primary-foreground/10"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {myBookingCount > 0 && (
-            <div className="mt-5 inline-flex flex-wrap gap-2 rounded-2xl bg-primary-foreground/10 px-4 py-3 text-sm">
-              {Object.entries(myBookings).map(([timeslotId, companySlug]) => {
-                const c = companies.find((x) => x.slug === companySlug);
-                const t = TIMESLOTS.find((x) => x.id === timeslotId);
-                if (!c || !t) return null;
-                return (
-                  <span key={timeslotId} className="rounded-full bg-primary-foreground/15 px-3 py-1">
-                    ✓ 1:1 {slotName(t)} — {c.name}
+              ["7", "Demo Day", `${EVENT_DAY_SHORT} · ${EVENT_TIME}`, EVENT_VENUE],
+              ["5", "1:1 business meetings", `${MEETUP_DATES_SHORT} · afternoons`, `${TIMESLOTS.length} rounds · ${MEETUP_COMPANIES.length} startups`],
+            ] as const).map(([d, title, when, where]) => {
+              const on = day === d;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setDay(d)}
+                  className={`mode-tile group text-left ${on ? "is-on" : ""}`}
+                >
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="text-lg font-bold">{title}</span>
+                    <span aria-hidden className="mode-dot" />
                   </span>
-                );
-              })}
-            </div>
-          )}
+                  <span className="mt-1 block text-sm tabular-nums text-white/70">{when}</span>
+                  <span className="block text-sm text-white/45">{where}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+        <div aria-hidden className="h-2 bg-brand-band" />
       </section>
 
-      <section className="mx-auto max-w-5xl px-5 py-10 sm:px-6">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* SUCCESS MODAL */}
         <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
-          <DialogContent className="w-[calc(100%-2rem)] max-w-md rounded-2xl">
+          <DialogContent className="w-[calc(100%-2rem)] max-w-md gap-0 overflow-hidden rounded-[3px] border-0 p-0 sm:rounded-[3px]">
             {submitted && (
               <>
-                <DialogHeader>
-                  <div className="mx-auto mb-1 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700">✓</div>
-                  <DialogTitle className="text-center text-xl text-navy">
-                    {submitted.bookings.some((b) => !b.ok) ? "RSVP received — please check below" : "Your RSVP is confirmed!"}
-                  </DialogTitle>
-                  <DialogDescription className="text-center">
-                    {day === "5" ? "See you in Singapore." : `See you on ${EVENT_DATE.replace(" 2026", "")}.`}
-                  </DialogDescription>
-                </DialogHeader>
-                <ul className="space-y-1.5 rounded-xl bg-muted/60 p-4 text-sm text-navy">
+                <div className="bg-navy px-6 pb-6 pt-7 text-white">
+                  <span aria-hidden className="flex h-11 w-11 items-center justify-center bg-yellow text-xl font-bold text-navy shadow-[3px_3px_0_0_#00ccff]">✓</span>
+                  <DialogHeader className="mt-5 space-y-1 text-left">
+                    <DialogTitle className="text-2xl font-extrabold text-white">
+                      {submitted.bookings.some((b) => !b.ok) ? "Almost there" : "You're registered"}
+                    </DialogTitle>
+                    <DialogDescription className="text-white/65">
+                      {submitted.bookings.some((b) => !b.ok)
+                        ? "Your RSVP is saved, but some picks were taken. Details below."
+                        : day === "5" ? "See you in Singapore." : `See you on ${EVENT_DATE.replace(" 2026", "")}.`}
+                    </DialogDescription>
+                  </DialogHeader>
+                </div>
+                <ul className="divide-y divide-border px-6">
                   {(submitted.attend.showcase || submitted.attend.lunch) && (
-                    <li>✓ Demo Day · {EVENT_DAY_SHORT} · {EVENT_TIME}</li>
+                    <li className="flex items-baseline gap-4 py-3.5 text-sm">
+                      <span className="w-24 shrink-0 tabular-nums text-muted-foreground">{EVENT_DAY_SHORT}</span>
+                      <span className="font-semibold text-navy">Demo Day · {EVENT_TIME}</span>
+                    </li>
                   )}
                   {submitted.bookings.map((b) => {
                     const c = companies.find((x) => x.slug === b.companySlug);
                     const t = TIMESLOTS.find((x) => x.id === b.timeslotId);
                     return (
-                      <li key={`m-${b.timeslotId}-${b.companySlug}`} className={b.ok ? "" : "text-red-700"}>
-                        {b.ok ? "✓" : "✕"} 1:1 {t ? slotName(t) : ""} · {t?.time} — {c?.name}
-                        {!b.ok && b.message ? <div className="pl-4 text-xs">{b.message} Pick another startup and re-submit.</div> : null}
+                      <li key={`m-${b.timeslotId}-${b.companySlug}`} className="flex items-baseline gap-4 py-3.5 text-sm">
+                        <span className="w-24 shrink-0 tabular-nums text-muted-foreground">{t ? `${meetupDay(t.day).short.split(" ")[0]} ${t.label.replace("Round ", "R")}` : ""}</span>
+                        <span className={b.ok ? "font-semibold text-navy" : "text-destructive line-through"}>{c?.name}</span>
+                        {!b.ok && <span className="ml-auto shrink-0 text-xs text-destructive">{b.message ?? "Taken"}</span>}
                       </li>
                     );
                   })}
                   {submitted.attend.meetups && submitted.bookings.length === 0 && (
-                    <li>✓ 1:1 Business Meetings ({MEETUP_DATES_SHORT}) — organizers will be in touch</li>
+                    <li className="py-3.5 text-sm text-navy">1:1 meetings ({MEETUP_DATES_SHORT}): the organisers will be in touch.</li>
                   )}
                 </ul>
-                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-navy">
+                <p className="mx-6 mt-2 border-t border-border pt-4 text-sm leading-relaxed text-muted-foreground">
                   {submitted.emailSent ? (
-                    <>
-                      📧 <strong>Please check your confirmation email.</strong> We've sent your schedule to{" "}
-                      <strong className="break-all">{submitted.email}</strong>. If you don't see it within a few
-                      minutes, check your spam or promotions folder.
-                    </>
+                    <>We've emailed your schedule to <strong className="break-all text-navy">{submitted.email}</strong>. Not there in a few minutes? Check spam or promotions.</>
                   ) : (
-                    <>
-                      📝 Your registration is saved. You can check or change your bookings any time from the
-                      "Check or cancel" section at the bottom of this page.
-                    </>
+                    <>Your registration is saved. Check or cancel your meetings any time at the bottom of this page.</>
                   )}
+                </p>
+                <div className="p-6">
+                  <button type="button" onClick={() => setSuccessOpen(false)} className="btn-node w-full justify-center">Done</button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSuccessOpen(false)}
-                  className="mt-1 w-full rounded-full bg-primary py-3 font-semibold text-primary-foreground hover:bg-primary/90"
-                >
-                  Done
-                </button>
               </>
             )}
           </DialogContent>
@@ -522,478 +500,436 @@ function RsvpPage() {
 
         {/* Failed picks stay visible on the page after the modal is closed */}
         {submitted && !successOpen && submitted.bookings.some((b) => !b.ok) && (
-          <div className="mb-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-900">
-            <div className="font-semibold">Some 1:1 picks couldn't be booked — the rest of your RSVP is confirmed.</div>
+          <div className="mt-10 border-l-4 border-destructive bg-[#fff4ef] p-5 text-navy">
+            <p className="font-bold">Some picks couldn't be booked. The rest of your RSVP is confirmed.</p>
             <ul className="mt-2 space-y-1 text-sm">
-              {(submitted.attend.showcase || submitted.attend.lunch) && <li>✓ Demo Day ({EVENT_DAY_SHORT} · {EVENT_TIME}: registration, talks, pitches & networking dinner)</li>}
-              {submitted.bookings.map((b) => {
+              {submitted.bookings.filter((b) => !b.ok).map((b) => {
                 const c = companies.find((x) => x.slug === b.companySlug);
                 const t = TIMESLOTS.find((x) => x.id === b.timeslotId);
                 return (
-                  <li key={`${b.timeslotId}-${b.companySlug}`} className={b.ok ? "" : "text-red-700"}>
-                    {b.ok ? "✓" : "✕"} 1:1 {t ? slotName(t) : ""} — {c?.name}
-                    {!b.ok && b.message ? ` (${b.message} Pick another startup below and re-submit.)` : ""}
+                  <li key={`${b.timeslotId}-${b.companySlug}`}>
+                    {t ? slotName(t) : ""}: {c?.name} ({b.message} Pick another startup below and submit again.)
                   </li>
                 );
               })}
-              {submitted.attend.meetups && submitted.bookings.length === 0 && (
-                <li>✓ 1:1 Business Meetings ({MEETUP_DATES_SHORT}) — organizers will be in touch</li>
-              )}
             </ul>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* STEP 1 — sessions */}
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-            <div className="flex items-center gap-3">
-              {day === "5" && (
-                <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-primary-foreground">
-                  Step 01
-                </span>
-              )}
-              <h2 className="text-lg font-bold text-navy">{day === "5" ? "Pick Your Startups" : "Agenda"}</h2>
-            </div>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              {day === "5" ? "Pick the afternoon, then one startup per round. You can book rounds on both days. Leave a round empty if you don't need it; greyed-out slots are taken." : "Run with Tenity at 80RR Fintech Hub."}
-            </p>
-
-            {day === "7" && (
-              <div className="mt-5 divide-y divide-border rounded-xl border border-border bg-background">
-                {DEMO_AGENDA.map(([time, label]) => (
-                  <div key={time} className="flex items-center gap-4 px-4 py-3.5">
-                    <span className="w-28 shrink-0 text-sm font-bold text-primary">{time}</span>
-                    <span className="text-sm font-semibold text-navy">{label}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="hidden">
-              {PROGRAM.filter((p) => p.id !== "meetups").map((p) => {
-                const checked = attend[p.id];
-                return (
-                  <label
-                    key={p.id}
-                    className={`flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition ${
-                      checked ? "border-primary bg-primary/5" : "border-border bg-background hover:border-primary/40"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(e) => setAttend((a) => ({ ...a, [p.id]: e.target.checked }))}
-                      className="mt-1 h-4 w-4 accent-[var(--primary)]"
-                    />
-                    <span>
-                      <span className="block text-sm font-bold text-navy">
-                        {p.title} <span className="ml-1 font-medium text-muted-foreground">{p.time}</span>
-                      </span>
-                      <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{p.description}</span>
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-
-            {/* 1:1 picker — appears when meetups checked and self-booking is open */}
-            {ONE_ON_ONE_OPEN && attend.meetups && (
-              <div className="mt-5 rounded-xl border border-primary/25 bg-primary/[0.03] p-4 sm:p-5">
-                <div role="tablist" aria-label="Afternoon" className="grid grid-cols-2 gap-2">
-                  {MEETUP_DAYS.map((d) => {
-                    const picks = TIMESLOTS.filter((t) => t.day === d.id && (selections[t.id] || myBookings[t.id])).length;
-                    const on = mday === d.id;
-                    return (
-                      <button
-                        key={d.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={on}
-                        onClick={() => setMday(d.id)}
-                        className={`rounded-xl border px-4 py-3 text-left transition ${on ? "border-navy bg-navy text-white" : "border-border bg-card text-navy hover:border-navy/40"}`}
-                      >
-                        <span className="block text-sm font-bold">{d.short}</span>
-                        <span className={`block text-xs ${on ? "text-white/70" : "text-muted-foreground"}`}>
-                          {d.id === "fri" ? "Afternoon · time TBC" : d.time}
-                          {picks > 0 && <span className={`ml-2 font-semibold ${on ? "text-yellow" : "text-navy"}`}>· {picks} picked</span>}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {mday === "fri" && (
-                  <p className="mt-3 text-xs text-muted-foreground">Friday's exact round times are being confirmed. We'll email you the time of each meeting you book.</p>
-                )}
-                {loading && <LoadingNote text="Checking live availability…" className="mt-3 text-xs font-semibold text-primary" />}
-                {/* Phones: one card per startup, the rounds as full-width
-                    buttons underneath — the table's round columns sat off-screen
-                    at 360–390px with no hint that they scroll. */}
-                <div className="mt-4 space-y-3 sm:hidden">
-                  {MEETUP_COMPANIES.map((c) => (
-                    <div key={c.slug} className="rounded-xl border border-border bg-card p-3.5">
-                      <div className="font-semibold text-navy">{c.name}</div>
-                      <div className="text-xs text-muted-foreground">{c.sector}</div>
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        {daySlots.map((t) => {
-                          if (!isSlotOffered(c.slug, t.id)) {
-                            return (
-                              <div key={t.id} className="rounded-lg border border-dashed border-border px-1 py-2 text-center text-[11px] text-muted-foreground/60">
-                                {t.day === "thu" ? "Fri only" : "—"}
-                              </div>
-                            );
-                          }
-                          const isBooked = booked.has(key(c.slug, t.id));
-                          const isMine = myBookings[t.id] === c.slug;
-                          const iHaveThisRound = Boolean(myBookings[t.id]) && !isMine;
-                          const isSelected = selections[t.id] === c.slug;
-                          const disabled = loading || isBooked || isMine || iHaveThisRound;
-                          const tone = isMine
-                            ? "border-green-300 bg-green-50 text-green-800"
-                            : isBooked
-                              ? "border-border bg-muted text-muted-foreground"
-                              : isSelected
-                                ? "border-navy bg-navy text-white"
-                                : "border-primary/30 bg-background text-navy";
-                          return (
-                            <button
-                              key={t.id}
-                              type="button"
-                              disabled={disabled}
-                              onClick={() => toggleSelection(t.id, c.slug)}
-                              className={`rounded-lg border px-1 py-2 text-center transition disabled:cursor-not-allowed ${iHaveThisRound ? "opacity-40" : ""} ${tone}`}
-                            >
-                              <div className="text-[11px] font-bold">{t.label.replace("Round ", "R")}</div>
-                              <div className="text-[10px] leading-tight opacity-80">{t.time.replace(" – ", "–")}</div>
-                              <div className="mt-0.5 text-[10px] font-semibold">
-                                {isMine ? "✓ Booked" : isBooked ? "Full" : isSelected ? "✓ Picked" : "Select"}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 hidden overflow-x-auto rounded-xl border border-border bg-card sm:block">
-                  {/* Fixed layout: the three round columns share the width equally and
-                      every cell holds one same-size pill, centred, so Select / Selected
-                      / Full / Booked / Friday only line up down each column. */}
-                  <table className="w-full min-w-[560px] table-fixed border-collapse text-sm">
-                    <colgroup>
-                      <col className="w-[34%]" />
-                      {daySlots.map((t) => <col key={t.id} />)}
-                    </colgroup>
-                    <thead>
-                      <tr className="bg-secondary text-navy">
-                        <th className="p-3 text-left font-semibold">Startup</th>
-                        {daySlots.map((t) => (
-                          <th key={t.id} className="p-3 text-center font-semibold">
-                            {t.label}
-                            <div className="text-xs font-normal text-muted-foreground">{t.time}</div>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {MEETUP_COMPANIES.map((c) => (
-                        <tr key={c.slug} className="border-t border-border">
-                          <td className="p-3">
-                            <div className="font-semibold text-navy">{c.name}</div>
-                            <div className="text-xs text-muted-foreground">{c.sector}</div>
-                          </td>
-                          {daySlots.map((t) => {
-                            if (!isSlotOffered(c.slug, t.id)) {
-                              return (
-                                <td key={t.id} className="p-3 text-center">
-                                  <span className="inline-flex h-8 w-28 items-center justify-center rounded-full border border-dashed border-border text-xs font-medium text-muted-foreground">
-                                    {t.day === "thu" ? "Friday only" : "—"}
-                                  </span>
-                                </td>
-                              );
-                            }
-                            const isBooked = booked.has(key(c.slug, t.id));
-                            const isMine = myBookings[t.id] === c.slug;
-                            const iHaveThisRound = Boolean(myBookings[t.id]) && !isMine;
-                            const isSelected = selections[t.id] === c.slug;
-                            const disabled = loading || isBooked || isMine || iHaveThisRound;
-                            return (
-                              <td key={t.id} className="p-3 text-center">
-                                {isMine ? (
-                                  <span className="inline-flex h-8 w-28 items-center justify-center gap-1.5 rounded-full bg-green-100 text-xs font-semibold text-green-800">
-                                    ✓ Booked
-                                  </span>
-                                ) : isBooked ? (
-                                  <span className="inline-flex h-8 w-28 items-center justify-center gap-1.5 rounded-full bg-muted text-xs font-semibold text-muted-foreground">
-                                    Full
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    disabled={disabled}
-                                    onClick={() => toggleSelection(t.id, c.slug)}
-                                    title={iHaveThisRound ? "You already have a meeting in this round" : undefined}
-                                    className={`inline-flex h-8 w-28 items-center justify-center gap-1.5 rounded-full text-xs font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                                      isSelected
-                                        ? "bg-yellow text-navy ring-1 ring-navy/30"
-                                        : "bg-primary text-primary-foreground hover:bg-primary/90"
-                                    }`}
-                                  >
-                                    {isSelected ? "✓ Selected" : "Select"}
-                                  </button>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* STEP 2 — details */}
-          <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-            <div className="flex items-center gap-3">
-              {day === "5" && (
-                <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-primary-foreground">
-                  Step 02
-                </span>
-              )}
-              <h2 className="text-lg font-bold text-navy">Your Details</h2>
-            </div>
-
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          {day === "7" ? (
+            /* DEMO DAY — the morning, as on the home page */
+            <section className="grid gap-10 py-14 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-16 md:py-20">
               <div>
-                <label className="text-xs font-semibold text-navy">Full Name *</label>
-                <input
-                  required
-                  value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-navy">Organisation *</label>
-                <input
-                  required
-                  value={form.organisation}
-                  onChange={(e) => setForm({ ...form, organisation: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-navy">Job Title *</label>
-                <input
-                  required
-                  value={form.jobTitle}
-                  onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-navy">Email *</label>
-                <input
-                  required
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-                />
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Re-submitting with the same email updates your RSVP.
+                <h2 className="text-3xl font-bold text-navy md:text-4xl">{EVENT_DATE.replace(" 2026", "")}</h2>
+                <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+                  Doors open at 09:00. Each attendee registers separately, so colleagues need their own RSVP.
+                </p>
+                <p className="mt-6 text-sm text-navy">
+                  {EVENT_MAP_URL ? (
+                    <a href={EVENT_MAP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">{EVENT_VENUE}</a>
+                  ) : <span className="font-semibold">{EVENT_VENUE}</span>}
+                  <span className="block text-muted-foreground">{EVENT_ADDRESS}</span>
                 </p>
               </div>
-              <div>
-                <label className="text-xs font-semibold text-navy">Phone *</label>
-                <input
-                  required
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="+65 XXXX XXXX"
-                  className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-navy">Primary Interest *</label>
-                <select
-                  required
-                  value={form.primaryInterest}
-                  onChange={(e) => setForm({ ...form, primaryInterest: e.target.value })}
-                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                >
-                  <option value="" disabled>
-                    Select one...
-                  </option>
-                  {INTEREST_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
+              <div className="border-t-4 border-navy pt-5">
+                <p className="text-sm font-semibold text-muted-foreground">Morning, with Tenity</p>
+                <ol className="mt-3 divide-y divide-navy/10 border-y border-navy/10">
+                  {DEMO_AGENDA.map(([time, label]) => (
+                    <li key={time} className="grid grid-cols-[7.5rem_1fr] gap-3 py-3 text-[15px]">
+                      <span className="tabular-nums text-muted-foreground">{time}</span>
+                      <span className="text-navy">{label}</span>
+                    </li>
                   ))}
-                </select>
+                </ol>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Want private meetings too?{" "}
+                  <button type="button" onClick={() => setDay("5")} className="font-semibold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">
+                    Book 1:1s on Thursday or Friday afternoon
+                  </button>
+                </p>
               </div>
-            </div>
-            {attend.meetups && !ONE_ON_ONE_OPEN && (
-              <div className="mt-4 rounded-xl border border-primary/25 bg-primary/[0.03] p-4 text-sm text-navy">
-                Thanks for your interest in 1:1 meetings on {MEETUP_DATES.replace(" 2026", "")}. The organizers will contact you to
-                match you with the startups that fit your goals.
-              </div>
-            )}
-            {attend.meetups && (
-              <div className="mt-4">
-                <label className="text-xs font-semibold text-navy">
-                  Colleagues joining your 1:1 meetings{" "}
-                  <span className="font-normal text-muted-foreground">(optional — for name badges)</span>
-                </label>
-                <input
-                  value={form.additionalAttendees}
-                  onChange={(e) => setForm({ ...form, additionalAttendees: e.target.value })}
-                  placeholder="e.g. Jane Tan (Co-founder), David Lim (Marketing)"
-                  className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-                />
-                <div className="mt-1 text-[11px] text-muted-foreground">
-                  1:1 slots are booked per organisation, so list colleagues sitting in with you here. For the
-                  Demo Day pitches and networking, each attendee should simply register individually.
+            </section>
+          ) : (
+            /* 1:1 PICKER — both afternoons on one board */
+            <section className="py-14 md:py-20" aria-labelledby="pick-title">
+              <div className="flex items-start gap-4">
+                <span aria-hidden className="step-node">1</span>
+                <div>
+                  <h2 id="pick-title" className="text-3xl font-bold text-navy md:text-4xl">Pick your startups</h2>
+                  <p className="mt-2 max-w-2xl text-[15px] text-muted-foreground">
+                    One startup per round. Tap a square to pick it, tap again to clear.
+                  </p>
                 </div>
               </div>
-            )}
-            <div className="mt-4">
-              <label className="text-xs font-semibold text-navy">
-                LinkedIn or contact link{" "}
-                <span className="font-normal text-muted-foreground">(optional — shown on your card in the attendee networking lounge)</span>
-              </label>
-              <input
-                value={form.contactUrl}
-                onChange={(e) => setForm({ ...form, contactUrl: e.target.value })}
-                placeholder="e.g. linkedin.com/in/yourname or your company site"
-                className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-              />
-              <label className="mt-2 flex items-start gap-2 text-xs text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={form.showInLounge}
-                  onChange={(e) => setForm({ ...form, showInLounge: e.target.checked })}
-                  className="mt-0.5"
-                />
-                <span>
-                  Show my card (name, organisation, job title) in the attendee networking lounge —
-                  visible to fellow attendees only. Email and phone are never shown.
-                </span>
-              </label>
-            </div>
-            <div className="mt-4">
-              <label className="text-xs font-semibold text-navy">
-                Any notes or questions? <span className="font-normal text-muted-foreground">(optional)</span>
-              </label>
-              <textarea
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                rows={3}
-                placeholder="Dietary requirements, questions, or anything else you'd like us to know..."
-                className="mt-1 w-full rounded-lg border border-input px-3 py-2 text-sm"
-              />
-            </div>
 
-            {formError && (
-              <div className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</div>
-            )}
+              <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-12">
+                <div className="min-w-0">
+                  {!ONE_ON_ONE_OPEN ? (
+                    <p className="border-l-4 border-yellow bg-secondary p-5 text-sm text-navy">
+                      Booking opens soon. Register below and the organisers will match you with the startups that fit your goals.
+                    </p>
+                  ) : (
+                    <div className="pick-board" role="grid" aria-label="1:1 meeting rounds" aria-busy={loading} onMouseLeave={() => setHover(null)}>
+                      {/* day headers */}
+                      <div role="row" className="pick-row pick-head">
+                        <span role="columnheader" className="pick-name text-xs text-muted-foreground">
+                          {loading ? <LoadingNote text="Checking availability…" className="text-xs font-semibold text-navy" /> : `${MEETUP_COMPANIES.length} startups`}
+                        </span>
+                        {MEETUP_DAYS.map((d) => (
+                          <span key={d.id} role="columnheader" className={`pick-day ${d.id === "fri" ? "is-fri" : ""}`}>
+                            <span className="block font-bold text-navy">{d.short}</span>
+                            <span className="block truncate text-[11px] tabular-nums text-muted-foreground">{d.id === "fri" ? "Time TBC" : d.time}</span>
+                          </span>
+                        ))}
+                      </div>
+                      {/* round headers */}
+                      <div role="row" className="pick-row pick-rounds">
+                        <span className="pick-name" />
+                        {[thuSlots, friSlots].map((slots, g) => (
+                          <span key={g} className="pick-group">
+                            {slots.map((t) => (
+                              <span key={t.id} role="columnheader" className={`pick-round ${hover?.slot === t.id ? "is-hot" : ""}`}>
+                                <span className="font-bold text-navy">{t.label.replace("Round ", "R")}</span>
+                                <span className="hidden text-[10px] tabular-nums text-muted-foreground lg:block">{t.day === "thu" ? t.time.split("–")[0].trim() : "TBC"}</span>
+                              </span>
+                            ))}
+                          </span>
+                        ))}
+                      </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="mt-6 w-full rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
-            >
-              <BusyLabel busy={submitting} text="Submitting…">Confirm My RSVP →</BusyLabel>
-            </button>
-          </div>
-        </form>
-
-        {/* CHECK / MANAGE — #manage is linked from the confirmation email */}
-        <div id="manage" className="mt-12 scroll-mt-24 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
-          <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-            Already registered?
-          </div>
-          <h2 className="mt-2 text-xl font-bold text-navy">Check or cancel your 1:1 meetings</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Enter the email you used to see your confirmed meetings on any device. To change your
-            session choices, just re-submit the form above with the same email.
-          </p>
-          <form onSubmit={handleLookup} className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <input
-              type="email"
-              required
-              value={lookupEmail}
-              onChange={(e) => {
-                setLookupEmail(e.target.value);
-                setLookupResults(null);
-              }}
-              placeholder="your@email.com"
-              className="w-full rounded-lg border border-input px-3 py-2.5 text-sm sm:max-w-sm"
-            />
-            <button
-              type="submit"
-              disabled={lookupLoading}
-              className="shrink-0 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
-            >
-              <BusyLabel busy={lookupLoading} text="Checking…">Find my bookings</BusyLabel>
-            </button>
-          </form>
-
-          {lookupResults !== null && (
-            <div className="mt-6">
-              {lookupResults.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                  No 1:1 meetings found for this email. If you just registered, double-check the
-                  spelling — the lookup matches the exact email used on the form.
-                </div>
-              ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {lookupResults.map((b) => {
-                    const c = companies.find((x) => x.slug === b.company_id);
-                    const t = TIMESLOTS.find((x) => x.id === b.timeslot_id);
-                    return (
-                      <div key={b.id} className="rounded-xl border border-border bg-background p-5">
-                        <div className="text-xs font-semibold uppercase tracking-wide text-primary">
-                          {getSlotInfo(b.timeslot_id).label} · {getSlotInfo(b.timeslot_id).time}
-                        </div>
-                        <div className="mt-1.5 text-lg font-bold text-navy">{c?.name ?? b.company_id}</div>
-                        <div className="mt-0.5 text-xs text-muted-foreground">
-                          {getSlotInfo(b.timeslot_id).context}
-                        </div>
-                        <div className="mt-4 flex items-center justify-between gap-3">
-                          {c && (
-                            <Link
-                              to="/companies/$slug"
-                              params={{ slug: c.slug }}
-                              className="text-xs font-semibold text-primary hover:underline"
-                            >
-                              View one-pager →
+                      {MEETUP_COMPANIES.map((c) => {
+                        const logo = STARTUP_LOGOS[c.slug];
+                        const friOnly = !companySessions(c.slug).includes("thu");
+                        return (
+                          <div key={c.slug} role="row" className={`pick-row ${hover?.slug === c.slug ? "is-hot" : ""}`}>
+                            <Link to="/companies/$slug" params={{ slug: c.slug }} target="_blank" className="pick-name group flex items-center gap-3" title={`${c.name}: open profile`}>
+                              <span className="pick-logo hidden sm:inline-flex">
+                                {logo ? <img src={logo} alt="" className="max-h-6 max-w-full object-contain" /> : <span className="text-[10px] font-extrabold leading-none text-navy">{c.name}</span>}
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block text-[13px] font-semibold leading-tight text-navy group-hover:underline sm:text-sm">{c.name}</span>
+                                <span className="hidden truncate text-xs text-muted-foreground sm:block">{c.sector}</span>
+                              </span>
                             </Link>
-                          )}
+                            {[thuSlots, friSlots].map((slots, g) =>
+                              g === 0 && friOnly ? (
+                                <span key={g} className="pick-group">
+                                  <span className="pick-closed">Friday only</span>
+                                </span>
+                              ) : (
+                                <span key={g} className="pick-group">
+                                  {slots.map((t) => {
+                                    const isBooked = booked.has(key(c.slug, t.id));
+                                    const isMine = myBookings[t.id] === c.slug;
+                                    const iHaveThisRound = Boolean(myBookings[t.id]) && !isMine;
+                                    const isSelected = selections[t.id] === c.slug;
+                                    const state = isMine ? "is-mine" : isBooked ? "is-full" : isSelected ? "is-picked" : iHaveThisRound ? "is-blocked" : "";
+                                    const when = `${meetupDay(t.day).short}, ${t.label}${t.day === "thu" ? `, ${t.time}` : ""}`;
+                                    return (
+                                      <span key={t.id} role="gridcell" className={`pick-cell ${hover?.slot === t.id ? "is-hot" : ""}`}>
+                                        <button
+                                          type="button"
+                                          disabled={loading || isBooked || isMine || iHaveThisRound}
+                                          aria-pressed={isSelected}
+                                          aria-label={`${c.name}, ${when}${isMine ? ", booked by you" : isBooked ? ", taken" : iHaveThisRound ? ", you already have a meeting in this round" : ""}`}
+                                          title={isMine ? "Booked" : isBooked ? "Taken" : iHaveThisRound ? "You already have a meeting in this round" : `${c.name} · ${when}`}
+                                          onMouseEnter={() => setHover({ slug: c.slug, slot: t.id })}
+                                          onFocus={() => setHover({ slug: c.slug, slot: t.id })}
+                                          onClick={() => toggleSelection(t.id, c.slug)}
+                                          className={`pick ${state}`}
+                                        >
+                                          {(isSelected || isMine) && <span aria-hidden>✓</span>}
+                                        </button>
+                                      </span>
+                                    );
+                                  })}
+                                </span>
+                              ),
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground" aria-label="Legend">
+                        <li className="flex items-center gap-2"><span aria-hidden className="pick pick-legend" />Open</li>
+                        <li className="flex items-center gap-2"><span aria-hidden className="pick pick-legend is-picked" />Your pick</li>
+                        <li className="flex items-center gap-2"><span aria-hidden className="pick pick-legend is-mine" />Booked by you</li>
+                        <li className="flex items-center gap-2"><span aria-hidden className="pick pick-legend is-full" />Taken</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* YOUR SCHEDULE — fills in as you pick */}
+                {ONE_ON_ONE_OPEN && (
+                  <aside className="lg:sticky lg:top-6 lg:self-start" aria-label="Your schedule" aria-live="polite">
+                    <div className="border-t-4 border-yellow bg-navy p-5 text-white">
+                      <div className="flex items-baseline justify-between">
+                        <h3 className="text-lg font-bold">Your schedule</h3>
+                        <span className="text-sm tabular-nums text-white/60">{scheduleCount} / {TIMESLOTS.length}</span>
+                      </div>
+                      {MEETUP_DAYS.map((d) => (
+                        <div key={d.id} className="mt-5">
+                          <p className="text-xs text-white/50">{d.short} · {d.id === "fri" ? "time TBC" : d.time}</p>
+                          <ol className="mt-2 space-y-1.5">
+                            {TIMESLOTS.filter((t) => t.day === d.id).map((t) => {
+                              const mine = myBookings[t.id];
+                              const pick = mine ?? selections[t.id];
+                              const c = pick ? companies.find((x) => x.slug === pick) : undefined;
+                              return (
+                                <li key={t.id} className={`sched-slot ${c ? "is-filled" : ""}`}>
+                                  <span className="w-7 shrink-0 text-xs font-bold tabular-nums text-white/50">{t.label.replace("Round ", "R")}</span>
+                                  {c ? (
+                                    <>
+                                      <span className="min-w-0 flex-1 truncate text-sm font-semibold">{c.name}</span>
+                                      {mine ? (
+                                        <span className="shrink-0 text-xs font-semibold text-yellow">Booked</span>
+                                      ) : (
+                                        <button type="button" onClick={() => toggleSelection(t.id, c.slug)} className="sched-x" aria-label={`Remove ${c.name} from ${slotName(t)}`}>×</button>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <span className="text-sm text-white/35">Open</span>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ol>
+                        </div>
+                      ))}
+                      <button type="button" onClick={goToDetails} disabled={scheduleCount === 0} className="btn-node mt-6 w-full justify-center disabled:pointer-events-none disabled:opacity-40">
+                        {pickedSlots.length ? `Continue with ${pickedSlots.length} ${pickedSlots.length === 1 ? "meeting" : "meetings"}` : "Pick a startup to continue"}
+                      </button>
+                      <p className="mt-3 text-xs leading-relaxed text-white/45">Friday's round times follow the morning's institution visits. We'll email them once they're set.</p>
+                    </div>
+                  </aside>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* DETAILS */}
+          <section ref={detailsRef} id="details" className="scroll-mt-6 border-t border-border py-14 md:py-20" aria-labelledby="details-title">
+            <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-12">
+              <div className="min-w-0">
+                <div className="flex items-start gap-4">
+                  {day === "5" && <span aria-hidden className="step-node">2</span>}
+                  <div>
+                    <h2 id="details-title" className="text-3xl font-bold text-navy md:text-4xl">Your details</h2>
+                    <p className="mt-2 text-[15px] text-muted-foreground">Already registered? Use the same email and we'll update your RSVP.</p>
+                  </div>
+                </div>
+
+                <div className="mt-10 grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                  {([
+                    ["fullName", "Full name", "text", "", "name"],
+                    ["organisation", "Organisation", "text", "", "organization"],
+                    ["jobTitle", "Job title", "text", "", "organization-title"],
+                    ["email", "Email", "email", "", "email"],
+                    ["phone", "Phone", "tel", "+65 XXXX XXXX", "tel"],
+                  ] as const).map(([k, label, type, ph, ac]) => (
+                    <label key={k} className="block">
+                      <span className="text-sm font-semibold text-navy">{label}</span>
+                      <input
+                        required
+                        type={type}
+                        autoComplete={ac}
+                        placeholder={ph}
+                        value={form[k]}
+                        onChange={(e) => setForm({ ...form, [k]: e.target.value })}
+                        className={field}
+                      />
+                    </label>
+                  ))}
+                  <label className="block">
+                    <span className="text-sm font-semibold text-navy">LinkedIn or website <span className="font-normal text-muted-foreground">(optional)</span></span>
+                    <input
+                      value={form.contactUrl}
+                      onChange={(e) => setForm({ ...form, contactUrl: e.target.value })}
+                      placeholder="linkedin.com/in/yourname"
+                      className={field}
+                    />
+                  </label>
+                </div>
+
+                <fieldset className="mt-8">
+                  <legend className="text-sm font-semibold text-navy">What brings you here?</legend>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    {INTEREST_OPTIONS.map((opt) => (
+                      <label key={opt} className={`chip-node ${form.primaryInterest === opt ? "is-on" : ""}`}>
+                        <input
+                          type="radio"
+                          name="primaryInterest"
+                          value={opt}
+                          required
+                          checked={form.primaryInterest === opt}
+                          onChange={() => setForm({ ...form, primaryInterest: opt })}
+                          className="sr-only"
+                        />
+                        {opt}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                {attend.meetups && (
+                  <label className="mt-8 block">
+                    <span className="text-sm font-semibold text-navy">Colleagues joining your 1:1s <span className="font-normal text-muted-foreground">(optional)</span></span>
+                    <input
+                      value={form.additionalAttendees}
+                      onChange={(e) => setForm({ ...form, additionalAttendees: e.target.value })}
+                      placeholder="Jane Tan (Co-founder), David Lim (Marketing)"
+                      className={field}
+                    />
+                    <span className="mt-1.5 block text-xs text-muted-foreground">Meetings are booked per organisation; we'll print badges for the names here.</span>
+                  </label>
+                )}
+
+                <label className="mt-8 block">
+                  <span className="text-sm font-semibold text-navy">Notes or questions <span className="font-normal text-muted-foreground">(optional)</span></span>
+                  <textarea
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    rows={3}
+                    placeholder="Dietary requirements, questions, anything we should know"
+                    className={`${field} h-auto py-2.5`}
+                  />
+                </label>
+
+                <label className="lounge-toggle mt-8">
+                  <input type="checkbox" checked={form.showInLounge} onChange={(e) => setForm({ ...form, showInLounge: e.target.checked })} className="peer sr-only" />
+                  <span aria-hidden className="lounge-switch" />
+                  <span>
+                    <span className="block text-sm font-semibold text-navy">Show me in the Networking Lounge</span>
+                    <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">Your name, organisation and title, visible to fellow attendees only. Email and phone are never shown.</span>
+                  </span>
+                </label>
+              </div>
+
+              {/* CONFIRM — sticks beside the form on desktop */}
+              <div className="lg:sticky lg:top-6 lg:self-start">
+                <div className="border-t-4 border-navy bg-secondary p-5">
+                  <h3 className="text-lg font-bold text-navy">Confirm</h3>
+                  <ul className="mt-3 space-y-1.5 text-sm text-navy">
+                    {day === "7" ? (
+                      <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Demo Day · {EVENT_DAY_SHORT} · {EVENT_TIME}</li>
+                    ) : scheduleCount === 0 ? (
+                      <li className="text-muted-foreground">No meetings picked yet.</li>
+                    ) : (
+                      TIMESLOTS.filter((t) => myBookings[t.id] || selections[t.id]).map((t) => (
+                        <li key={t.id} className="flex gap-2">
+                          <span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />
+                          <span className="min-w-0">
+                            <span className="text-muted-foreground">{meetupDay(t.day).short.split(" ")[0]} {t.label.replace("Round ", "R")}</span>{" "}
+                            {companies.find((x) => x.slug === (myBookings[t.id] ?? selections[t.id]))?.name}
+                            {myBookings[t.id] && <span className="text-muted-foreground"> (booked)</span>}
+                          </span>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                  {formError && <p role="alert" className="mt-4 border-l-4 border-destructive bg-white px-3 py-2 text-sm text-navy">{formError}</p>}
+                  <button type="submit" disabled={submitting} className="btn-node mt-5 w-full justify-center disabled:opacity-60">
+                    <BusyLabel busy={submitting} text="Confirming…">Confirm my RSVP</BusyLabel>
+                  </button>
+                  <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
+                    The organisers use your details only to run this event, in line with Singapore's PDPA.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </form>
+      </main>
+
+      {/* CHECK / MANAGE — #manage is linked from the confirmation email */}
+      <section id="manage" className="scroll-mt-6 bg-secondary">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-16 md:py-16">
+          <div>
+            <h2 className="text-2xl font-bold text-navy md:text-3xl">Already booked?</h2>
+            <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+              Enter your email to see your 1:1 meetings on any device, or cancel one so someone else can take it.
+            </p>
+          </div>
+          <div>
+            <form onSubmit={handleLookup} className="flex flex-col gap-3 sm:flex-row">
+              <input
+                type="email"
+                required
+                value={lookupEmail}
+                onChange={(e) => {
+                  setLookupEmail(e.target.value);
+                  setLookupResults(null);
+                }}
+                placeholder="your@email.com"
+                aria-label="Email used to register"
+                className="fn-field sm:flex-1"
+              />
+              <button type="submit" disabled={lookupLoading} className="btn-node-dark shrink-0 justify-center disabled:opacity-60">
+                <BusyLabel busy={lookupLoading} text="Checking…">Find my meetings</BusyLabel>
+              </button>
+            </form>
+
+            {lookupResults !== null && (
+              <div className="mt-6">
+                {lookupResults.length === 0 ? (
+                  <p className="border border-dashed border-navy/20 p-5 text-sm text-muted-foreground">
+                    No meetings found for this email. The lookup matches the exact address used on the form.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-navy/10 border-y border-navy/10 bg-white">
+                    {lookupResults.map((b) => {
+                      const c = companies.find((x) => x.slug === b.company_id);
+                      const info = getSlotInfo(b.timeslot_id);
+                      return (
+                        <li key={b.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3.5">
+                          <span className="w-36 shrink-0 text-sm tabular-nums text-muted-foreground">{info.label.replace("1:1 ", "")}<span className="block text-xs">{info.time}</span></span>
+                          <span className="min-w-0 flex-1">
+                            {c ? (
+                              <Link to="/companies/$slug" params={{ slug: c.slug }} className="font-bold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">{c.name}</Link>
+                            ) : <span className="font-bold text-navy">{b.company_id}</span>}
+                          </span>
                           <button
+                            type="button"
                             onClick={() => handleSelfCancel(b)}
                             disabled={selfCancelling === b.id}
-                            className="rounded-full border border-red-200 bg-red-50 px-4 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                            className="btn-node-line !border-destructive/40 !py-2 !text-destructive hover:!border-destructive disabled:opacity-50"
                           >
-                            <BusyLabel busy={selfCancelling === b.id} text="Cancelling…">Cancel booking</BusyLabel>
+                            <BusyLabel busy={selfCancelling === b.id} text="Cancelling…">Cancel</BusyLabel>
                           </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-
-        <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground">
-          By submitting, you agree that the organizers may use your details to manage event
-          logistics and communications. Personal data will be used solely for this event and
-          handled in accordance with the Personal Data Protection Act (PDPA).
-        </p>
       </section>
+
+      <footer className="bg-background">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 sm:px-6">
+          <Wordmark />
+          <a href="mailto:support@lodestart.ai" className="text-sm font-semibold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">support@lodestart.ai</a>
+        </div>
+      </footer>
+
+      {/* Phones: keep the next step in reach while picking */}
+      {showBar && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t-4 border-yellow bg-navy px-4 py-3 text-white lg:hidden">
+          <div className="mx-auto flex max-w-6xl items-center gap-3">
+            <span className="min-w-0 flex-1 text-sm">
+              <b className="tabular-nums">{pickedSlots.length}</b> {pickedSlots.length === 1 ? "meeting" : "meetings"} picked
+              <span className="block truncate text-xs text-white/55">
+                {pickedSlots.map((t) => companies.find((x) => x.slug === selections[t.id])?.name).join(", ")}
+              </span>
+            </span>
+            <button type="button" onClick={goToDetails} className="btn-node shrink-0 !px-4 !py-2.5 text-sm">Continue</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
