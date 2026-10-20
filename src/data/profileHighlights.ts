@@ -23,13 +23,13 @@ export const HIGHLIGHTS: Record<string, Highlight> = {
   },
   devd: {
     stats: [
-      ["US$26.1M", "annualised GMV run-rate, July 2026"],
-      ["73%", "of renters pay again every month"],
-      ["Zero", "financial incidents since launch"],
+      ["KRW 1.08B", "revenue in 2025"],
+      ["KRW 1.27B", "raised to date, incl. a May 2026 Pre-A"],
+      ["TIPS", "selected; works with NHN, Hana Card, Woori and BNK Kyongnam"],
     ],
-    problem: "Newcomers owe deposit and rent on arrival, months before local banking is ready.",
-    fix: "Tenants pay rent by card. Landlords still receive a local bank transfer.",
-    asks: ["Singapore rent-corridor partners", "A pilot with Finmo", "Employers, HR teams and landlords", "Investors and MoU partners"],
+    problem: "Most landlords only take bank transfers, so rent can't go on a card.",
+    fix: "Rent on a credit card for tenants, regular settlement for landlords.",
+    asks: ["PSPs, banks, proptech and coliving operators", "Regional investors and market validation"],
   },
   marinachain: {
     stats: [

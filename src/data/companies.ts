@@ -13,8 +13,8 @@
 // All four one-pagers are due 21 Oct; replace these entries then.
 // IR decks are NOT published (CMK lesson, 7 Oct). Sector labels are ours.
 // Profile sections (16 Oct): from each company's FIN:NECT one-pager where
-// MYSC has finished it (6 of 8); DEVD and MarinaChain from their IR decks
-// until their one-pagers land.
+// MYSC has finished it (7 of 8; DEVD's landed 20 Oct); MarinaChain from its
+// IR deck until its one-pager lands.
 
 export interface Company {
   slug: string;
@@ -95,7 +95,7 @@ export const companies: Company[] = [
       "Breakeven reached in H1 2026 on a 45-day asset cycle.",
       "0.22% realised loss across 1,295 completed transactions since 2023.",
       "USD 3.0M raised through Series A, plus USD 0.4M in non-dilutive government R&D grants.",
-      "Founded in 2019 in Seoul; establishing 276 HOLDINGS ASIA in Singapore.",
+      "Founded in 2019 in Seoul; establishing 276 HOLDINGS ASIA in Singapore (in progress).",
       "USD figures converted at KRW 1,380.",
     ],
     team: [
@@ -114,54 +114,46 @@ export const companies: Company[] = [
     slug: "devd",
     name: "DEVD",
     displayName: "DEVD Co., Ltd.",
-    tagline: "ZIPUP PAY: a rent-payment infrastructure that verifies leases, screens transaction risk, routes payments, and settles rent to landlords while tenants pay by card.",
-    sector: "Payments · Security & authentication",
-    stage: "Pre-A · founded 2022",
+    tagline: "Pay rent with a credit card: ZIPUP Pay, rent payment infrastructure.",
+    sector: "Payments · Proptech",
+    stage: "Pre-A",
     track: "track1",
-    website: "",
+    website: "https://www.devd.co.kr",
     email: "ted@devd.co.kr",
-    phone: "",
+    phone: "+82-70-4222-0421",
     problem: [
-      "Cross-border renters must pay a deposit and first rent on arrival, before local banking, salary and credit are ready, which can take around 90 days.",
-      "Landlords want local bank transfers, so newcomers face a liquidity shock that repeats across countries, currencies and corridors.",
-      "The gap affects a large global base: 7.3M students studying abroad and 304M international migrants.",
+      "Most landlords accept only bank transfers, so tenants miss card benefits and cash-flow flexibility on rent.",
+      "Small businesses lack simple digital tools to collect and settle rent.",
     ],
     solution: [
-      "ZIPUPpay verifies the lease and payee, checks identity and transaction risk, and lets tenants pay rent by card or corporate budget.",
-      "Landlords simply receive local bank funds: no enrollment and no new app.",
-      "One control layer verifies, routes and reconciles payments for foreign residents paying in Korea and for Korea-based payers sending rent abroad.",
+      "ZIPUP Pay lets tenants pay rent by credit card while landlords receive regular settlement.",
+      "ZIPUP Pay Biz and Partners extend this to businesses and property platforms.",
     ],
     keyFeatures: [
-      "Trust and risk control engine: payer-owner matching, V1-V11 contract cross-check rules, and monitoring for amount drift and high-value card cycling.",
-      "Dual-control exception handling and an append-only audit log with minimum 5-year retention.",
-      "RESTful API and iOS/Android SDK let partner apps embed rent payment natively, with settlement handled by ZIPUPpay.",
+      "Monthly rent payment by card, with rewards and benefits.",
+      "API and SDK for property-management software integration.",
+      "Payments operated through registered PGs (PayVerse, InnoPay).",
     ],
-    targetAudience: [
-      "International students, expats and migrants who must pay rent before local banking and credit are in place.",
-      "Employers and HR teams paying rent from corporate budgets for relocating staff.",
-      "Landlords, proptech and platform partners that want to embed rent payment without rebuilding their stack.",
-    ],
+    targetAudience: [],
     businessModel: [
-      "Transaction fee of 2.3-5.5% on each rent payment.",
-      "Distribution moves from B2C to B2B to API, including white-label and API deals with payment partners.",
-      "Roadmap extends from payment module to multi-PG routing and later rent-specific cards, limits and embedded finance.",
+      "Transaction-based payment fees from rent payments.",
+      "B2B subscription and API/SDK fees from partners.",
+      "Card-benefit and marketing partnerships.",
     ],
     businessSnapshot: [
-      "2025 GMV US$4.1M and revenue US$245K; July 2026 monthly GMV US$2.18M (US$26.1M annualized run-rate) with 73% monthly repeat.",
-      "Pre-A round closed May 2026; US$864K cumulative funding, backed by SJ First Mover Fund and MYSC.",
-      "ISO 9001 and ISO/IEC 27001 certified; 3 granted and 3 pending patents plus 1 PCT filing; zero financial incidents since launch.",
-      "Selected for COMEUP STARS 2026 Singapore Track and exhibited at CES 2026 Eureka Park; existing cross-border payment relationship with Finmo, a MAS-listed Major Payment Institution.",
+      "Raised KRW 1.27B cumulatively, including a Pre-A round in May 2026.",
+      "2025 revenue of KRW 1.08B; 11-person team.",
+      "Selected for TIPS; works with NHN, Hana Card, Woori and BNK Kyongnam.",
     ],
     team: [
-      { name: "Ted Kim", role: "CEO & Founder", bio: ["UK founder with an exit; leads business, product and partnerships", "International & European Law LLB; KAIST Digital Finance MBA"] },
-      { name: "Brown Hyun", role: "CTO", bio: ["10-year full-stack developer; SW Maestro 9th cohort", "Built the risk engine, multi-PG and partner APIs; leads architecture, security and integrations"] },
+      { name: "Ted Ki Tae Kim", role: "Founder & CEO", bio: ["Leads DEV.D and ZIPUP Pay", "Underdogs, Sheffield, KAIST"] },
+      { name: "Kevin Kyungsub Kim", role: "Manager", bio: ["Manages DEV.D and ZIPUP Pay", "Allra fintech, Soongsil University"] },
     ],
     seekingOpportunities: [
-      "Partners to launch the first Singapore rent corridor, targeting 2 signed PoCs and live transactions within 12 weeks.",
-      "A pilot-ready Singapore PoC with Finmo: payment link plus one corridor, then white-label or API.",
-      "Employers, HR teams and landlords in Singapore to onboard paying renters, aiming for 100 renters and US$200K monthly GMV by day 90.",
-      "Investors and partner MoUs as part of the Singapore market entry programme.",
+      "Local partners: licensed PSPs and banks, proptech and coliving operators.",
+      "Regional investors and Singapore market validation support.",
     ],
+    onepager: "/onepagers/devd.pdf",
   },
   {
     slug: "marinachain",
@@ -255,8 +247,8 @@ export const companies: Company[] = [
     ],
     businessSnapshot: [
       "Founded in 2019 in Seoul after winning the FSC's 1st Korea Fintech Idea Contest; 29 employees, 70%+ developers.",
-      "2025 revenue of KRW 7.77B (approx. USD 5.5M); net income turned positive in H1 2026; 2026 revenue target of KRW 12.0B.",
-      "Series A of KRW 5.7B (Q3 2025) from Korea Investment Partners, KakaoBank, HG Initiative and Korea Credit Information.",
+      "2025 revenue of KRW 7.77B (approx. USD 5.5M); net income turned positive in H1 2026; 2026 revenue target of KRW 12.0B (approx. USD 8.9M).",
+      "Series A of KRW 5.7B (approx. USD 4.3M, Q3 2025) from Korea Investment Partners, KakaoBank, HG Initiative and Korea Credit Information.",
       "Live with KB Kookmin, KakaoBank, NH, Hana, Woori, Shinhan, BNK, IBK Securities, Kyobo Life and NAVER.",
       "Selected by every major Korean financial group's fintech lab; FSC Regulatory Sandbox; ISO/IEC 27001 certified.",
     ],

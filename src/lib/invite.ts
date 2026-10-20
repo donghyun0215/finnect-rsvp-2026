@@ -32,7 +32,7 @@ const PITCH =
 // One line per startup for the "Featuring" list (falls back to the site tagline).
 const LINES: Record<string, string> = {
   "276holdings": "AI credit-scored supply-chain finance (Settle Now, Pay Later) for SMEs",
-  devd: "Rent-payment infrastructure: tenants pay by card, landlords settled in local currency",
+  devd: "Rent-payment infrastructure: tenants pay rent by credit card, landlords receive regular settlement",
   marinachain: "AI maritime carbon and financial data platform for shipping",
   bigtechplus: "Automated property-title and collateral verification for households and lenders",
   sionic: "No-code AI agent builder for financial institutions",
