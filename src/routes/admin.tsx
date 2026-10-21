@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Wordmark } from "@/components/Wordmark";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { companies, MEETUP_COMPANIES } from "@/data/companies";
-import { EVENT_DATE, TIMESLOTS, getSlotInfo, isSlotOffered, slotName } from "@/data/timeslots";
+import { EVENT_DATE, MEETUP_DATES, MEETUP_DATES_SHORT, TIMESLOTS, getSlotInfo, isSlotOffered, slotName } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
 import { updateContactUrl, adminSetCheckedIn, adminRenameAttendee } from "@/lib/booking.server";
@@ -219,7 +219,7 @@ function AdminPage() {
             <Wordmark />
             <div>
               <div className="text-sm font-bold text-navy">Admin Dashboard</div>
-              <div className="text-xs text-muted-foreground">1:1 Meetings · {EVENT_DATE}</div>
+              <div className="text-xs text-muted-foreground">1:1 Meetings · {MEETUP_DATES}</div>
             </div>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -367,7 +367,7 @@ function AdminPage() {
         )}
 
         {/* GRID VIEW */}
-        <h2 className="mt-10 text-lg font-bold text-navy">1:1 Business Meetups — Rounds (Thu 19 Nov)</h2>
+        <h2 className="mt-10 text-lg font-bold text-navy">1:1 Business Meetups — Rounds ({MEETUP_DATES_SHORT})</h2>
         <p className="text-sm text-muted-foreground">Click a filled slot to cancel it and reopen it for others.</p>
         <div className="mt-4 overflow-x-auto rounded-2xl border border-border shadow-sm">
           <table className="w-full min-w-[560px] border-collapse text-sm">
