@@ -134,14 +134,21 @@ export const fetchBookedSlots = createServerFn({ method: "GET" }).handler(async 
   return data;
 });
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "lodestart.ai";
+// FIN:NECT has its own admin password (22 Oct) so it can be shared with
+// MYSC and Tenity without opening the other programmes' admins, which use
+// the shared Lodestart one. Only the SHA-256 of the password is kept here
+// because the repo is public.
+const ADMIN_PASSWORD_SHA256 = "391841720174d2c2f6c4c492a8de1ecc76bf1cb565616d5f18747121e78b2401";
 // Forgiving match: phones auto-capitalise the first letter and chat apps
 // (KakaoTalk, WhatsApp) often add a trailing space/newline when the password
 // is copied — both locked MYSC out on 23 Sep. Case and surrounding whitespace
 // don't matter; the characters do.
-function isAdmin(pw: string | undefined): boolean {
-  const norm = (v: string) => v.normalize("NFKC").trim().toLowerCase();
-  return typeof pw === "string" && norm(pw) === norm(ADMIN_PASSWORD);
+async function isAdmin(pw: string | undefined): Promise<boolean> {
+  if (typeof pw !== "string") return false;
+  const bytes = new TextEncoder().encode(pw.normalize("NFKC").trim().toLowerCase());
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const hex = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+  return hex === ADMIN_PASSWORD_SHA256;
 }
 
 export interface MyBooking {
@@ -218,7 +225,7 @@ export interface AdminBooking {
 export const adminListBookings = createServerFn({ method: "POST" })
   .validator((data: { password: string }) => data)
   .handler(async ({ data }): Promise<{ ok: true; bookings: AdminBooking[] } | { ok: false }> => {
-    if (!isAdmin(data.password)) {
+    if (!(await isAdmin(data.password))) {
       return { ok: false };
     }
     const { data: rows, error } = await supabaseAdmin
@@ -238,7 +245,7 @@ export const adminListBookings = createServerFn({ method: "POST" })
 export const adminRenameAttendee = createServerFn({ method: "POST" })
   .validator((data: { password: string; email: string; fullName: string }) => data)
   .handler(async ({ data }): Promise<{ ok: boolean; message?: string }> => {
-    if (!isAdmin(data.password)) return { ok: false, message: "Not authorised." };
+    if (!(await isAdmin(data.password))) return { ok: false, message: "Not authorised." };
     const email = data.email?.toLowerCase().trim();
     const fullName = data.fullName?.trim();
     if (!email || !fullName) return { ok: false, message: "Name is required." };
@@ -255,7 +262,7 @@ export const adminRenameAttendee = createServerFn({ method: "POST" })
 export const adminCancelBooking = createServerFn({ method: "POST" })
   .validator((data: { password: string; id: string }) => data)
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
-    if (!isAdmin(data.password)) {
+    if (!(await isAdmin(data.password))) {
       return { ok: false };
     }
     const { data: deleted, error } = await supabaseAdmin
@@ -297,7 +304,7 @@ export interface BookingEvent {
 export const adminListEvents = createServerFn({ method: "POST" })
   .validator((data: { password: string }) => data)
   .handler(async ({ data }): Promise<{ ok: true; events: BookingEvent[] } | { ok: false }> => {
-    if (!isAdmin(data.password)) {
+    if (!(await isAdmin(data.password))) {
       return { ok: false };
     }
     const { data: rows, error } = await supabaseAdmin
@@ -493,7 +500,7 @@ export interface AdminRsvp {
 export const adminListRsvps = createServerFn({ method: "POST" })
   .validator((data: { password: string }) => data)
   .handler(async ({ data }): Promise<{ ok: true; rsvps: AdminRsvp[] } | { ok: false }> => {
-    if (!isAdmin(data.password)) {
+    if (!(await isAdmin(data.password))) {
       return { ok: false };
     }
     const { data: rows, error } = await supabaseAdmin
@@ -625,7 +632,7 @@ export interface RosterEntry {
 export const fetchMeetingRoster = createServerFn({ method: "POST" })
   .validator((data: { password: string }) => data)
   .handler(async ({ data: input }): Promise<{ ok: true; entries: RosterEntry[] } | { ok: false }> => {
-    if (!isAdmin(input.password)) return { ok: false };
+    if (!(await isAdmin(input.password))) return { ok: false };
     const { data, error } = await supabaseAdmin
       .from("bookings")
       .select("company_id, timeslot_id, full_name, organisation, job_title, primary_interest, email, phone");
@@ -691,7 +698,7 @@ export const markLoungeCheckIn = createServerFn({ method: "POST" })
 export const adminSetCheckedIn = createServerFn({ method: "POST" })
   .validator((data: { password: string; rsvpId: string; checked: boolean }) => data)
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
-    if (!isAdmin(data.password)) return { ok: false };
+    if (!(await isAdmin(data.password))) return { ok: false };
     const patch = data.checked
       ? { checked_in_at: new Date().toISOString(), checked_in_via: "manual" }
       : { checked_in_at: null, checked_in_via: null };
