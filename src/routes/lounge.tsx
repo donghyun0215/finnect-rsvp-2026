@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Wordmark } from "@/components/Wordmark";
-import { useMemo, useState } from "react";
-import { CREDITS, EVENT_NAME, EVENT_NAME_LINE2, EVENT_DATE, EVENT_DAY_SHORT } from "@/data/timeslots";
+import { useMemo, useState, type CSSProperties } from "react";
+import { FinnectSymbol, NodePattern, node } from "@/components/Brand";
+import { Pair, PAIRS } from "@/components/Pair";
+import { CREDITS, EVENT_NAME, EVENT_DAY_SHORT } from "@/data/timeslots";
 import { companies } from "@/data/companies";
 import { STARTUP_LOGOS } from "@/data/companyImages";
 import {
@@ -39,19 +41,19 @@ export const Route = createFileRoute("/lounge")({
   }),
 });
 
-// Matches the exact values offered on the RSVP form.
-const CHIP_COLORS: Record<string, string> = {
-  Investment: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-  "Distribution / partnership": "bg-sky-50 text-sky-700 ring-sky-600/20",
-  "Pilot / trial opportunity": "bg-violet-50 text-violet-700 ring-violet-600/20",
-  "General interest": "bg-slate-100 text-slate-600 ring-slate-500/20",
+// Interest = a node colour from the KV's cyan→green→yellow ramp; "General"
+// stays a hollow node so the three asks read first. Values match the RSVP form.
+const INTEREST_NODE: Record<string, string> = {
+  Investment: "#ffe300",
+  "Distribution / partnership": "#00ccff",
+  "Pilot / trial opportunity": "#6fdb6a",
 };
-const BAR_COLORS: Record<string, string> = {
-  Investment: "bg-emerald-500",
-  "Distribution / partnership": "bg-sky-500",
-  "Pilot / trial opportunity": "bg-violet-500",
-  "General interest": "bg-slate-400",
-};
+function nodeStyle(interest: string, dark: boolean): CSSProperties {
+  const c = INTEREST_NODE[interest];
+  return c
+    ? { background: c }
+    : { boxShadow: `inset 0 0 0 1.5px ${dark ? "rgb(255 255 255 / .55)" : "rgb(30 30 30 / .45)"}` };
+}
 
 // Charcoal palette (FIN:NECT 2026 KV black) — kept within one family so a
 // full wall of avatars reads as one surface rather than a rainbow.
@@ -95,50 +97,81 @@ function LockGlyph({ className }: { className?: string }) {
   );
 }
 
-function DotGrid({ className }: { className?: string }) {
+// Gate art: the KV's "connect" checker. Twelve filled squares hold the
+// startups, the centre one the FIN:NECT mark; yellow colon nodes sit where
+// squares meet. Tiles drop in along the diagonals once, on load.
+const SQUARE_MARKS = new Set(["276holdings", "bigtechplus", "atones"]);
+function ConnectBoard() {
+  const [hover, setHover] = useState<number | null>(null);
+  let n = 0;
+  const cells = Array.from({ length: 25 }, (_, k) => {
+    const x = k % 5, y = Math.floor(k / 5);
+    if ((x + y) % 2) return { x, y, kind: "empty" as const };
+    if (x === 2 && y === 2) return { x, y, kind: "mark" as const };
+    return { x, y, kind: "co" as const, c: companies[n++] };
+  });
+  const lit = hover === null ? null : companies[hover];
+  const joins: string[] = [];
+  for (let y = 1; y < 5; y++) for (let x = 1; x < 5; x++) joins.push(node(x, y));
   return (
-    <svg aria-hidden="true" className={className} fill="currentColor">
-      <defs>
-        <pattern id="dots" width="14" height="14" patternUnits="userSpaceOnUse">
-          <circle cx="2" cy="2" r="1.6" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#dots)" />
-    </svg>
-  );
-}
-
-// Faint marine glyphs — the subject's own vocabulary, kept quiet enough that
-// the type stays the loudest thing on the screen.
-function MarineWatermark() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 h-full w-full text-navy opacity-[0.045]"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <defs>
-        <pattern id="marine" width="112" height="112" patternUnits="userSpaceOnUse">
-          {/* waves */}
-          <path d="M8 22c6-6 12-6 18 0s12 6 18 0" />
-          <path d="M8 30c6-6 12-6 18 0s12 6 18 0" />
-          {/* hull */}
-          <path d="M70 34h26l-5 9H75z" />
-          <path d="M83 34V20l12 6-12 4" />
-          {/* buoy / sensor */}
-          <circle cx="24" cy="80" r="9" />
-          <path d="M24 71v-8M24 89v8" />
-          {/* propeller-ish rotor */}
-          <path d="M84 78l10-6M84 78l10 6M84 78l-11 0" />
-          <circle cx="84" cy="78" r="3" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#marine)" />
-    </svg>
+    <div className="mx-auto w-full max-w-[360px] sm:max-w-[440px] lg:max-w-[480px]" onMouseLeave={() => setHover(null)}>
+      <div className="relative grid grid-cols-5" role="list" aria-label={`The ${companies.length} startups`}>
+        {cells.map((cell, k) => {
+          const d = { "--i": cell.x + cell.y } as CSSProperties;
+          if (cell.kind === "empty") return <span key={k} aria-hidden className="aspect-square bg-white/[0.03]" />;
+          if (cell.kind === "mark")
+            return (
+              <span key={k} aria-hidden className="cx-tile flex aspect-square items-center justify-center bg-white/[0.08]" style={d}>
+                <FinnectSymbol className="w-1/2" />
+              </span>
+            );
+          const c = cell.c;
+          const i = companies.indexOf(c);
+          return (
+            <Link
+              key={k}
+              role="listitem"
+              to="/companies/$slug"
+              params={{ slug: c.slug }}
+              aria-label={c.name}
+              onMouseEnter={() => setHover(i)}
+              onFocus={() => setHover(i)}
+              onBlur={() => setHover(null)}
+              className={`cx-tile flex aspect-square items-center justify-center bg-white p-[13%] ${hover === i ? "is-lit" : ""}`}
+              style={d}
+            >
+              {STARTUP_LOGOS[c.slug] ? (
+                <img src={STARTUP_LOGOS[c.slug]} alt="" className={`${SQUARE_MARKS.has(c.slug) ? "max-h-[78%]" : "max-h-[46%]"} max-w-full object-contain`} />
+              ) : (
+                <span className="text-center text-[11px] font-extrabold leading-tight text-navy sm:text-xs">{c.name}</span>
+              )}
+            </Link>
+          );
+        })}
+        <svg viewBox="0 0 5 5" aria-hidden className="cx-joins pointer-events-none absolute inset-0 h-full w-full" fill="#ffe300">
+          {joins.map((p, i) => (
+            <path key={i} d={p} />
+          ))}
+        </svg>
+      </div>
+      <div className="mt-6 min-h-[4.75rem] border-t border-white/15 pt-5" aria-live="polite">
+        {lit ? (
+          <>
+            <div className="font-bold text-white">
+              {lit.name} <span className="ml-1 text-xs font-medium text-white/45">{lit.sector}</span>
+            </div>
+            <p className="mt-1.5 text-[15px]">
+              <Pair who={(PAIRS[lit.slug] ?? ["", lit.sector])[0]} what={(PAIRS[lit.slug] ?? ["", lit.sector])[1]} dark />
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="font-bold text-white">{companies.length} Korean fintechs on stage</div>
+            <p className="mt-1.5 text-sm text-white/55">Point at a logo to see who it serves.</p>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -206,6 +239,7 @@ function LoungePage() {
       setProfiles(res.profiles);
       if (auth.email) {
         setGrantedEmail(auth.email);
+        setCEmail((v) => v || auth.email!);
         void refreshWallet(auth.email);
         void markLoungeCheckIn({ data: { key: auth.key, email: auth.email } });
       }
@@ -265,405 +299,278 @@ function LoungePage() {
     setLinkedOnly(false);
   };
 
+  // The room in one picture: everyone, grouped by what they came for.
+  const roomOrder = useMemo(() => {
+    if (!profiles) return [];
+    const rank = new Map(groups.map(([g], i) => [g, i]));
+    return [...profiles].sort(
+      (a, b) =>
+        (rank.get(a.primary_interest || "General interest") ?? 9) -
+        (rank.get(b.primary_interest || "General interest") ?? 9),
+    );
+  }, [profiles, groups]);
+
+  const enter = () => email.trim() && void load(key ? { key, email: email.trim() } : { email: email.trim() });
+
   return (
-    <div className="fn-square min-h-screen w-full overflow-x-hidden bg-secondary/40">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+    <div className="fn-square min-h-screen w-full overflow-x-hidden bg-secondary text-navy">
+      <header className="sticky top-0 z-30 bg-navy">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
           <Link to="/" className="flex min-w-0 items-center">
-            <Wordmark compact />
+            <Wordmark light compact />
           </Link>
-          <nav className="flex shrink-0 items-center gap-1.5 sm:gap-3">
-            <Link
-              to="/"
-              className="rounded-full bg-secondary px-2.5 py-1.5 text-[11px] font-semibold text-secondary-foreground transition hover:bg-accent sm:px-4 sm:py-2 sm:text-sm"
-            >
+          <nav className="flex shrink-0 items-center gap-0.5 text-[13px] font-semibold sm:gap-2 sm:text-sm">
+            <Link to="/" className="nav-link">
               Home
             </Link>
-            <Link
-              to="/"
-              hash="startups"
-              className="hidden rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition hover:bg-accent sm:block"
-            >
+            <Link to="/" hash="startups" className="nav-link max-sm:hidden">
               Startups
             </Link>
-            <Link
-              to="/book"
-              className="rounded-full bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:px-4 sm:py-2 sm:text-sm"
-            >
-              Event RSVP<span className="hidden sm:inline"> ({EVENT_DAY_SHORT})</span>
+            <Link to="/book" className="nav-link whitespace-nowrap">
+              Event RSVP<span className="max-sm:hidden"> ({EVENT_DAY_SHORT})</span>
             </Link>
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8">
-        {!profiles ? (
-          <>
-            {/* ── HERO ── */}
-            <section className="relative -mx-4 -mt-6 overflow-hidden bg-navy px-4 pb-14 pt-10 sm:-mx-6 sm:-mt-8 sm:px-6 sm:pb-16 sm:pt-12">
-              {/* decorative field */}
-              <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-                <DotGrid className="absolute left-6 top-8 h-20 w-32 text-white/25" />
-                <DotGrid className="absolute bottom-10 left-1/3 h-16 w-24 text-white/15" />
-                <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full border-[10px] border-white/10" />
-                <div className="absolute right-1/3 top-6 h-0 w-0 border-b-[26px] border-l-[16px] border-r-[16px] border-b-white/15 border-l-transparent border-r-transparent rotate-[24deg]" />
-                <div className="absolute -bottom-20 -left-14 h-48 w-48 rounded-full bg-white/5" />
-              </div>
-
-              <div className="relative mx-auto grid max-w-6xl items-center gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-10">
-                <div className="order-2 lg:order-1">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-yellow">
-                    {EVENT_NAME}
-                  </div>
-                  <h1
-                    className="mt-3 text-[32px] font-extrabold leading-[1.12] tracking-tight text-white sm:text-[42px]"
-                    style={{ fontFamily: 'Arial, "Helvetica Neue", Helvetica, sans-serif' }}
-                  >
-                    Welcome to
-                    <br />
-                    Virtual Networking Lounge
-                  </h1>
-                  <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/85">
-                    Connect, collaborate, and explore opportunities with innovators, investors, and
-                    partners in the fintech ecosystem.
-                  </p>
-
-                  {/* gate card — email is always required; the QR key on top
-                      of it is what marks on-site attendance */}
-                  <div className="mt-7 max-w-md rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm sm:p-5">
-                    <div className="text-sm font-bold text-white">
-                      {key ? "You're at the event — enter your RSVP email to check in" : "To enter the lounge, input your email"}
-                    </div>
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && email.trim() && void load(key ? { key, email: email.trim() } : { email: email.trim() })}
-                        placeholder="Enter your email address"
-                        className="min-w-0 flex-1 rounded-lg border border-white/30 bg-white px-3 py-2.5 text-base text-navy placeholder:text-slate-400 sm:text-sm"
-                      />
-                      <button
-                        type="button"
-                        disabled={!email.trim() || loading}
-                        onClick={() => void load(key ? { key, email: email.trim() } : { email: email.trim() })}
-                        className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
-                      >
-                        <BusyLabel busy={loading} text="Checking…">
-                          Enter lounge <span aria-hidden="true">→</span>
-                        </BusyLabel>
-                      </button>
-                    </div>
-                    {gateError && (
-                      <p className="mt-2.5 text-xs leading-relaxed text-rose-200">
-                        {gateError}{" "}
-                        <a href="/book" className="font-semibold text-white underline underline-offset-2">
-                          RSVP here →
-                        </a>
-                      </p>
-                    )}
-                    <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-relaxed text-white/75">
-                      <LockGlyph className="mt-0.5 h-3 w-3 shrink-0" />
-                      RSVP attendees only. Please use the email you registered with.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Who's in the room: the startup logos (names until supplied) on white tiles */}
-                <div className="relative order-1 mx-auto w-full max-w-[320px] lg:order-2 lg:max-w-[440px]">
-                  <div className="grid grid-cols-4 gap-2 lg:grid-cols-2 lg:gap-3">
-                    {companies.map((c) => (
-                      <div key={c.slug} className="flex aspect-[3/2] items-center justify-center rounded-lg bg-white p-2 lg:aspect-[5/2] lg:p-3">
-                        {STARTUP_LOGOS[c.slug] ? (
-                          <img src={STARTUP_LOGOS[c.slug]} alt={c.name} className="max-h-full max-w-full object-contain" />
-                        ) : (
-                          <span className="text-center font-display text-sm font-bold text-navy lg:text-base">{c.name}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* ── NOTICE ── */}
-            <section className="mx-auto max-w-3xl py-10 sm:py-12">
-              <div className="relative flex gap-4 overflow-hidden rounded-2xl border border-primary/15 bg-card p-5 shadow-sm sm:gap-5 sm:p-6">
-                <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-                  <div className="absolute -right-8 -top-10 h-24 w-24 rounded-full bg-primary/10" />
-                  <svg className="absolute -bottom-6 -right-4 h-20 w-20 text-primary/25" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <defs>
-                      <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse">
-                        <path d="M0 6L6 0" />
-                      </pattern>
-                    </defs>
-                    <circle cx="40" cy="40" r="38" fill="url(#hatch)" stroke="none" />
-                  </svg>
-                  <DotGrid className="absolute -left-1 bottom-3 h-12 w-20 text-primary/25" />
-                </div>
-                <div className="relative hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 sm:flex">
-                  <LockGlyph className="h-5 w-5 text-primary" />
-                </div>
-                <div className="relative min-w-0">
-                  <h2 className="text-sm font-bold text-navy">{"<Networking Lounge Notice>"}</h2>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                    To facilitate professional networking during the {EVENT_NAME},
-                    this directory displays the name, organisation, designation and primary business
-                    interests of registered attendees.
-                  </p>
-                  <dl className="mt-3 space-y-2 text-xs leading-relaxed">
-                    <div>
-                      <dt className="inline font-semibold text-navy">Exclusive access. </dt>
-                      <dd className="inline text-muted-foreground">
-                        This directory is strictly private and accessible only to verified attendees
-                        present at the event.
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="inline font-semibold text-navy">No direct contact info. </dt>
-                      <dd className="inline text-muted-foreground">
-                        Personal contact information such as email addresses and phone numbers is not
-                        displayed or shared.
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="inline font-semibold text-navy">Data management. </dt>
-                      <dd className="inline text-muted-foreground">
-                        To update your details or opt out of being listed, use “Add or update my
-                        link” inside the lounge, or contact the organising team at{" "}
-                        <a href="mailto:support@lodestart.ai" className="font-medium text-primary hover:underline">
-                          support@lodestart.ai
-                        </a>
-                        .
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-            </section>
-
-            {/* ── FOOTER ── */}
-            <footer className="relative -mx-4 -mb-16 overflow-hidden bg-navy px-4 py-8 sm:-mx-6 sm:px-6">
-              <div className="relative mx-auto flex max-w-6xl flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
-                <Wordmark light />
-                <div>
-                  <div className="text-sm font-bold text-white">{EVENT_NAME_LINE2}</div>
-                  <div className="mt-1 text-xs text-white/70">{EVENT_DAY_SHORT} 2026 · Singapore</div>
-                </div>
-                <div>
-                  <div className="text-sm font-bold text-white">Contact</div>
-                  <a
-                    href="mailto:support@lodestart.ai"
-                    className="mt-1 block text-xs text-yellow hover:underline"
-                  >
-                    support@lodestart.ai
-                  </a>
-                </div>
-              </div>
-            </footer>
-          </>
-        ) : (
-          <div className="lg:grid lg:grid-cols-[248px_1fr] lg:gap-8">
-            {/* ── side rail ─────────────────────────────── */}
-            <aside className="lg:sticky lg:top-24 lg:self-start">
-              <div className="hidden lg:block">
-                <h1 className="font-display text-2xl font-bold tracking-tight text-navy">Attendees</h1>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {profiles.length} people joined on {EVENT_DATE.replace(/^\w+, | 2026$/g, "")}.
+      {!profiles ? (
+        <>
+          {/* ── GATE ── */}
+          <section className="bg-navy text-white">
+            <div className="mx-auto grid max-w-7xl gap-14 px-4 pb-20 pt-12 sm:px-6 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:items-center lg:gap-20 lg:pb-28 lg:pt-20">
+              <div>
+                <p className="hero-in text-sm text-white/60">Virtual Networking Lounge, {EVENT_DAY_SHORT}</p>
+                <h1 className="hero-in mt-6 text-[clamp(2.6rem,6.6vw,4.75rem)] font-extrabold leading-[1.02] tracking-tight [--i:1]">
+                  Find the people
+                  <span className="block text-white/45">worth meeting.</span>
+                </h1>
+                <p className="hero-in mt-6 max-w-[46ch] text-[15px] leading-relaxed text-white/70 sm:text-base [--i:2]">
+                  Everyone registered for the {EVENT_NAME}, sorted by what they are looking for.
+                  Open a card to see who they are and connect.
                 </p>
-              </div>
 
-              <div className="relative mt-4 lg:mt-5">
-                <svg
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M20 20l-3.5-3.5" />
-                </svg>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search name, company, role"
-                  className="w-full rounded-full border border-input bg-background py-2.5 pl-9 pr-3 text-base outline-none ring-primary/30 transition focus:ring-2 sm:text-sm"
-                />
-              </div>
-
-              {/* who's here — counts double as filters */}
-              <div className="mt-4 hidden rounded-2xl border border-border bg-card p-4 shadow-sm lg:block">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  Who's here
+                <div className="hero-in mt-10 max-w-xl [--i:3]">
+                  <label htmlFor="lounge-email" className="block text-sm font-semibold text-white">
+                    {key ? "You're at the venue. Enter your RSVP email to check in." : "Enter with the email you RSVP'd with"}
+                  </label>
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                    <input
+                      id="lounge-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && enter()}
+                      placeholder="name@company.com"
+                      autoComplete="email"
+                      className="min-w-0 flex-1 rounded-[3px] bg-white px-4 py-3.5 text-base text-navy placeholder:text-[#8a8a8a] focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[#00ccff] sm:text-[15px]"
+                    />
+                    <button type="button" disabled={loading} onClick={enter} className="btn-node disabled:opacity-60">
+                      <BusyLabel busy={loading} text="Checking…">
+                        Enter lounge
+                      </BusyLabel>
+                    </button>
+                  </div>
+                  {gateError && (
+                    <p className="mt-3 text-sm leading-relaxed text-[#ffb4a8]">
+                      {gateError}{" "}
+                      <a href="/book" className="font-semibold text-white underline underline-offset-2">
+                        RSVP here
+                      </a>
+                    </p>
+                  )}
+                  <p className="mt-4 flex items-center gap-2 text-xs text-white/50">
+                    <LockGlyph className="h-3.5 w-3.5 shrink-0" />
+                    Only registered attendees can open the list.
+                  </p>
                 </div>
-                <div className="mt-3 space-y-2.5">
+              </div>
+
+              <ConnectBoard />
+            </div>
+          </section>
+
+          {/* ── NOTICE ── */}
+          <section className="bg-background">
+            <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-20">
+              <h2 className="text-2xl font-extrabold tracking-tight sm:text-[28px]">What the lounge shows</h2>
+              <p className="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-muted-foreground">
+                To help people meet during the {EVENT_NAME}, each card shows a registered attendee's
+                name, organisation, role and main business interest. Nothing else.
+              </p>
+              <dl className="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-8">
+                {[
+                  ["Attendees only", "The list is private. Only people who registered for the event can open it."],
+                  ["No contact details", "Email addresses and phone numbers are never shown or shared here."],
+                  [
+                    "Your card, your call",
+                    <>
+                      Add or change your link inside the lounge. To be removed, write to{" "}
+                      <a href="mailto:support@lodestart.ai" className="font-semibold text-navy underline underline-offset-2">
+                        support@lodestart.ai
+                      </a>
+                      .
+                    </>,
+                  ],
+                ].map(([t, d], i) => (
+                  <div key={i} className="border-t-2 border-navy pt-5">
+                    <dt className="flex items-center gap-2.5 font-bold">
+                      <span aria-hidden className="h-2.5 w-2.5 bg-yellow" />
+                      {t}
+                    </dt>
+                    <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">{d}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </section>
+
+          <footer className="bg-navy">
+            <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <Wordmark light />
+              <span className="text-white/50">{CREDITS}</span>
+              <a href="mailto:support@lodestart.ai" className="font-semibold text-yellow hover:underline">
+                support@lodestart.ai
+              </a>
+            </div>
+          </footer>
+        </>
+      ) : (
+        <>
+          {/* ── THE ROOM ── one square per person, grouped by interest */}
+          <section className="bg-navy text-white">
+            <div className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-10 sm:px-6 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16 lg:pb-14 lg:pt-14">
+              <div>
+                <p className="text-sm text-white/60">Virtual Networking Lounge</p>
+                <h1 className="mt-3 flex items-end gap-4 font-extrabold tracking-tight">
+                  <span className="text-[clamp(3.75rem,9vw,6rem)] leading-[0.85] tabular-nums text-yellow">{profiles.length}</span>
+                  <span className="pb-1 text-2xl leading-[1.1] sm:text-[28px]">
+                    people
+                    <br />
+                    in the room
+                  </span>
+                </h1>
+              </div>
+
+              <div>
+                <div className="flex flex-wrap gap-[3px]" role="list" aria-label="Everyone in the lounge, grouped by interest">
+                  {roomOrder.map((p, i) => {
+                    const g = p.primary_interest || "General interest";
+                    const dim = (interest && g !== interest) || (linkedOnly && !p.contact_url);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        role="listitem"
+                        title={`${p.full_name}, ${p.organisation}`}
+                        aria-label={`${p.full_name}, ${p.organisation}`}
+                        onClick={() => setSelected(p)}
+                        className={`waffle-dot h-3.5 w-3.5 sm:h-4 sm:w-4 ${dim ? "opacity-15" : ""}`}
+                        style={{ "--i": i, ...nodeStyle(g, true) } as CSSProperties}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="mt-6 flex flex-wrap gap-2">
                   {groups.map(([label, n]) => {
                     const active = interest === label;
                     return (
                       <button
                         key={label}
                         type="button"
-                        onClick={() => setInterest(active ? null : label)}
-                        className="group w-full text-left"
+                        aria-pressed={active}
+                        onClick={() => {
+                          setView("all");
+                          setInterest(active ? null : label);
+                        }}
+                        className={`inline-flex items-center gap-2 rounded-[3px] border px-3 py-2 text-[13px] font-semibold transition ${
+                          active ? "border-yellow bg-white/10 text-white" : "border-white/15 text-white/70 hover:border-white/40 hover:text-white"
+                        }`}
                       >
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span
-                            className={`truncate text-xs transition ${
-                              active ? "font-semibold text-navy" : "text-navy/70 group-hover:text-navy"
-                            }`}
-                          >
-                            {label}
-                          </span>
-                          <span className={`text-xs tabular-nums ${active ? "font-semibold text-navy" : "text-muted-foreground"}`}>
-                            {n}
-                          </span>
-                        </div>
-                        <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-secondary">
-                          <div
-                            className={`h-full rounded-full transition-all ${BAR_COLORS[label] ?? "bg-slate-400"} ${
-                              active ? "opacity-100" : "opacity-60 group-hover:opacity-90"
-                            }`}
-                            style={{ width: `${Math.round((n / profiles.length) * 100)}%` }}
-                          />
-                        </div>
+                        <span aria-hidden className="h-2.5 w-2.5 shrink-0" style={nodeStyle(label, true)} />
+                        {label}
+                        <span className="tabular-nums text-white/45">{n}</span>
                       </button>
                     );
                   })}
-                </div>
-
-                <label className="mt-4 flex cursor-pointer items-center gap-2 border-t border-border pt-3 text-xs text-navy/70">
-                  <input
-                    type="checkbox"
-                    checked={linkedOnly}
-                    onChange={(e) => setLinkedOnly(e.target.checked)}
-                    className="h-3.5 w-3.5 accent-[color:var(--primary)]"
-                  />
-                  <span>Has a contact link ({linkedCount})</span>
-                </label>
-
-                {filtersOn && (
                   <button
                     type="button"
-                    onClick={clearFilters}
-                    className="mt-3 text-[11px] font-semibold text-primary hover:underline"
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </div>
-
-              {/* mobile: horizontal filter chips */}
-              <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 lg:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {groups.map(([label, n]) => {
-                  const active = interest === label;
-                  return (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => setInterest(active ? null : label)}
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition ${
-                        active
-                          ? "bg-navy text-white ring-navy"
-                          : "bg-card text-navy/70 ring-border"
-                      }`}
-                    >
-                      {label} <span className="tabular-nums opacity-70">{n}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setShowContactForm((v) => !v);
-                  if (grantedEmail && !cEmail) setCEmail(grantedEmail);
-                }}
-                className="mt-4 w-full rounded-full border border-primary/40 bg-card px-4 py-2.5 text-xs font-semibold text-primary transition hover:bg-primary/10"
-              >
-                {showContactForm ? "Close" : "Add or update my link"}
-              </button>
-
-              {showContactForm && (
-                <div className="mt-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-                  <p className="text-[11px] leading-relaxed text-muted-foreground">
-                    Add a LinkedIn profile, company page or open-chat link so others can reach you.
-                    No re-registration needed.
-                  </p>
-                  <input
-                    type="email"
-                    value={cEmail}
-                    onChange={(e) => setCEmail(e.target.value)}
-                    placeholder="Email you RSVP'd with"
-                    className="mt-3 w-full rounded-lg border border-input px-3 py-2.5 text-base sm:text-sm"
-                  />
-                  <input
-                    value={cUrl}
-                    onChange={(e) => setCUrl(e.target.value)}
-                    placeholder="linkedin.com/in/yourname"
-                    className="mt-2 w-full rounded-lg border border-input px-3 py-2.5 text-base sm:text-sm"
-                  />
-                  <button
-                    type="button"
-                    disabled={cBusy || !cEmail.trim()}
-                    onClick={() => void submitContact()}
-                    className="mt-3 w-full rounded-full bg-primary py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-50"
-                  >
-                    <BusyLabel busy={cBusy} text="Saving…">Save</BusyLabel>
-                  </button>
-                  {cMsg && (
-                    <p className={`mt-2 text-[11px] ${cMsg.ok ? "text-green-700" : "text-red-600"}`}>{cMsg.text}</p>
-                  )}
-                </div>
-              )}
-            </aside>
-
-            {/* ── card wall ─────────────────────────────── */}
-            <section className="mt-6 lg:mt-0">
-              {grantedEmail && (
-                <div className="mb-4 inline-flex rounded-full border border-border bg-card p-1 shadow-sm">
-                  <button
-                    type="button"
-                    onClick={() => setView("all")}
-                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                      view === "all" ? "bg-navy text-white" : "text-navy hover:bg-muted"
-                    }`}
-                  >
-                    Everyone
-                  </button>
-                  <button
-                    type="button"
+                    aria-pressed={linkedOnly}
                     onClick={() => {
-                      setView("mine");
-                      if (grantedEmail) void refreshWallet(grantedEmail);
+                      setView("all");
+                      setLinkedOnly((v) => !v);
                     }}
-                    className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                      view === "mine" ? "bg-navy text-white" : "text-navy hover:bg-muted"
+                    className={`inline-flex items-center gap-2 rounded-[3px] border px-3 py-2 text-[13px] font-semibold transition ${
+                      linkedOnly ? "border-yellow bg-white/10 text-white" : "border-white/15 text-white/70 hover:border-white/40 hover:text-white"
                     }`}
                   >
-                    My Contacts{wallet?.length ? ` (${wallet.length})` : ""}
+                    <LinkIcon className="h-3 w-3" />
+                    Has a link
+                    <span className="tabular-nums text-white/45">{linkedCount}</span>
                   </button>
-                  {isTeam && (
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <main className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              {grantedEmail && (
+                <div className="flex self-start border border-navy" role="tablist">
+                  {(
+                    [
+                      ["all", "Everyone"],
+                      ["mine", `My Contacts${wallet?.length ? ` (${wallet.length})` : ""}`],
+                      ...(isTeam ? [["team", "Team view"]] : []),
+                    ] as ["all" | "mine" | "team", string][]
+                  ).map(([v, label]) => (
                     <button
+                      key={v}
                       type="button"
+                      role="tab"
+                      aria-selected={view === v}
                       onClick={() => {
-                        setView("team");
-                        if (grantedEmail) void refreshTeam(grantedEmail);
+                        setView(v);
+                        if (v === "mine" && grantedEmail) void refreshWallet(grantedEmail);
+                        if (v === "team" && grantedEmail) void refreshTeam(grantedEmail);
                       }}
-                      className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
-                        view === "team" ? "bg-navy text-white" : "text-navy hover:bg-muted"
+                      className={`px-4 py-2.5 text-[13px] font-bold transition ${
+                        view === v ? "bg-navy text-yellow" : "text-navy hover:bg-white"
                       }`}
                     >
-                      Team view
+                      {label}
                     </button>
-                  )}
+                  ))}
                 </div>
               )}
+              {view === "all" && (
+                <label className="relative block md:w-80">
+                  <span className="sr-only">Search attendees</span>
+                  <svg
+                    className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M20 20l-3.5-3.5" />
+                  </svg>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search name, company, role"
+                    className="w-full rounded-[3px] border border-[#cfcfcf] bg-white py-2.5 pl-10 pr-3 text-base outline-none transition focus:border-navy sm:text-sm"
+                  />
+                </label>
+              )}
+            </div>
 
-              {view === "team" && isTeam ? (
+            {view === "team" && isTeam ? (
+              <div className="mt-6">
                 <TeamContactsWall entries={teamEntries} />
-              ) : view === "mine" && grantedEmail ? (
+              </div>
+            ) : view === "mine" && grantedEmail ? (
+              <div className="mt-6">
                 <MyContactsWall
                   wallet={wallet}
                   ownerEmail={grantedEmail}
@@ -671,238 +578,243 @@ function LoungePage() {
                   onAddCustom={() => setCustomEditor("new")}
                   onBrowseAll={() => setView("all")}
                 />
-              ) : (
-                <>
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="font-display text-xl font-bold text-navy lg:hidden">Attendees</h2>
-                <p className="text-xs text-muted-foreground">
-                  {filtersOn ? `${shown.length} of ${profiles.length}` : `${profiles.length} people`}
-                  {interest && <> · {interest}</>}
-                </p>
-                {filtersOn && (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="text-[11px] font-semibold text-primary hover:underline lg:hidden"
-                  >
-                    Clear
-                  </button>
-                )}
               </div>
-
-              {shown.length === 0 ? (
-                <div className="mt-4 rounded-2xl border border-dashed border-border bg-card/60 p-10 text-center">
-                  <p className="text-sm font-semibold text-navy">No one matches that</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Try a different name or company, or clear the filters.
+            ) : (
+              <>
+                <div className="mt-7 flex items-baseline justify-between gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    {filtersOn ? (
+                      <>
+                        <span className="font-bold text-navy">{shown.length}</span> of {profiles.length}
+                        {interest && <>, {interest}</>}
+                        {linkedOnly && <>, with a link</>}
+                      </>
+                    ) : (
+                      <>Everyone, grouped as above</>
+                    )}
                   </p>
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="mt-4 rounded-full border border-border px-4 py-2 text-xs font-semibold text-navy transition hover:bg-muted"
-                  >
-                    Clear filters
+                  {filtersOn && (
+                    <button type="button" onClick={clearFilters} className="text-[13px] font-bold text-navy underline underline-offset-4 hover:no-underline">
+                      Clear filters
+                    </button>
+                  )}
+                </div>
+
+                {shown.length === 0 ? (
+                  <div className="mt-4 border border-dashed border-[#cfcfcf] bg-white px-6 py-14 text-center">
+                    <p className="font-bold">No one matches that</p>
+                    <p className="mt-1 text-sm text-muted-foreground">Try a different name or company, or clear the filters.</p>
+                    <button type="button" onClick={clearFilters} className="btn-node-line mt-5">
+                      Clear filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-4 grid grid-cols-1 border-l border-t border-[#dcdcdc] sm:grid-cols-2 xl:grid-cols-3">
+                    {(filtersOn ? shown : roomOrder).map((p) => {
+                      const g = p.primary_interest || "General interest";
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setSelected(p)}
+                          className="room-tile group flex min-h-[132px] sm:min-h-[150px] flex-col border-b border-r border-[#dcdcdc] bg-white p-5 text-left focus:outline-none focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00ccff]"
+                        >
+                          <div className="flex items-start gap-3.5">
+                            <span className="room-av relative flex h-11 w-11 shrink-0 items-center justify-center bg-navy text-[13px] font-bold text-white">
+                              {initials(p.full_name)}
+                              <span
+                                aria-hidden
+                                className="absolute -bottom-[3px] -right-[3px] h-3 w-3 ring-[3px] ring-white"
+                                style={nodeStyle(g, false)}
+                              />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-[15px] font-bold leading-tight">{p.full_name}</div>
+                              <div className="mt-1 line-clamp-2 break-words text-[13px] leading-snug text-muted-foreground">{p.job_title}</div>
+                              <div className="mt-1 truncate text-[13px] font-semibold text-navy/75">{p.organisation}</div>
+                            </div>
+                          </div>
+                          <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+                            <span className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+                              <span aria-hidden className="h-2 w-2 shrink-0" style={nodeStyle(g, false)} />
+                              <span className="truncate">{g}</span>
+                            </span>
+                            {p.contact_url && (
+                              <a
+                                href={absUrl(p.contact_url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-[3px] bg-navy px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-black hover:text-yellow"
+                              >
+                                <LinkIcon className="h-3 w-3" />
+                                {contactLabel(p.contact_url)}
+                              </a>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ── my card ── */}
+            <section className="mt-14 grid gap-6 border-t-2 border-navy pt-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+              <div>
+                <h2 className="text-lg font-extrabold tracking-tight">Add or update my link</h2>
+                <p className="mt-2 max-w-[46ch] text-sm leading-relaxed text-muted-foreground">
+                  Add a LinkedIn profile, company page or open-chat link so people can reach you. No need to RSVP again.
+                </p>
+              </div>
+              <div>
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_auto]">
+                  <input
+                    type="email"
+                    value={cEmail}
+                    onChange={(e) => setCEmail(e.target.value)}
+                    placeholder="Email you RSVP'd with"
+                    aria-label="Email you RSVP'd with"
+                    className="min-w-0 rounded-[3px] border border-[#cfcfcf] bg-white px-3 py-2.5 text-base outline-none focus:border-navy sm:text-sm"
+                  />
+                  <input
+                    value={cUrl}
+                    onChange={(e) => setCUrl(e.target.value)}
+                    placeholder="linkedin.com/in/yourname"
+                    aria-label="Your link"
+                    className="min-w-0 rounded-[3px] border border-[#cfcfcf] bg-white px-3 py-2.5 text-base outline-none focus:border-navy sm:text-sm"
+                  />
+                  <button type="button" disabled={cBusy || !cEmail.trim()} onClick={() => void submitContact()} className="btn-node-dark disabled:opacity-50">
+                    <BusyLabel busy={cBusy} text="Saving…">
+                      Save link
+                    </BusyLabel>
                   </button>
                 </div>
-              ) : (
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
-                  {shown.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setSelected(p)}
-                      className="group flex flex-col rounded-2xl border border-border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-5"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-white"
-                          style={{ backgroundColor: avatarColor(p.full_name) }}
-                        >
-                          {initials(p.full_name)}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-bold text-navy">{p.full_name}</div>
-                          <div className="line-clamp-2 break-words text-xs leading-snug text-muted-foreground">
-                            {p.job_title}
-                          </div>
-                          <div className="mt-0.5 truncate text-xs font-medium text-navy/60">
-                            {p.organisation}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-3 flex flex-1 items-end justify-between gap-2">
-                        {p.primary_interest ? (
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ring-inset ${
-                              CHIP_COLORS[p.primary_interest] ?? "bg-secondary text-navy ring-border"
-                            }`}
-                          >
-                            {p.primary_interest}
-                          </span>
-                        ) : (
-                          <span />
-                        )}
-                        {p.contact_url ? (
-                          <a
-                            href={absUrl(p.contact_url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-navy px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-navy/85"
-                          >
-                            <LinkIcon className="h-3 w-3" />
-                            {contactLabel(p.contact_url)}
-                          </a>
-                        ) : (
-                          <span className="shrink-0 text-[10px] text-muted-foreground opacity-0 transition group-hover:opacity-100">
-                            View →
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <p className="mt-8 text-center text-[11px] leading-relaxed text-muted-foreground">
-                Visible to event attendees only · emails are shared only between confirmed 1:1
-                meeting partners inside My Contacts · to update or remove your card, contact{" "}
-                <a href="mailto:support@lodestart.ai" className="font-medium text-primary hover:underline">
-                  support@lodestart.ai
-                </a>
-              </p>
-                </>
-              )}
+                {cMsg && <p className={`mt-2 text-sm ${cMsg.ok ? "text-[#2f7d32]" : "text-[#c62828]"}`}>{cMsg.text}</p>}
+              </div>
             </section>
-          </div>
-        )}
 
-        {selected && (
+            <p className="mt-12 max-w-[80ch] text-xs leading-relaxed text-muted-foreground">
+              Only registered attendees can see this list. Emails are shared only between confirmed 1:1 meeting partners,
+              inside My Contacts. To update or remove your card, write to{" "}
+              <a href="mailto:support@lodestart.ai" className="font-semibold text-navy underline underline-offset-2">
+                support@lodestart.ai
+              </a>
+              .
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">{CREDITS}</p>
+          </main>
+        </>
+      )}
+
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          onClick={() => setSelected(null)}
+        >
           <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-            onClick={() => setSelected(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={selected.full_name}
+            className="sheet-rise max-h-[88dvh] w-full max-w-md overflow-y-auto bg-card sm:shadow-[8px_8px_0_0_#00ccff]"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card shadow-xl sm:rounded-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="relative bg-secondary/60 px-6 pb-6 pt-8 text-center">
+            <div className="relative overflow-hidden bg-navy px-6 pb-6 pt-7 text-white">
+              <NodePattern name="connect" className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 text-white/[0.07]" />
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                aria-label="Close"
+                className="absolute right-3 top-3 p-1.5 text-white/60 transition hover:text-yellow"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+              <span className="relative flex h-16 w-16 items-center justify-center bg-yellow text-xl font-extrabold text-navy">
+                {initials(selected.full_name)}
+              </span>
+              <div className="relative mt-4 text-xl font-bold leading-tight">{selected.full_name}</div>
+              <div className="relative mt-1 text-sm text-white/60">{selected.job_title}</div>
+            </div>
+            <dl className="divide-y divide-border px-6">
+              <div className="py-4">
+                <dt className="text-xs text-muted-foreground">Organisation</dt>
+                <dd className="mt-1 break-words font-semibold">{selected.organisation}</dd>
+              </div>
+              <div className="py-4">
+                <dt className="text-xs text-muted-foreground">Looking for</dt>
+                <dd className="mt-1 flex items-center gap-2 font-semibold">
+                  <span aria-hidden className="h-2.5 w-2.5 shrink-0" style={nodeStyle(selected.primary_interest || "General interest", false)} />
+                  {selected.primary_interest || "General interest"}
+                </dd>
+              </div>
+            </dl>
+            <div className="space-y-3 px-6 pb-6 pt-2">
+              {selected.contact_url ? (
+                <a href={absUrl(selected.contact_url)} target="_blank" rel="noopener noreferrer" className="btn-node w-full">
+                  <LinkIcon className="h-4 w-4" />
+                  Connect on {contactLabel(selected.contact_url)}
+                </a>
+              ) : (
+                <p className="bg-secondary px-3 py-2.5 text-center text-sm text-muted-foreground">No contact link added yet</p>
+              )}
+              {grantedEmail && (
                 <button
                   type="button"
-                  onClick={() => setSelected(null)}
-                  aria-label="Close"
-                  className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground transition hover:bg-background hover:text-navy"
+                  disabled={addedIds.has(selected.id)}
+                  onClick={() => setAddTarget(selected)}
+                  className="btn-node-line w-full disabled:opacity-60"
                 >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M6 6l12 12M18 6L6 18" />
-                  </svg>
+                  {addedIds.has(selected.id) ? "In My Contacts" : "Add to My Contacts"}
                 </button>
-                <div
-                  className="mx-auto flex h-20 w-20 items-center justify-center rounded-full text-xl font-bold text-white ring-4 ring-background"
-                  style={{ backgroundColor: avatarColor(selected.full_name) }}
-                >
-                  {initials(selected.full_name)}
-                </div>
-                <div className="mt-3 text-lg font-bold text-navy">{selected.full_name}</div>
-                {selected.primary_interest && (
-                  <span
-                    className={`mt-2 inline-block rounded-full px-3 py-1 text-[11px] font-semibold ring-1 ring-inset ${
-                      CHIP_COLORS[selected.primary_interest] ?? "bg-background text-navy ring-border"
-                    }`}
-                  >
-                    {selected.primary_interest}
-                  </span>
-                )}
-              </div>
-              <div className="space-y-3 px-6 py-5">
-                <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Organisation
-                  </div>
-                  <div className="mt-0.5 break-words text-sm font-semibold text-navy">{selected.organisation}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Role</div>
-                  <div className="mt-0.5 break-words text-sm text-navy/90">{selected.job_title}</div>
-                </div>
-                {selected.contact_url ? (
-                  <a
-                    href={absUrl(selected.contact_url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-navy py-2.5 text-sm font-semibold text-white transition hover:bg-navy/85"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    Connect on {contactLabel(selected.contact_url)}
-                  </a>
-                ) : (
-                  <p className="mt-2 rounded-lg bg-secondary/60 px-3 py-2 text-center text-xs text-muted-foreground">
-                    No contact link added yet
-                  </p>
-                )}
-                {grantedEmail && (
-                  <button
-                    type="button"
-                    disabled={addedIds.has(selected.id)}
-                    onClick={() => setAddTarget(selected)}
-                    className="mt-1 flex w-full items-center justify-center gap-2 rounded-full border border-border py-2.5 text-sm font-semibold text-navy transition hover:bg-muted disabled:opacity-60"
-                  >
-                    {addedIds.has(selected.id) ? "✓ In My Contacts" : "＋ Add to My Contacts"}
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
-        )}
-
-        {addTarget && grantedEmail && (
-          <AddContactPopup
-            profile={addTarget}
-            onCancel={() => setAddTarget(null)}
-            onAdd={async (note) => {
-              const r = await addLoungeContact({
-                data: { ownerEmail: grantedEmail, contactRsvpId: addTarget.id, note: note || undefined },
-              });
-              if (r.ok) {
-                setAddedIds((s) => new Set(s).add(addTarget.id));
-                void refreshWallet(grantedEmail);
-              }
-              setAddTarget(null);
-            }}
-          />
-        )}
-
-        {customEditor && grantedEmail && (
-          <CustomContactModal
-            entry={customEditor === "new" ? null : customEditor}
-            ownerEmail={grantedEmail}
-            onClose={() => setCustomEditor(null)}
-            onDone={() => {
-              setCustomEditor(null);
+        </div>
+      )}
+      {addTarget && grantedEmail && (
+        <AddContactPopup
+          profile={addTarget}
+          onCancel={() => setAddTarget(null)}
+          onAdd={async (note) => {
+            const r = await addLoungeContact({
+              data: { ownerEmail: grantedEmail, contactRsvpId: addTarget.id, note: note || undefined },
+            });
+            if (r.ok) {
+              setAddedIds((s) => new Set(s).add(addTarget.id));
               void refreshWallet(grantedEmail);
-            }}
-          />
-        )}
+            }
+            setAddTarget(null);
+          }}
+        />
+      )}
 
-        {walletSelected && grantedEmail && (
-          <WalletCardModal
-            entry={walletSelected}
-            ownerEmail={grantedEmail}
-            onClose={() => setWalletSelected(null)}
-            onChanged={() => void refreshWallet(grantedEmail)}
-            onRemoved={() => {
-              setWalletSelected(null);
-              void refreshWallet(grantedEmail);
-            }}
-          />
-        )}
+      {customEditor && grantedEmail && (
+        <CustomContactModal
+          entry={customEditor === "new" ? null : customEditor}
+          ownerEmail={grantedEmail}
+          onClose={() => setCustomEditor(null)}
+          onDone={() => {
+            setCustomEditor(null);
+            void refreshWallet(grantedEmail);
+          }}
+        />
+      )}
 
-        {profiles && (
-          <footer className="mt-10 text-center text-xs text-muted-foreground">
-            {CREDITS}
-          </footer>
-        )}
-      </main>
+      {walletSelected && grantedEmail && (
+        <WalletCardModal
+          entry={walletSelected}
+          ownerEmail={grantedEmail}
+          onClose={() => setWalletSelected(null)}
+          onChanged={() => void refreshWallet(grantedEmail)}
+          onRemoved={() => {
+            setWalletSelected(null);
+            void refreshWallet(grantedEmail);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1020,22 +932,20 @@ function MyContactsWall({
           <strong className="text-navy">Step 1:</strong> tap the cards you want to email. <strong className="text-navy">Step 2:</strong> hit the button at the bottom — your own mail app opens with everyone in BCC. Cards without an email are greyed out.
         </p>
       )}
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 border-l border-t border-[#dcdcdc] sm:grid-cols-2 xl:grid-cols-3">
         {wallet.map((w) => (
           <button
             key={w.rsvp_id ?? w.entry_id}
             type="button"
             onClick={() => (selecting ? togglePick(w) : onSelect(w))}
-            className={`group relative flex flex-col rounded-2xl border bg-card p-4 text-left shadow-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-5 ${
-              selecting && picked.has(keyOf(w))
-                ? "border-primary ring-2 ring-primary/40"
-                : "border-border hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md"
+            className={`room-tile group flex min-h-[132px] sm:min-h-[150px] flex-col border-b border-r border-[#dcdcdc] bg-white p-5 text-left focus:outline-none focus-visible:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#00ccff] ${
+              selecting && picked.has(keyOf(w)) ? "z-[1] outline outline-2 -outline-offset-2 outline-navy" : ""
             } ${selecting && !emailOf(w) ? "opacity-50" : ""}`}
           >
             {selecting && (
               <span
                 className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-bold ${
-                  picked.has(keyOf(w)) ? "border-primary bg-primary text-white" : "border-border bg-background text-transparent"
+                  picked.has(keyOf(w)) ? "border-navy bg-yellow text-navy" : "border-[#cfcfcf] bg-background text-transparent"
                 }`}
               >
                 ✓
@@ -1144,7 +1054,7 @@ function BulkEmailBar({
   return (
     <>
       {opening && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-navy/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="flex items-center gap-3 rounded-2xl bg-card px-6 py-4 shadow-xl">
             <svg className="h-5 w-5 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -1256,36 +1166,35 @@ function WalletCardModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-card shadow-xl sm:rounded-2xl"
+        className="max-h-[88dvh] w-full max-w-md overflow-y-auto sheet-rise bg-card sm:shadow-[8px_8px_0_0_#00ccff]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative bg-secondary/60 px-6 pb-6 pt-8 text-center">
+        <div className="relative overflow-hidden bg-navy px-6 pb-6 pt-7 text-white">
+          <NodePattern name="connect" className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 text-white/[0.07]" />
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute right-3 top-3 rounded-full p-1.5 text-muted-foreground transition hover:bg-background hover:text-navy"
+            className="absolute right-3 top-3 p-1.5 text-white/60 transition hover:text-yellow"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>
           </button>
-          <div
-            className="mx-auto flex h-20 w-20 items-center justify-center rounded-full text-xl font-bold text-white ring-4 ring-background"
-            style={{ backgroundColor: avatarColor(entry.full_name) }}
-          >
+          <span className="relative flex h-16 w-16 items-center justify-center bg-yellow text-xl font-extrabold text-navy">
             {initials(entry.full_name)}
-          </div>
-          <div className="mt-3 text-lg font-bold text-navy">{entry.full_name}</div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            {entry.job_title} · {entry.organisation}
+          </span>
+          <div className="relative mt-4 text-xl font-bold leading-tight">{entry.full_name}</div>
+          <div className="relative mt-1 text-sm text-white/60">
+            {entry.job_title}, {entry.organisation}
           </div>
           {entry.source === "meeting" && (
-            <span className="mt-2 inline-block rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+            <span className="relative mt-3 inline-flex items-center gap-2 text-xs font-semibold text-yellow">
+              <span aria-hidden className="h-2 w-2 bg-yellow" />
               Met in a 1:1 meeting
             </span>
           )}
@@ -1395,11 +1304,11 @@ function AddContactPopup({
   };
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl"
+        className="w-full max-w-sm sheet-rise bg-card p-5 sm:shadow-[8px_8px_0_0_#00ccff]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3">
@@ -1509,11 +1418,11 @@ function CustomContactModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-navy/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="max-h-[88dvh] w-full max-w-sm overflow-y-auto rounded-t-2xl bg-card p-5 shadow-xl sm:rounded-2xl"
+        className="max-h-[88dvh] w-full max-w-sm overflow-y-auto sheet-rise bg-card p-5 sm:shadow-[8px_8px_0_0_#00ccff]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-sm font-bold text-navy">{entry ? "Edit contact" : "Add someone manually"}</div>
@@ -1593,9 +1502,9 @@ function TeamContactsWall({ entries }: { entries: TeamContactEntry[] | null }) {
       <p className="text-xs text-muted-foreground">
         {entries.length} manually saved across all attendees{externals ? ` · ${externals} external` : ""} · organizer view
       </p>
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 border-l border-t border-[#dcdcdc] sm:grid-cols-2 xl:grid-cols-3">
         {entries.map((e, i) => (
-          <div key={i} className="flex flex-col rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+          <div key={i} className="flex min-h-[150px] flex-col border-b border-r border-[#dcdcdc] bg-white p-5">
             <div className="flex items-start gap-3">
               <div
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white ring-2 ring-white"

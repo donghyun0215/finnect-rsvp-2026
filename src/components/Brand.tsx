@@ -39,7 +39,7 @@ export const PATTERNS = {
 };
 export type PatternName = keyof typeof PATTERNS;
 
-const node = (cx: number, cy: number, r = 0.16, k = 0.448 * 0.16) =>
+export const node = (cx: number, cy: number, r = 0.16, k = 0.448 * 0.16) =>
   `M${cx} ${cy + r}C${cx} ${cy + k} ${cx - k} ${cy} ${cx - r} ${cy}C${cx - k} ${cy} ${cx} ${cy - k} ${cx} ${cy - r}` +
   `C${cx} ${cy - k} ${cx + k} ${cy} ${cx + r} ${cy}C${cx + k} ${cy} ${cx} ${cy + k} ${cx} ${cy + r}Z`;
 
