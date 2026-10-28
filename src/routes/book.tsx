@@ -579,7 +579,7 @@ function RsvpPage() {
                         {MEETUP_DAYS.map((d) => (
                           <span key={d.id} role="columnheader" className={`pick-day ${d.id === "fri" ? "is-fri" : ""}`}>
                             <span className="block font-bold text-navy">{d.short}</span>
-                            <span className="block truncate text-[11px] tabular-nums text-muted-foreground">{d.id === "fri" ? "Time TBC" : d.time}</span>
+                            <span className="block truncate text-[11px] tabular-nums text-muted-foreground">{d.time}</span>
                           </span>
                         ))}
                       </div>
@@ -591,7 +591,7 @@ function RsvpPage() {
                             {slots.map((t) => (
                               <span key={t.id} role="columnheader" className={`pick-round ${hover?.slot === t.id ? "is-hot" : ""}`}>
                                 <span className="font-bold text-navy">{t.label.replace("Round ", "R")}</span>
-                                <span className="hidden text-[10px] tabular-nums text-muted-foreground lg:block">{t.day === "thu" ? t.time.split("–")[0].trim() : "TBC"}</span>
+                                <span className="hidden text-[10px] tabular-nums text-muted-foreground lg:block">{t.time.split("–")[0].trim()}</span>
                               </span>
                             ))}
                           </span>
@@ -671,7 +671,7 @@ function RsvpPage() {
                       </div>
                       {MEETUP_DAYS.map((d) => (
                         <div key={d.id} className="mt-5">
-                          <p className="text-xs text-white/50">{d.short} · {d.id === "fri" ? "time TBC" : d.time}</p>
+                          <p className="text-xs text-white/50">{d.short} · {d.time}</p>
                           <ol className="mt-2 space-y-1.5">
                             {TIMESLOTS.filter((t) => t.day === d.id).map((t) => {
                               const mine = myBookings[t.id];
@@ -701,7 +701,6 @@ function RsvpPage() {
                       <button type="button" onClick={goToDetails} disabled={scheduleCount === 0} className="btn-node mt-6 w-full justify-center disabled:pointer-events-none disabled:opacity-40">
                         {pickedSlots.length ? `Continue with ${pickedSlots.length} ${pickedSlots.length === 1 ? "meeting" : "meetings"}` : "Pick a startup to continue"}
                       </button>
-                      <p className="mt-3 text-xs leading-relaxed text-white/45">Friday's round times follow the morning's institution visits. We'll email them once they're set.</p>
                     </div>
                   </aside>
                 )}

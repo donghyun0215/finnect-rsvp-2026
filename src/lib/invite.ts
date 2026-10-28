@@ -64,7 +64,7 @@ export function buildInvite(team = false, unsub = false): { subject: string; htm
   const mins = (h2 * 60 + m2) - (h1 * 60 + m1);
   const perDay = TIMESLOTS.filter((t) => t.day === "thu").length;
   const rounds = `Private ${mins}-minute meetings with the startups you choose (${perDay} rounds)`;
-  const meetRows: [string, string][] = MEETUP_DAYS.map((d) => [d.id === "fri" ? "Fri, time TBC" : `Thu ${d.time}`, rounds]);
+  const meetRows: [string, string][] = MEETUP_DAYS.map((d) => [`${d.id === "fri" ? "Fri" : "Thu"} ${d.time}`, rounds]);
 
   const btn = (href: string, label: string) =>
     `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:14px;"><tr><td style="background:${C.brand};border-radius:2px;"><a href="${href}" style="display:block;padding:11px 16px;${F}font-size:12px;font-weight:bold;letter-spacing:0.7px;color:#ffffff;text-decoration:none;text-transform:uppercase;">${label}&nbsp;&nbsp;→</a></td></tr></table>`;

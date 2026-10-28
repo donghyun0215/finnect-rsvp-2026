@@ -118,7 +118,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
       ["Your 1:1 meetings:", ...list.map((m) => `• ${m.round} ${m.time} — ${m.company}`), "", `Manage: ${SITE}/book#manage`].join("\n"),
     );
   const tbcNote = (d: (typeof MEETUP_DAYS)[number]) =>
-    d.id === "fri" ? "Friday's round times are being confirmed; we'll email them to you. " : "";
+    "";
   const demoCal = gcal(
     "FIN:NECT · Singapore Demo Day",
     "20261119T090000/20261119T123000",

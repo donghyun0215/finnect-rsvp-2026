@@ -343,7 +343,7 @@ function Landing() {
           </div>
           <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--yellow)]">
             <p className="text-sm font-semibold text-[#6d6d6d]">Afternoon</p>
-            <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="text-[#6d6d6d]">time TBC</span></h3>
+            <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="text-[#6d6d6d]">{meetupDay("fri").time}</span></h3>
             <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
               {FRI_SLOTS.map((t, i) => (
                 <li key={t.id} className="agenda-row grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2.5 text-sm" style={{ "--i": i } as CSSProperties}>
@@ -353,8 +353,7 @@ function Landing() {
               ))}
             </ol>
             <div className="mt-auto pt-5">
-              <p className="text-sm text-[#6d6d6d]">Exact times are being confirmed. Book a round now and we'll email you the time.</p>
-              <div className="mt-3"><Place venue={meetupDay("fri").venue} address={meetupDay("fri").address} map={meetupDay("fri").mapUrl} /></div>
+              <div><Place venue={meetupDay("fri").venue} address={meetupDay("fri").address} map={meetupDay("fri").mapUrl} /></div>
               {ONE_ON_ONE_OPEN ? (
                 <Link to="/book" search={{ day: "5", on: "fri" }} className="btn-node-dark mt-7">Book a Friday 1:1</Link>
               ) : (
