@@ -40,17 +40,17 @@ export const ONE_ON_ONE_OPEN = true;
 // 1:1 meetings on two afternoons.
 // Thu 19 Nov: rounds start 14:30 / 15:30 / 16:30 (ops table). ponytail: 40
 // min each like CMK until the length is confirmed.
-// Fri 20 Nov: added at MYSC's request (20 Oct). Same round times as
-// Thursday (MYSC, 28 Oct), though the Friday-morning visits are still open.
+// Fri 20 Nov: added at MYSC's request (20 Oct). Rounds at 14:00 / 15:00 /
+// 16:00 (MYSC, 29 Oct); may still move once the Friday visits are fixed.
 // IDs are stable references stored in bookings — change labels/times
 // freely, never the ids.
 export const TIMESLOTS: Timeslot[] = [
   { id: "slot1", label: "Round 1", time: "14:30 – 15:10", day: "thu" },
   { id: "slot2", label: "Round 2", time: "15:30 – 16:10", day: "thu" },
   { id: "slot3", label: "Round 3", time: "16:30 – 17:10", day: "thu" },
-  { id: "slot4", label: "Round 1", time: "14:30 – 15:10", day: "fri" },
-  { id: "slot5", label: "Round 2", time: "15:30 – 16:10", day: "fri" },
-  { id: "slot6", label: "Round 3", time: "16:30 – 17:10", day: "fri" },
+  { id: "slot4", label: "Round 1", time: "14:00 – 14:40", day: "fri" },
+  { id: "slot5", label: "Round 2", time: "15:00 – 15:40", day: "fri" },
+  { id: "slot6", label: "Round 3", time: "16:00 – 16:40", day: "fri" },
 ];
 
 export interface MeetupDay {
@@ -81,11 +81,11 @@ export const MEETUP_DAYS: MeetupDay[] = [
     id: "fri",
     date: "Friday, 20 November 2026",
     short: "Fri 20 Nov",
-    time: "14:30 – 17:10",
+    time: "14:00 – 16:40",
     venue: "Venue to be announced",
     address: "Singapore",
     mapUrl: "",
-    cal: "20261120T143000/20261120T171000",
+    cal: "20261120T140000/20261120T164000",
   },
 ];
 export const meetupDay = (id: MeetupDayId): MeetupDay => MEETUP_DAYS.find((d) => d.id === id)!;
