@@ -117,7 +117,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
       const slot = TIMESLOTS.find((t) => t.id === m.timeslot_id)!;
       return { day: slot.day, round: slot.label, time: slot.time, company: getCompanyBySlug(m.company_id)?.name ?? m.company_id };
     });
-  // One block per afternoon that has meetings (Thu 19 / Fri 20 Nov).
+  // One block per meeting day (Thu 19 / Fri 20 Nov).
   const meetDays = MEETUP_DAYS.map((d) => ({ d, list: meetings.filter((m) => m.day === d.id) })).filter((x) => x.list.length);
   const demoDay: string[] = [];
   if (input.attendShowcase) demoDay.push(`Pitches & investor meetings ${programTime("showcase")}`);
@@ -159,7 +159,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
     t.push(pendingNote, "");
   }
   for (const { d, list } of meetDays) {
-    t.push(`${d.short.toUpperCase()} (AFTERNOON) · 1:1 BUSINESS MEETINGS`);
+    t.push(`${d.short.toUpperCase()} · 1:1 BUSINESS MEETINGS`);
     for (const m of list) t.push(`• ${m.round} · ${m.time} — ${m.company}`);
     t.push(`${d.venue}, ${d.address}`, ...(d.mapUrl ? [`Map: ${d.mapUrl}`] : []), `${tbcNote(d)}Please arrive 5–10 minutes before your first meeting.`, "");
   }
@@ -227,7 +227,7 @@ ${personalHtml}
         </td></tr>
       </table>
     </td></tr>` : ""}
-  ${meetDays.map(({ d, list }) => block(`${d.short} afternoon · 1:1 Business Meetings`, list.map((m) => `${esc(m.round)} · ${esc(m.time)} — ${esc(m.company)}`), d.venue, d.address, d.mapUrl, meetupsCal(d, list), `${tbcNote(d)}Please arrive 5–10 minutes before your first meeting.`)).join("")}
+  ${meetDays.map(({ d, list }) => block(`${d.short} · 1:1 Business Meetings`, list.map((m) => `${esc(m.round)} · ${esc(m.time)} — ${esc(m.company)}`), d.venue, d.address, d.mapUrl, meetupsCal(d, list), `${tbcNote(d)}Please arrive 5–10 minutes before your first meeting.`)).join("")}
   ${onTheDay ? `<tr><td style="padding:0 32px 16px;${F}font-size:14px;line-height:21px;color:#1e1e1e;">
     <div style="${F}font-size:11px;letter-spacing:1.2px;font-weight:bold;color:#1e1e1e;text-transform:uppercase;padding-bottom:6px;">On the day</div>
     <b>Check-in:</b> scan the QR code at the entrance and enter this email address to collect your name badge — please keep this email handy.<br>

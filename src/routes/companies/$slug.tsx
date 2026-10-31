@@ -331,7 +331,7 @@ function Profile({ company }: { company: Company }) {
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 md:items-center md:py-16">
           <div>
             <h2 className="text-2xl font-bold md:text-3xl">Meet {company.name} in Singapore</h2>
-            <p className="mt-2 text-white/60">{hasMeetups ? `Private 1:1 meeting · ${companySessions(company.slug).includes("thu") ? "Thu 19 or Fri 20 Nov, afternoon" : "Fri 20 Nov, afternoon"}` : `Demo Day · ${EVENT_DATE} · ${EVENT_VENUE}`}</p>
+            <p className="mt-2 text-white/60">{hasMeetups ? `Private 1:1 meeting · ${companySessions(company.slug).includes("thu") ? "Thu 19 Nov afternoon or Fri 20 Nov" : "Fri 20 Nov"}` : `Demo Day · ${EVENT_DATE} · ${EVENT_VENUE}`}</p>
             <Link to="/book" search={bookSearch} className="btn-node mt-6">{bookLabel}</Link>
           </div>
           <Link to="/companies/$slug" params={{ slug: next.slug }} className="next-card group flex items-center gap-5 border border-white/15 p-5">

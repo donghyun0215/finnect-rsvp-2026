@@ -96,7 +96,7 @@ export function buildInvite(team = false, unsub = false): { subject: string; htm
     "I hope this email finds you well.",
     `${I} delighted to invite you to <b>${esc(EVENT_NAME)}</b> in Singapore. ${esc(PITCH)}`,
     ONE_ON_ONE_OPEN
-      ? `The Demo Day is on the morning of <b>${esc(EVENT_DATE)}</b>, and you are welcome to book private 1:1 meetings with the startups that interest you on <b>Thursday or Friday afternoon</b>.`
+      ? `The Demo Day is on the morning of <b>${esc(EVENT_DATE)}</b>, and you are welcome to book private 1:1 meetings with the startups that interest you on <b>Thursday afternoon or Friday</b>.`
       : `They will pitch at the Demo Day on <b>${esc(EVENT_DATE)}</b>.`,
     `It would mean a great deal to have you with us. Please find the details below, and ${my} be grateful if you could RSVP at your earliest convenience.`,
   ];

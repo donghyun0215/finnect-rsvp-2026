@@ -40,24 +40,27 @@ export const ONE_ON_ONE_OPEN = true;
 // 1:1 meetings on two afternoons.
 // Thu 19 Nov: rounds start 14:30 / 15:30 / 16:30 (ops table). ponytail: 40
 // min each like CMK until the length is confirmed.
-// Fri 20 Nov: added at MYSC's request (20 Oct). Rounds at 14:00 / 15:00 /
-// 16:00 (MYSC, 29 Oct); may still move once the Friday visits are fixed.
+// Fri 20 Nov: added at MYSC's request (20 Oct). Five rounds from 31 Oct
+// (MYSC): 10:30 / 11:20 / 14:30 / 15:20 / 16:10, 40 min each. slot4–6 keep
+// their ids (now the afternoon rounds), slot7–8 are the new morning rounds.
 // IDs are stable references stored in bookings — change labels/times
 // freely, never the ids.
 export const TIMESLOTS: Timeslot[] = [
   { id: "slot1", label: "Round 1", time: "14:30 – 15:10", day: "thu" },
   { id: "slot2", label: "Round 2", time: "15:30 – 16:10", day: "thu" },
   { id: "slot3", label: "Round 3", time: "16:30 – 17:10", day: "thu" },
-  { id: "slot4", label: "Round 1", time: "14:00 – 14:40", day: "fri" },
-  { id: "slot5", label: "Round 2", time: "15:00 – 15:40", day: "fri" },
-  { id: "slot6", label: "Round 3", time: "16:00 – 16:40", day: "fri" },
+  { id: "slot7", label: "Round 1", time: "10:30 – 11:10", day: "fri" },
+  { id: "slot8", label: "Round 2", time: "11:20 – 12:00", day: "fri" },
+  { id: "slot4", label: "Round 3", time: "14:30 – 15:10", day: "fri" },
+  { id: "slot5", label: "Round 4", time: "15:20 – 16:00", day: "fri" },
+  { id: "slot6", label: "Round 5", time: "16:10 – 16:50", day: "fri" },
 ];
 
 export interface MeetupDay {
   id: MeetupDayId;
   date: string;
   short: string;
-  /** Afternoon window. */
+  /** Meeting window (Thu: afternoon; Fri: morning and afternoon). */
   time: string;
   venue: string;
   address: string;
@@ -81,11 +84,11 @@ export const MEETUP_DAYS: MeetupDay[] = [
     id: "fri",
     date: "Friday, 20 November 2026",
     short: "Fri 20 Nov",
-    time: "14:00 – 16:40",
+    time: "10:30 – 16:50",
     venue: "Venue to be announced",
     address: "Singapore",
     mapUrl: "",
-    cal: "20261120T140000/20261120T164000",
+    cal: "20261120T103000/20261120T165000",
   },
 ];
 export const meetupDay = (id: MeetupDayId): MeetupDay => MEETUP_DAYS.find((d) => d.id === id)!;
@@ -111,7 +114,7 @@ export type Session = "demo" | "thu" | "fri";
 export const SESSION_LABELS: Record<Session, string> = {
   demo: "Demo Day, Thu AM",
   thu: "1:1, Thu PM",
-  fri: "1:1, Fri PM",
+  fri: "1:1, Fri",
 };
 const FRIDAY_ONLY = new Set(["elevenliter", "moneyguard"]);
 export function companySessions(companySlug: string): Session[] {
@@ -150,8 +153,8 @@ export const PROGRAM: ProgramBlock[] = [
   {
     id: "meetups",
     title: "1:1 Business Meetings",
-    time: `${MEETUP_DATES_SHORT}, afternoons`,
-    description: "Private meetings with the startups of your choice, on Thursday or Friday afternoon.",
+    time: `Thu 19 Nov afternoon & Fri 20 Nov`,
+    description: "Private meetings with the startups of your choice, on Thursday afternoon or Friday (morning and afternoon).",
   },
 ];
 

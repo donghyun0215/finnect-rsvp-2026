@@ -265,7 +265,7 @@ function Landing() {
             <p className="hero-in mt-8 max-w-[34rem] text-[1.0625rem] leading-relaxed text-white/75 [--i:3]">
               Twelve Korean fintechs in Singapore with the Korea Fintech Support Center's FIN:NECT programme, sponsored
               by KakaoBank. See the Demo Day on Thursday morning, then meet the ones that fit your business at a 1:1 on
-              Thursday or Friday afternoon.
+              Thursday afternoon or Friday.
             </p>
             <div className="hero-in mt-9 flex flex-wrap gap-3 [--i:4]">
               <Link to="/book" search={{ day: "7" }} className="btn-node">Request to join the Demo Day</Link>
@@ -332,17 +332,17 @@ function Landing() {
           </article>
         </div>
 
-        {/* FRIDAY — a second afternoon of 1:1s, set under Thursday's afternoon */}
+        {/* FRIDAY — a second day of 1:1s (morning and afternoon), set under Thursday */}
         <div className="mt-16 grid gap-10 border-t border-navy/15 pt-12 md:mt-20 md:grid-cols-2 md:gap-14">
           <div>
             <h2 data-reveal="wipe" className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">{meetupDay("fri").date.replace(" 2026", "")}</h2>
             <p data-reveal="rise" className="mt-4 max-w-sm text-[15px] text-[#6d6d6d] [--d:300ms]">
-              A second afternoon of 1:1 meetings, for anyone who can't make Thursday and for two startups who are only
-              meeting guests on Friday.
+              A second day of 1:1 meetings, morning and afternoon, for anyone who can't make Thursday and for two
+              startups who are only meeting guests on Friday.
             </p>
           </div>
           <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--yellow)]">
-            <p className="text-sm font-semibold text-[#6d6d6d]">Afternoon</p>
+            <p className="text-sm font-semibold text-[#6d6d6d]">Morning &amp; afternoon</p>
             <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="text-[#6d6d6d]">{meetupDay("fri").time}</span></h3>
             <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
               {FRI_SLOTS.map((t, i) => (

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Wordmark } from "@/components/Wordmark";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { z } from "zod";
 import { companies, MEETUP_COMPANIES } from "@/data/companies";
 import {
@@ -411,7 +411,7 @@ function RsvpPage() {
           </h1>
           <p className="hero-in mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white/70 [--i:1]">
             {day === "5"
-              ? "Private meetings with the startups of your choice, on Thursday and Friday afternoon. One startup per round; book as many rounds as you like."
+              ? "Private meetings with the startups of your choice, on Thursday afternoon and all day Friday. One startup per round; book as many rounds as you like."
               : "IR pitches from Korean fintechs, then their meetings with investors, run with Tenity on Thursday morning. It's a closed-door session: the host reviews each request and confirms by email."}
           </p>
 
@@ -419,7 +419,7 @@ function RsvpPage() {
           <div role="tablist" aria-label="What are you registering for?" className="hero-in mt-9 grid gap-3 sm:grid-cols-2 [--i:2]">
             {([
               ["7", "Demo Day", `${EVENT_DAY_SHORT} · ${EVENT_TIME}`, EVENT_VENUE],
-              ["5", "1:1 business meetings", `${MEETUP_DATES_SHORT} · afternoons`, `${TIMESLOTS.length} rounds · ${MEETUP_COMPANIES.length} startups`],
+              ["5", "1:1 business meetings", `${MEETUP_DATES_SHORT}`, `${TIMESLOTS.length} rounds · ${MEETUP_COMPANIES.length} startups`],
             ] as const).map(([d, title, when, where]) => {
               const on = day === d;
               return (
@@ -554,7 +554,7 @@ function RsvpPage() {
                 <p className="mt-4 text-sm text-muted-foreground">
                   Want private meetings too?{" "}
                   <button type="button" onClick={() => setDay("5")} className="font-semibold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">
-                    Book 1:1s on Thursday or Friday afternoon
+                    Book 1:1s on Thursday afternoon or Friday
                   </button>
                 </p>
               </div>
@@ -579,7 +579,7 @@ function RsvpPage() {
                       Booking opens soon. Register below and the organisers will match you with the startups that fit your goals.
                     </p>
                   ) : (
-                    <div className="pick-board" role="grid" aria-label="1:1 meeting rounds" aria-busy={loading} onMouseLeave={() => setHover(null)}>
+                    <div className="pick-board" role="grid" aria-label="1:1 meeting rounds" aria-busy={loading} onMouseLeave={() => setHover(null)} style={{ "--thu": thuSlots.length, "--fri": friSlots.length } as CSSProperties}>
                       {/* day headers */}
                       <div role="row" className="pick-row pick-head">
                         <span role="columnheader" className="pick-name text-xs text-muted-foreground">
@@ -596,7 +596,7 @@ function RsvpPage() {
                       <div role="row" className="pick-row pick-rounds">
                         <span className="pick-name" />
                         {[thuSlots, friSlots].map((slots, g) => (
-                          <span key={g} className="pick-group">
+                          <span key={g} className="pick-group" style={{ "--n": slots.length } as CSSProperties}>
                             {slots.map((t) => (
                               <span key={t.id} role="columnheader" className={`pick-round ${hover?.slot === t.id ? "is-hot" : ""}`}>
                                 <span className="font-bold text-navy">{t.label.replace("Round ", "R")}</span>
@@ -623,18 +623,18 @@ function RsvpPage() {
                             </Link>
                             {[thuSlots, friSlots].map((slots, g) =>
                               g === 0 && friOnly ? (
-                                <span key={g} className="pick-group">
+                                <span key={g} className="pick-group" style={{ "--n": slots.length } as CSSProperties}>
                                   <span className="pick-closed">Friday only</span>
                                 </span>
                               ) : (
-                                <span key={g} className="pick-group">
+                                <span key={g} className="pick-group" style={{ "--n": slots.length } as CSSProperties}>
                                   {slots.map((t) => {
                                     const isBooked = booked.has(key(c.slug, t.id));
                                     const isMine = myBookings[t.id] === c.slug;
                                     const iHaveThisRound = Boolean(myBookings[t.id]) && !isMine;
                                     const isSelected = selections[t.id] === c.slug;
                                     const state = isMine ? "is-mine" : isBooked ? "is-full" : isSelected ? "is-picked" : iHaveThisRound ? "is-blocked" : "";
-                                    const when = `${meetupDay(t.day).short}, ${t.label}${t.day === "thu" ? `, ${t.time}` : ""}`;
+                                    const when = `${meetupDay(t.day).short}, ${t.label}, ${t.time}`;
                                     return (
                                       <span key={t.id} role="gridcell" className={`pick-cell ${hover?.slot === t.id ? "is-hot" : ""}`}>
                                         <button

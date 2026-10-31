@@ -580,7 +580,7 @@ function MeetingRoster() {
           <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
             <span className="rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-primary-foreground">{MEETUP_DATES_SHORT}</span>
             <span className="text-sm font-semibold text-navy">1:1 Business Meetings</span>
-            <span className="text-xs text-muted-foreground">{MEETUP_VENUE} · afternoons</span>
+            <span className="text-xs text-muted-foreground">{MEETUP_VENUE} · Thu afternoon & Fri</span>
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             {ordered.map((c) => {
