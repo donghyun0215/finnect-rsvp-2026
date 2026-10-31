@@ -5,7 +5,7 @@ import { companies, MEETUP_COMPANIES } from "@/data/companies";
 import { EVENT_DATE, MEETUP_DATES, MEETUP_DATES_SHORT, TIMESLOTS, getSlotInfo, isSlotOffered, slotName } from "@/data/timeslots";
 import { supabase } from "@/lib/supabase-client";
 import { adminListBookings, adminCancelBooking, adminListEvents, adminListRsvps, type AdminBooking, type BookingEvent, type AdminRsvp } from "@/lib/booking.server";
-import { updateContactUrl, adminSetCheckedIn, adminRenameAttendee } from "@/lib/booking.server";
+import { updateContactUrl, adminSetCheckedIn, adminRenameAttendee, adminDecideDemo } from "@/lib/booking.server";
 import { BusyLabel, LoadingNote } from "@/components/Spinner";
 import { absUrl } from "@/lib/url";
 
@@ -260,6 +260,7 @@ function AdminPage() {
         {/* STATS */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <Stat label="RSVPs" value={`${day2.length}${day2Guests ? ` (+${day2Guests} guests)` : ""}`} />
+          <Stat label="Demo Day requests to review" value={`${rsvps.filter(wantsDemo).filter((r) => r.demo_status === "pending").length}`} />
           
           <Stat label="Checked in (19 Nov)" value={`${day2CheckedIn} / ${day2.length}`} />
           <Stat label="Pre-registered / Walk-in" value={`${day2.length - day2WalkIns.length} / ${day2WalkIns.length}`} />
@@ -284,7 +285,7 @@ function AdminPage() {
             Export Outreach CSV
           </button>
         </div>
-        <p className="text-sm text-muted-foreground">Everyone who registered, with the sessions they'll attend.</p>
+        <p className="text-sm text-muted-foreground">Everyone who registered, with the sessions they'll attend. The Demo Day is host-approved: pending requests are listed first; approving or declining emails the guest.</p>
         {rsvps.length === 0 ? (
           <div className="mt-4 rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">
             No RSVPs yet.
@@ -306,7 +307,7 @@ function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {rsvps.map((r) => {
+                {[...rsvps].sort((a, b) => Number(isPending(b)) - Number(isPending(a))).map((r) => {
                   const myMeetings = bookings.filter((b) => b.email === r.email);
                   return (
                     <tr key={r.id} className="border-t border-border align-top">
@@ -339,6 +340,7 @@ function AdminPage() {
                         <div className="text-xs text-muted-foreground">{r.phone}</div>
                       </td>
                       <td className="p-3">
+                        {wantsDemo(r) && <DemoDecision rsvp={r} password={pwRef.current} onSaved={() => load(pwRef.current)} />}
                         <div className="flex flex-wrap gap-1.5">
                           {r.attend_showcase && (
                             <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">Showcase</span>
@@ -834,6 +836,57 @@ function ContactLinkCell({ rsvp, onSaved }: { rsvp: AdminRsvp; onSaved: () => vo
           <span className="text-muted-foreground/70">No link yet</span>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Demo Day approval (closed-door, 31 Oct) ──
+const wantsDemo = (r: AdminRsvp) => r.attend_showcase || r.attend_lunch;
+const isPending = (r: AdminRsvp) => wantsDemo(r) && r.demo_status === "pending";
+
+function DemoDecision({ rsvp, password, onSaved }: { rsvp: AdminRsvp; password: string; onSaved: () => void | Promise<unknown> }) {
+  const [busy, setBusy] = useState<"approved" | "declined" | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  async function decide(decision: "approved" | "declined") {
+    setBusy(decision);
+    setNote(null);
+    try {
+      const res = await adminDecideDemo({ data: { password, rsvpId: rsvp.id, decision } });
+      if (!res.ok) setNote(res.message ?? "Couldn't save.");
+      else {
+        if (!res.emailSent) setNote("Saved, but the email didn't go out.");
+        await onSaved();
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
+  const status = rsvp.demo_status;
+  const pill =
+    status === "approved" ? "bg-green-100 text-green-800"
+    : status === "declined" ? "bg-gray-200 text-gray-700"
+    : "bg-yellow-100 text-yellow-900";
+  return (
+    <div className="mb-2">
+      <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${pill}`}>
+        {status === "approved" ? "Approved" : status === "declined" ? "Declined" : "Pending"}
+      </span>
+      {status === "pending" && (
+        <div className="mt-2 flex gap-1.5">
+          <button type="button" disabled={busy !== null} onClick={() => void decide("approved")} className="rounded-full bg-navy px-3 py-1 text-[11px] font-semibold text-white disabled:opacity-60">
+            <BusyLabel busy={busy === "approved"} text="Approving…">Approve</BusyLabel>
+          </button>
+          <button type="button" disabled={busy !== null} onClick={() => void decide("declined")} className="rounded-full border border-border px-3 py-1 text-[11px] font-semibold text-navy disabled:opacity-60">
+            <BusyLabel busy={busy === "declined"} text="Declining…">Decline</BusyLabel>
+          </button>
+        </div>
+      )}
+      {status !== "pending" && (
+        <button type="button" disabled={busy !== null} onClick={() => void decide(status === "approved" ? "declined" : "approved")} className="ml-2 text-[11px] text-muted-foreground underline">
+          {status === "approved" ? "Decline" : "Approve"}
+        </button>
+      )}
+      {note && <div className="mt-1 text-[11px] text-destructive">{note}</div>}
     </div>
   );
 }

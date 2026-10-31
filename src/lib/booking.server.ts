@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "./supabase-admin.server";
 import { MEETUP_COMPANIES } from "@/data/companies";
 import { TIMESLOTS } from "@/data/timeslots";
-import { buildConfirmation } from "./confirmation";
+import { buildConfirmation, buildDeclineNote, buildHostNotice } from "./confirmation";
 import { absUrl } from "./url";
 import { foldName, nameMatches } from "./namematch";
 
@@ -344,6 +344,7 @@ export interface RsvpResult {
   message?: string;
   bookingResults: { timeslotId: string; companySlug: string; ok: boolean; message?: string }[];
   emailSent?: boolean; // confirmation email accepted by the mailer
+  demoStatus?: DemoStatus; // set when the guest asked for the Demo Day
 }
 
 export const createRsvp = createServerFn({ method: "POST" })
@@ -356,6 +357,24 @@ export const createRsvp = createServerFn({ method: "POST" })
     if (!data.attendShowcase && !data.attendLunch && !data.attendMeetups) {
       return { rsvpOk: false, message: "Please select at least one session.", bookingResults: [] };
     }
+
+    // Demo Day is closed-door (Tammy, 31 Oct): a Demo Day RSVP is a request
+    // until a host approves it in /admin. 1:1 bookings stay instant. A guest
+    // already approved for the Demo Day keeps that on re-submit; a declined
+    // guest stays declined (no fresh notification).
+    const wantsDemo = data.attendShowcase || data.attendLunch;
+    const { data: prev } = await supabaseAdmin
+      .from("rsvps")
+      .select("demo_status, attend_showcase, attend_lunch")
+      .eq("email", email)
+      .maybeSingle();
+    const hadDemo = Boolean(prev && (prev.attend_showcase || prev.attend_lunch));
+    const demoStatus: DemoStatus =
+      prev?.demo_status === "declined" ? "declined"
+      : prev?.demo_status === "approved" && hadDemo ? "approved"
+      : wantsDemo ? "pending"
+      : (prev?.demo_status as DemoStatus | undefined) ?? "approved";
+    const newRequest = demoStatus === "pending" && prev?.demo_status !== "pending";
 
     // Upsert by email — re-submitting updates your choices.
     const { error: rsvpError } = await supabaseAdmin.from("rsvps").upsert(
@@ -373,6 +392,8 @@ export const createRsvp = createServerFn({ method: "POST" })
         attend_showcase: data.attendShowcase,
         attend_lunch: data.attendLunch,
         attend_meetups: data.attendMeetups,
+        demo_status: demoStatus,
+        ...(demoStatus === "pending" ? { demo_decided_at: null } : {}),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "email" },
@@ -433,48 +454,113 @@ export const createRsvp = createServerFn({ method: "POST" })
       }
     }
 
-    const emailSent = await sendConfirmation(email, data);
-    return { rsvpOk: true, bookingResults, emailSent };
+    // Pending: "request received" (any 1:1s are listed as confirmed) and a
+    // heads-up to the host. Approved: the usual confirmation. Declined: the
+    // 1:1 part only.
+    const emailSent = await sendConfirmation(email, {
+      ...data,
+      attendShowcase: demoStatus === "approved" && data.attendShowcase,
+      attendLunch: demoStatus === "approved" && data.attendLunch,
+    }, demoStatus === "pending" ? "request" : "confirm", demoStatus === "pending" ? { showcase: data.attendShowcase, lunch: data.attendLunch } : undefined);
+    if (newRequest) await notifyHost(data, email);
+    return { rsvpOk: true, bookingResults, emailSent, demoStatus: wantsDemo ? demoStatus : undefined };
   });
 
-// Auto confirmation email via an Apps Script web app deployed from
-// support@lodestart.ai (it sends from that Gmail). Off until both env vars
-// are set in Vercel. Never blocks or fails the RSVP: errors are logged and
-// the call gives up after 8s.
-async function sendConfirmation(email: string, data: RsvpInput): Promise<boolean> {
+export type DemoStatus = "pending" | "approved" | "declined";
+
+// Who hears about new Demo Day requests (Tammy's Lodestart account).
+const HOST_NOTIFY = ["tammy.ahn@lodestart.ai"];
+
+async function postMail(to: string, mail: { subject: string; html: string; text: string }): Promise<boolean> {
   const url = process.env.CONFIRMATION_WEBHOOK_URL;
   const token = process.env.CONFIRMATION_WEBHOOK_TOKEN;
   if (!url || !token) return false;
   try {
-    // All of this guest's bookings (including earlier submissions), so a
-    // re-submit sends the full, current schedule.
-    const { data: rows } = await supabaseAdmin.from("bookings").select("timeslot_id, company_id").eq("email", email);
-    const mail = buildConfirmation({
-      fullName: data.fullName,
-      attendShowcase: data.attendShowcase,
-      attendLunch: data.attendLunch,
-      meetings: rows ?? [],
-    });
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 8000);
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ token, to: email, ...mail }),
+      body: JSON.stringify({ token, to, ...mail }),
       signal: ctrl.signal,
       redirect: "follow",
     });
     clearTimeout(timer);
     const out = await res.text();
     if (!out.includes('"ok":true')) {
-      console.error("confirmation email not sent:", res.status, out.slice(0, 200));
+      console.error("mail not sent:", to, res.status, out.slice(0, 200));
       return false;
     }
     return true;
   } catch (err) {
-    console.error("confirmation email error:", err);
+    console.error("mail error:", to, err);
     return false;
   }
+}
+
+async function notifyHost(data: RsvpInput, email: string): Promise<void> {
+  const mail = buildHostNotice({
+    fullName: data.fullName,
+    organisation: data.organisation,
+    jobTitle: data.jobTitle,
+    email,
+    phone: data.phone,
+    interest: data.primaryInterest,
+    notes: data.notes,
+    contactUrl: absUrl(data.contactUrl) || undefined,
+    showcase: data.attendShowcase,
+    lunch: data.attendLunch,
+  });
+  await Promise.all(HOST_NOTIFY.map((to) => postMail(to, mail)));
+}
+
+// Host decision from /admin. Approving sends the full confirmation; declining
+// sends a short, polite note (the guest's 1:1 meetings are unaffected).
+export const adminDecideDemo = createServerFn({ method: "POST" })
+  .validator((data: { password: string; rsvpId: string; decision: "approved" | "declined" }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean; emailSent?: boolean; message?: string }> => {
+    if (!(await isAdmin(data.password))) return { ok: false, message: "Not authorised." };
+    if (data.decision !== "approved" && data.decision !== "declined") return { ok: false, message: "Bad decision." };
+    const { data: row, error } = await supabaseAdmin
+      .from("rsvps")
+      .update({ demo_status: data.decision, demo_decided_at: new Date().toISOString() })
+      .eq("id", data.rsvpId)
+      .select("full_name, email, attend_showcase, attend_lunch")
+      .single();
+    if (error || !row) {
+      console.error("adminDecideDemo error:", error);
+      return { ok: false, message: "Couldn't save the decision." };
+    }
+    const { data: rows } = await supabaseAdmin.from("bookings").select("timeslot_id, company_id").eq("email", row.email);
+    const mail = data.decision === "approved"
+      ? buildConfirmation({ kind: "approved", fullName: row.full_name, attendShowcase: row.attend_showcase, attendLunch: row.attend_lunch, meetings: rows ?? [] })
+      : buildDeclineNote(row.full_name, (rows ?? []).length > 0);
+    const emailSent = await postMail(row.email, mail);
+    return { ok: true, emailSent };
+  });
+
+// Auto confirmation email via an Apps Script web app deployed from
+// support@lodestart.ai (it sends from that Gmail). Off until both env vars
+// are set in Vercel. Never blocks or fails the RSVP: errors are logged and
+// the call gives up after 8s.
+async function sendConfirmation(
+  email: string,
+  data: RsvpInput,
+  kind: "confirm" | "request" = "confirm",
+  requested?: { showcase: boolean; lunch: boolean },
+): Promise<boolean> {
+  // All of this guest's bookings (including earlier submissions), so a
+  // re-submit sends the full, current schedule.
+  const { data: rows } = await supabaseAdmin.from("bookings").select("timeslot_id, company_id").eq("email", email);
+  const mail = buildConfirmation({
+    kind,
+    fullName: data.fullName,
+    attendShowcase: data.attendShowcase,
+    attendLunch: data.attendLunch,
+    requested,
+    meetings: rows ?? [],
+  });
+  return postMail(email, mail);
 }
 
 export interface AdminRsvp {
@@ -494,6 +580,8 @@ export interface AdminRsvp {
   attend_meetups: boolean;
   checked_in_at: string | null;
   checked_in_via: string | null;
+  demo_status: DemoStatus;
+  demo_decided_at: string | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -576,6 +664,7 @@ export const listLoungeProfiles = createServerFn({ method: "POST" })
         .from("rsvps")
         .select("id")
         .eq("email", email)
+        .eq("demo_status", "approved")
         .maybeSingle();
       authorised = Boolean(row);
     }
@@ -585,6 +674,7 @@ export const listLoungeProfiles = createServerFn({ method: "POST" })
       .from("rsvps")
       .select("id, full_name, organisation, job_title, primary_interest, contact_url, email")
       .eq("show_in_lounge", true)
+      .eq("demo_status", "approved")
       .order("full_name", { ascending: true });
     if (error) {
       console.error("listLoungeProfiles error:", error);

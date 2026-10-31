@@ -9,7 +9,7 @@ export const REMINDER_KINDS: MailKind[] = ["week", "3day", "meetup-eve", "demo-e
 
 export async function buildReminderBatch(kind: MailKind): Promise<(ConfirmationEmail & { to: string })[]> {
   const [{ data: rsvps, error: e1 }, { data: bookings, error: e2 }] = await Promise.all([
-    supabaseAdmin.from("rsvps").select("full_name, email, attend_showcase, attend_lunch"),
+    supabaseAdmin.from("rsvps").select("full_name, email, attend_showcase, attend_lunch, demo_status"),
     supabaseAdmin.from("bookings").select("full_name, email, timeslot_id, company_id"),
   ]);
   if (e1 || e2) throw new Error(`DB error: ${(e1 ?? e2)?.message}`);
@@ -17,7 +17,9 @@ export async function buildReminderBatch(kind: MailKind): Promise<(ConfirmationE
   type Person = { name: string; showcase: boolean; lunch: boolean; meetings: { timeslot_id: string; company_id: string }[] };
   const people = new Map<string, Person>();
   for (const r of rsvps ?? []) {
-    people.set(r.email.toLowerCase(), { name: r.full_name, showcase: r.attend_showcase, lunch: r.attend_lunch, meetings: [] });
+    // Demo Day reminders only for approved guests (closed-door, host-approved).
+    const ok = r.demo_status === "approved";
+    people.set(r.email.toLowerCase(), { name: r.full_name, showcase: ok && r.attend_showcase, lunch: ok && r.attend_lunch, meetings: [] });
   }
   for (const b of bookings ?? []) {
     const k = b.email.toLowerCase();
@@ -30,6 +32,8 @@ export async function buildReminderBatch(kind: MailKind): Promise<(ConfirmationE
   for (const [email, p] of people) {
     const demoDay = p.showcase || p.lunch;
     if (kind === "meetup-eve" && p.meetings.length === 0) continue;
+    // Nothing confirmed yet (Demo Day request still pending or declined, no 1:1s).
+    if (!demoDay && p.meetings.length === 0) continue;
     // Demo Day and 1:1s are the same day here, so one eve email ("demo-eve")
     // goes to everyone with their full schedule; "meetup-eve" is not scheduled.
     if (kind === "demo-eve" && !demoDay && p.meetings.length === 0) continue;

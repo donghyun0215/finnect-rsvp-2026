@@ -268,7 +268,7 @@ function Landing() {
               Thursday or Friday afternoon.
             </p>
             <div className="hero-in mt-9 flex flex-wrap gap-3 [--i:4]">
-              <Link to="/book" search={{ day: "7" }} className="btn-node">RSVP for the Demo Day</Link>
+              <Link to="/book" search={{ day: "7" }} className="btn-node">Request to join the Demo Day</Link>
               {ONE_ON_ONE_OPEN && (
                 <Link to="/book" search={{ day: "5" }} className="btn-node-ghost">Book a 1:1 meeting</Link>
               )}
@@ -287,7 +287,7 @@ function Landing() {
       <section id="rsvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 data-reveal="wipe" className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">{EVENT_DATE.replace(" 2026", "")}</h2>
-          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for the Demo Day, a 1:1 or both. The Demo Day and the 1:1 meetings each have their own RSVP.</p>
+          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for the Demo Day, a 1:1 or both. The Demo Day is closed-door and host-approved; the 1:1 meetings are booked directly.</p>
         </div>
 
         <div className="mt-12"><DayRuler at={at} onScrub={setAt} /></div>
@@ -306,7 +306,7 @@ function Landing() {
             </ol>
             <div className="mt-auto pt-5">
               <Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} />
-              <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">RSVP for the Demo Day</Link>
+              <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">Request to join the Demo Day</Link>
             </div>
           </article>
 

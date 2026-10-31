@@ -18,13 +18,24 @@ import {
 
 const EVENT_TITLE = EVENT_NAME;
 
-export type MailKind = "confirm" | "week" | "3day" | "meetup-eve" | "demo-eve";
+export type MailKind = "confirm" | "request" | "approved" | "week" | "3day" | "meetup-eve" | "demo-eve";
 
 const COPY: Record<MailKind, { subject: string; headline: string; intro: string }> = {
   confirm: {
     subject: `Your RSVP is confirmed — ${EVENT_TITLE}`,
     headline: "Your RSVP is confirmed",
     intro: `Thank you for registering for the <b>${EVENT_TITLE}</b>. Here is your schedule:`,
+  },
+  // Demo Day is closed-door: a Demo Day RSVP is a request until a host approves it.
+  request: {
+    subject: `We've received your request — ${EVENT_TITLE}`,
+    headline: "Request received",
+    intro: `Thank you for your interest in the <b>${EVENT_TITLE}</b>. The Demo Day is a closed-door session, so the host reviews each request. We'll email you as soon as your place is confirmed.`,
+  },
+  approved: {
+    subject: "Your place at the FIN:NECT Demo Day is confirmed",
+    headline: "Your place is confirmed",
+    intro: `Good news: your request to join the <b>${EVENT_TITLE}</b> has been approved. Here is your schedule:`,
   },
   week: {
     subject: "Your schedule for FIN:NECT Global Demoday Singapore (19–20 Nov)",
@@ -75,6 +86,8 @@ export interface ConfirmationInput {
   fullName: string;
   attendShowcase: boolean;
   attendLunch: boolean;
+  /** Demo Day parts asked for but not yet approved ("request" mail only). */
+  requested?: { showcase: boolean; lunch: boolean };
   meetings: { timeslot_id: string; company_id: string }[];
 }
 
@@ -109,6 +122,10 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   const demoDay: string[] = [];
   if (input.attendShowcase) demoDay.push(`Pitches & investor meetings ${programTime("showcase")}`);
   if (input.attendLunch) demoDay.push(`Networking dinner ${programTime("lunch")}`);
+  const pending: string[] = [];
+  if (input.requested?.showcase) pending.push(`Pitches & investor meetings ${programTime("showcase")}`);
+  if (input.requested?.lunch) pending.push(`Networking dinner ${programTime("lunch")}`);
+  const pendingNote = "Pending host approval · venue and details follow in your confirmation email";
 
   const meetupsCal = (d: (typeof MEETUP_DAYS)[number], list: typeof meetings) =>
     gcal(
@@ -135,6 +152,11 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
     t.push("THU 19 NOV (MORNING) · DEMO DAY");
     for (const d of demoDay) t.push(`• ${d}`);
     t.push(`${EVENT_VENUE}, ${EVENT_ADDRESS}`, ...(EVENT_MAP_URL ? [`Map: ${EVENT_MAP_URL}`] : []), "");
+  }
+  if (pending.length) {
+    t.push("THU 19 NOV (MORNING) · DEMO DAY — REQUESTED");
+    for (const d of pending) t.push(`• ${d}`);
+    t.push(pendingNote, "");
   }
   for (const { d, list } of meetDays) {
     t.push(`${d.short.toUpperCase()} (AFTERNOON) · 1:1 BUSINESS MEETINGS`);
@@ -196,6 +218,15 @@ ${personalHtml}
     ${copy.intro}
   </td></tr>`}
   ${demoDay.length ? block("Thu 19 Nov morning · Demo Day", demoDay.map(esc), EVENT_VENUE, EVENT_ADDRESS, EVENT_MAP_URL, demoCal) : ""}
+  ${pending.length ? `<tr><td style="padding:0 32px 18px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px dashed #c9c9c9;border-left:5px solid #c9c9c9;">
+        <tr><td style="padding:16px 18px;">
+          <div style="${F}font-size:11px;letter-spacing:1.2px;font-weight:bold;color:#1e1e1e;text-transform:uppercase;">Thu 19 Nov morning · Demo Day · requested</div>
+          ${pending.map((r) => `<div style="${F}padding-top:8px;font-size:15px;line-height:21px;color:#1e1e1e;font-weight:bold;">${esc(r)}</div>`).join("")}
+          <div style="${F}padding-top:10px;font-size:13px;line-height:19px;color:#6d6d6d;">${esc(pendingNote)}</div>
+        </td></tr>
+      </table>
+    </td></tr>` : ""}
   ${meetDays.map(({ d, list }) => block(`${d.short} afternoon · 1:1 Business Meetings`, list.map((m) => `${esc(m.round)} · ${esc(m.time)} — ${esc(m.company)}`), d.venue, d.address, d.mapUrl, meetupsCal(d, list), `${tbcNote(d)}Please arrive 5–10 minutes before your first meeting.`)).join("")}
   ${onTheDay ? `<tr><td style="padding:0 32px 16px;${F}font-size:14px;line-height:21px;color:#1e1e1e;">
     <div style="${F}font-size:11px;letter-spacing:1.2px;font-weight:bold;color:#1e1e1e;text-transform:uppercase;padding-bottom:6px;">On the day</div>
@@ -216,4 +247,41 @@ ${personalHtml}
 </table></td></tr></table></body></html>`;
 
   return { subject: copy.subject, html, text: t.join("\n") };
+}
+
+// Short note when the host declines a Demo Day request. Any 1:1 meetings the
+// guest booked stand, so say so.
+export function buildDeclineNote(fullName: string, hasMeetings: boolean): ConfirmationEmail {
+  const lines = [
+    `Thank you for your interest in the ${EVENT_TITLE}.`,
+    "The Demo Day is a closed-door session with limited seats, and unfortunately we're unable to confirm a place for you this time.",
+    ...(hasMeetings ? ["Your 1:1 meetings with the startups are not affected and remain confirmed. You can view them here: " + `${SITE}/book#manage`] : []),
+    "We hope to see you at a future FIN:NECT event.",
+  ];
+  const text = [`Dear ${fullName},`, "", ...lines.flatMap((l) => [l, ""]), "Best regards,", "The LodestarT team"].join("\n");
+  const P = "margin:0 0 14px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:21px;color:#222222;";
+  const html = `<div style="max-width:600px;">${[`Dear ${esc(fullName)},`, ...lines.map(esc)].map((l) => `<p style="${P}">${l}</p>`).join("")}<p style="${P}">Best regards,<br>The LodestarT team</p></div>`;
+  return { subject: `Your request for the FIN:NECT Demo Day`, html, text };
+}
+
+// Heads-up to the host when a new Demo Day request comes in.
+export function buildHostNotice(r: {
+  fullName: string; organisation: string; jobTitle: string; email: string; phone: string;
+  interest?: string; notes?: string; contactUrl?: string; showcase: boolean; lunch: boolean;
+}): ConfirmationEmail {
+  const parts = [r.showcase && "Pitches", r.lunch && "Networking"].filter(Boolean).join(" + ");
+  const rows: [string, string][] = [
+    ["Name", r.fullName], ["Organisation", r.organisation], ["Title", r.jobTitle],
+    ["Email", r.email], ["Phone", r.phone], ["Interested in", r.interest || "-"],
+    ["Asked for", parts || "-"], ["LinkedIn", r.contactUrl || "-"], ["Notes", r.notes || "-"],
+  ];
+  const admin = `${SITE}/admin`;
+  const text = ["New Demo Day request (pending your approval):", "", ...rows.map(([k, v]) => `${k}: ${v}`), "", `Approve or decline: ${admin}`].join("\n");
+  const F = "font-family:Arial,Helvetica,sans-serif;";
+  const html = `<div style="${F}font-size:14px;line-height:21px;color:#222;max-width:600px;">
+<p style="margin:0 0 12px;">New Demo Day request, pending your approval:</p>
+<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;">${rows.map(([k, v]) => `<tr><td style="padding:3px 14px 3px 0;color:#6d6d6d;vertical-align:top;">${esc(k)}</td><td style="padding:3px 0;"><b>${esc(v)}</b></td></tr>`).join("")}</table>
+<p style="margin:16px 0 0;"><a href="${esc(admin)}" style="color:#1e1e1e;font-weight:bold;">Approve or decline in the admin page</a></p>
+</div>`;
+  return { subject: `[FIN:NECT] Demo Day request: ${r.fullName} (${r.organisation})`, html, text };
 }

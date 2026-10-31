@@ -120,6 +120,8 @@ function RsvpPage() {
     bookings: { timeslotId: string; companySlug: string; ok: boolean; message?: string }[];
     email: string;
     emailSent: boolean;
+    /** Demo Day is host-approved: "pending" until a host says yes. */
+    demoStatus?: "pending" | "approved" | "declined";
   } | null>(null);
   // Success is shown as a modal — the old inline green banner sat above the
   // fold and people didn't notice it.
@@ -308,6 +310,7 @@ function RsvpPage() {
       bookings: result.bookingResults,
       email: payload.email,
       emailSent: Boolean(result.emailSent),
+      demoStatus: result.demoStatus,
     });
     setSuccessOpen(true);
     setSelections(Object.fromEntries(TIMESLOTS.map((t) => [t.id, null])));
@@ -404,12 +407,12 @@ function RsvpPage() {
 
         <div className="mx-auto max-w-6xl px-4 pb-12 pt-8 sm:px-6 md:pb-16 md:pt-12">
           <h1 className="hero-in max-w-3xl text-[clamp(2.1rem,5.6vw,3.9rem)] font-extrabold leading-[1.02] tracking-tight">
-            {day === "5" ? "Pick your 1:1 meetings" : "RSVP for the Demo Day"}
+            {day === "5" ? "Pick your 1:1 meetings" : "Request to join the Demo Day"}
           </h1>
           <p className="hero-in mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white/70 [--i:1]">
             {day === "5"
               ? "Private meetings with the startups of your choice, on Thursday and Friday afternoon. One startup per round; book as many rounds as you like."
-              : "IR pitches from Korean fintechs, then their meetings with investors, run with Tenity on Thursday morning."}
+              : "IR pitches from Korean fintechs, then their meetings with investors, run with Tenity on Thursday morning. It's a closed-door session: the host reviews each request and confirms by email."}
           </p>
 
           {/* The two sign-ups, as the home page's two sessions */}
@@ -452,12 +455,14 @@ function RsvpPage() {
                   <span aria-hidden className="flex h-11 w-11 items-center justify-center bg-yellow text-xl font-bold text-navy shadow-[3px_3px_0_0_#00ccff]">✓</span>
                   <DialogHeader className="mt-5 space-y-1 text-left">
                     <DialogTitle className="text-2xl font-extrabold text-white">
-                      {submitted.bookings.some((b) => !b.ok) ? "Almost there" : "You're registered"}
+                      {submitted.bookings.some((b) => !b.ok) ? "Almost there" : submitted.demoStatus === "pending" ? "Request received" : "You're registered"}
                     </DialogTitle>
                     <DialogDescription className="text-white/65">
                       {submitted.bookings.some((b) => !b.ok)
                         ? "Your RSVP is saved, but some picks were taken. Details below."
-                        : day === "5" ? "See you in Singapore." : `See you on ${EVENT_DATE.replace(" 2026", "")}.`}
+                        : submitted.demoStatus === "pending"
+                          ? "The Demo Day is closed-door. The host will review your request and confirm by email."
+                          : day === "5" ? "See you in Singapore." : `See you on ${EVENT_DATE.replace(" 2026", "")}.`}
                     </DialogDescription>
                   </DialogHeader>
                 </div>
@@ -465,7 +470,11 @@ function RsvpPage() {
                   {(submitted.attend.showcase || submitted.attend.lunch) && (
                     <li className="flex items-baseline gap-4 py-3.5 text-sm">
                       <span className="w-24 shrink-0 tabular-nums text-muted-foreground">{EVENT_DAY_SHORT}</span>
-                      <span className="font-semibold text-navy">Demo Day · {EVENT_TIME}</span>
+                      <span className="font-semibold text-navy">
+                        Demo Day · {EVENT_TIME}
+                        {submitted.demoStatus === "pending" && <span className="ml-2 font-normal text-muted-foreground">(pending approval)</span>}
+                        {submitted.demoStatus === "declined" && <span className="ml-2 font-normal text-muted-foreground">(not confirmed)</span>}
+                      </span>
                     </li>
                   )}
                   {submitted.bookings.map((b) => {
@@ -485,7 +494,7 @@ function RsvpPage() {
                 </ul>
                 <p className="mx-6 mt-2 border-t border-border pt-4 text-sm leading-relaxed text-muted-foreground">
                   {submitted.emailSent ? (
-                    <>We've emailed your schedule to <strong className="break-all text-navy">{submitted.email}</strong>. Not there in a few minutes? Check spam or promotions.</>
+                    <>We've emailed {submitted.demoStatus === "pending" ? "a copy of your request" : "your schedule"} to <strong className="break-all text-navy">{submitted.email}</strong>. Not there in a few minutes? Check spam or promotions.</>
                   ) : (
                     <>Your registration is saved. Check or cancel your meetings any time at the bottom of this page.</>
                   )}
@@ -523,7 +532,7 @@ function RsvpPage() {
               <div>
                 <h2 className="text-3xl font-bold text-navy md:text-4xl">{EVENT_DATE.replace(" 2026", "")}</h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-                  Doors open at 09:00. Each attendee registers separately, so colleagues need their own RSVP.
+                  Doors open at 09:00. Seats are limited and confirmed by the host, so each attendee sends their own request. You'll hear back by email.
                 </p>
                 <p className="mt-6 text-sm text-navy">
                   {EVENT_MAP_URL ? (
@@ -830,7 +839,9 @@ function RsvpPage() {
                   </ul>
                   {formError && <p role="alert" className="mt-4 border-l-4 border-destructive bg-white px-3 py-2 text-sm text-navy">{formError}</p>}
                   <button type="submit" disabled={submitting} className="btn-node mt-5 w-full justify-center disabled:opacity-60">
-                    <BusyLabel busy={submitting} text="Confirming…">Confirm my RSVP</BusyLabel>
+                    {day === "7"
+                      ? <BusyLabel busy={submitting} text="Sending…">Send my request</BusyLabel>
+                      : <BusyLabel busy={submitting} text="Confirming…">Confirm my RSVP</BusyLabel>}
                   </button>
                   <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
                     The organisers use your details only to run this event, in line with Singapore's PDPA.
