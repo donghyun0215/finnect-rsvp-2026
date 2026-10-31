@@ -85,9 +85,10 @@ export const MEETUP_DAYS: MeetupDay[] = [
     date: "Friday, 20 November 2026",
     short: "Fri 20 Nov",
     time: "10:30 – 16:50",
-    venue: "Venue to be announced",
-    address: "Singapore",
-    mapUrl: "",
+    // Tammy (31 Oct): Wyndham Singapore Hotel; room to be confirmed with the hotel on Monday.
+    venue: "Wyndham Singapore Hotel (room to be confirmed)",
+    address: "5 Coleman Street, Singapore 179805",
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=Wyndham+Singapore+Hotel+5+Coleman+Street",
     cal: "20261120T103000/20261120T165000",
   },
 ];

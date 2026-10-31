@@ -77,11 +77,13 @@ const DAYS: ScheduleDay[] = [
   {
     date: "11/20", dow: "Fri", theme: "Institution Visits & 1:1 Meetings",
     items: [
-      { time: "9:00 – 12:00", title: "Visits to fintech institutions (from SFA, DAA, SDX, OCBC, UOB — TBC)", highlight: true },
-      { time: "12:00 – 14:00", title: "Lunch" },
-      // Friday 1:1 rounds added 20 Oct (MYSC); times follow the morning visits.
-      ...TIMESLOTS.filter((t) => t.day === "fri").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: MEETUP_VENUE, highlight: true })),
-      { time: "Rest of the afternoon", title: "Own B2B meetings & hustle time" },
+      // Friday 1:1s: five rounds from 31 Oct (10:30–16:50, Wyndham). The
+      // institution visits are being rescheduled around them (MYSC, Monday).
+      { time: "TBC", title: "Visits to fintech institutions (from SFA, DAA, SDX, OCBC, UOB — being rescheduled)" },
+      ...TIMESLOTS.filter((t) => t.day === "fri" && t.time < "12").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: meetupDay("fri").venue, highlight: true })),
+      { time: "12:00 – 14:30", title: "Lunch" },
+      ...TIMESLOTS.filter((t) => t.day === "fri" && t.time >= "12").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: meetupDay("fri").venue, highlight: true })),
+      { time: "After 16:50", title: "Own B2B meetings & hustle time" },
       { time: "19:00", title: "Dinner (free)" },
     ],
   },

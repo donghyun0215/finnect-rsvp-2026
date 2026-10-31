@@ -468,8 +468,10 @@ export const createRsvp = createServerFn({ method: "POST" })
 
 export type DemoStatus = "pending" | "approved" | "declined";
 
-// Who hears about new Demo Day requests (Tammy's Lodestart account).
-const HOST_NOTIFY = ["tammy.ahn@lodestart.ai"];
+// Who hears about new Demo Day requests: Tammy, with Donghyun and Yina copied
+// (31 Oct). One email to all three; the Apps Script mailer passes a
+// comma-separated "to" straight to GmailApp.sendEmail.
+const HOST_NOTIFY = ["tammy.ahn@lodestart.ai", "donghyun.kim@lodestart.ai", "yina.song@lodestart.ai"];
 
 async function postMail(to: string, mail: { subject: string; html: string; text: string }): Promise<boolean> {
   const url = process.env.CONFIRMATION_WEBHOOK_URL;
@@ -536,7 +538,7 @@ async function notifyHost(data: RsvpInput, email: string, rsvpId: string): Promi
     showcase: data.attendShowcase,
     lunch: data.attendLunch,
   });
-  await Promise.all(HOST_NOTIFY.map((to) => postMail(to, mail)));
+  await postMail(HOST_NOTIFY.join(","), mail);
 }
 
 // Host decision (from /admin or the email links). Approving sends the full
