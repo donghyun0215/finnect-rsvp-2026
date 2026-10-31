@@ -268,6 +268,8 @@ export function buildDeclineNote(fullName: string, hasMeetings: boolean): Confir
 export function buildHostNotice(r: {
   fullName: string; organisation: string; jobTitle: string; email: string; phone: string;
   interest?: string; notes?: string; contactUrl?: string; showcase: boolean; lunch: boolean;
+  /** Signed one-click links (open a confirm page on the site). */
+  approveUrl?: string; declineUrl?: string;
 }): ConfirmationEmail {
   const parts = [r.showcase && "Pitches", r.lunch && "Networking"].filter(Boolean).join(" + ");
   const rows: [string, string][] = [
@@ -276,12 +278,21 @@ export function buildHostNotice(r: {
     ["Asked for", parts || "-"], ["LinkedIn", r.contactUrl || "-"], ["Notes", r.notes || "-"],
   ];
   const admin = `${SITE}/admin`;
-  const text = ["New Demo Day request (pending your approval):", "", ...rows.map(([k, v]) => `${k}: ${v}`), "", `Approve or decline: ${admin}`].join("\n");
   const F = "font-family:Arial,Helvetica,sans-serif;";
+  const text = [
+    "New Demo Day request (pending your approval):", "", ...rows.map(([k, v]) => `${k}: ${v}`), "",
+    ...(r.approveUrl ? [`Approve: ${r.approveUrl}`] : []),
+    ...(r.declineUrl ? [`Decline: ${r.declineUrl}`] : []),
+    `All requests: ${admin}`,
+  ].join("\n");
+  const btn = (href: string, label: string, solid: boolean) =>
+    `<a href="${esc(href)}" style="display:inline-block;margin:0 8px 8px 0;padding:11px 22px;${F}font-size:14px;font-weight:bold;text-decoration:none;border-radius:3px;${solid ? "background:#1e1e1e;color:#ffe300;" : "background:#ffffff;color:#1e1e1e;border:1.5px solid #1e1e1e;"}">${label}</a>`;
   const html = `<div style="${F}font-size:14px;line-height:21px;color:#222;max-width:600px;">
 <p style="margin:0 0 12px;">New Demo Day request, pending your approval:</p>
 <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;">${rows.map(([k, v]) => `<tr><td style="padding:3px 14px 3px 0;color:#6d6d6d;vertical-align:top;">${esc(k)}</td><td style="padding:3px 0;"><b>${esc(v)}</b></td></tr>`).join("")}</table>
-<p style="margin:16px 0 0;"><a href="${esc(admin)}" style="color:#1e1e1e;font-weight:bold;">Approve or decline in the admin page</a></p>
+${r.approveUrl && r.declineUrl ? `<p style="margin:18px 0 0;">${btn(r.approveUrl, "Approve", true)}${btn(r.declineUrl, "Decline", false)}</p>
+<p style="margin:4px 0 0;font-size:12px;color:#6d6d6d;">Each button opens a one-tap confirm page. The guest is emailed automatically.</p>` : ""}
+<p style="margin:14px 0 0;font-size:12px;"><a href="${esc(admin)}" style="color:#6d6d6d;">See all requests in the admin page</a></p>
 </div>`;
   return { subject: `[FIN:NECT] Demo Day request: ${r.fullName} (${r.organisation})`, html, text };
 }

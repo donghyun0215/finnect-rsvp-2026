@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BookRouteImport } from './routes/book'
+import { Route as DecideRouteImport } from './routes/decide'
 import { Route as LoungeRouteImport } from './routes/lounge'
 import { Route as MeetRouteImport } from './routes/meet'
 import { Route as ScheduleRouteImport } from './routes/schedule'
@@ -33,6 +34,11 @@ const AdminRoute = AdminRouteImport.update({
 const BookRoute = BookRouteImport.update({
   id: '/book',
   path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DecideRoute = DecideRouteImport.update({
+  id: '/decide',
+  path: '/decide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoungeRoute = LoungeRouteImport.update({
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/book': typeof BookRoute
+  '/decide': typeof DecideRoute
   '/lounge': typeof LoungeRoute
   '/meet': typeof MeetRoute
   '/schedule': typeof ScheduleRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/book': typeof BookRoute
+  '/decide': typeof DecideRoute
   '/lounge': typeof LoungeRoute
   '/meet': typeof MeetRoute
   '/schedule': typeof ScheduleRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/book': typeof BookRoute
+  '/decide': typeof DecideRoute
   '/lounge': typeof LoungeRoute
   '/meet': typeof MeetRoute
   '/schedule': typeof ScheduleRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/book'
+    | '/decide'
     | '/lounge'
     | '/meet'
     | '/schedule'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/book'
+    | '/decide'
     | '/lounge'
     | '/meet'
     | '/schedule'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/book'
+    | '/decide'
     | '/lounge'
     | '/meet'
     | '/schedule'
@@ -151,6 +163,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   BookRoute: typeof BookRoute
+  DecideRoute: typeof DecideRoute
   LoungeRoute: typeof LoungeRoute
   MeetRoute: typeof MeetRoute
   ScheduleRoute: typeof ScheduleRoute
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       path: '/book'
       fullPath: '/book'
       preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/decide': {
+      id: '/decide'
+      path: '/decide'
+      fullPath: '/decide'
+      preLoaderRoute: typeof DecideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lounge': {
@@ -239,6 +259,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   BookRoute: BookRoute,
+  DecideRoute: DecideRoute,
   LoungeRoute: LoungeRoute,
   MeetRoute: MeetRoute,
   ScheduleRoute: ScheduleRoute,

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "./supabase-admin.server";
 import { MEETUP_COMPANIES } from "@/data/companies";
-import { TIMESLOTS } from "@/data/timeslots";
+import { SITE_URL, TIMESLOTS } from "@/data/timeslots";
 import { buildConfirmation, buildDeclineNote, buildHostNotice } from "./confirmation";
 import { absUrl } from "./url";
 import { foldName, nameMatches } from "./namematch";
@@ -377,7 +377,7 @@ export const createRsvp = createServerFn({ method: "POST" })
     const newRequest = demoStatus === "pending" && prev?.demo_status !== "pending";
 
     // Upsert by email — re-submitting updates your choices.
-    const { error: rsvpError } = await supabaseAdmin.from("rsvps").upsert(
+    const { data: saved, error: rsvpError } = await supabaseAdmin.from("rsvps").upsert(
       {
         full_name: data.fullName,
         organisation: data.organisation,
@@ -397,7 +397,7 @@ export const createRsvp = createServerFn({ method: "POST" })
         updated_at: new Date().toISOString(),
       },
       { onConflict: "email" },
-    );
+    ).select("id").single();
     if (rsvpError) {
       console.error("createRsvp upsert error:", rsvpError);
       return { rsvpOk: false, message: "Something went wrong. Please try again.", bookingResults: [] };
@@ -462,7 +462,7 @@ export const createRsvp = createServerFn({ method: "POST" })
       attendShowcase: demoStatus === "approved" && data.attendShowcase,
       attendLunch: demoStatus === "approved" && data.attendLunch,
     }, demoStatus === "pending" ? "request" : "confirm", demoStatus === "pending" ? { showcase: data.attendShowcase, lunch: data.attendLunch } : undefined);
-    if (newRequest) await notifyHost(data, email);
+    if (newRequest && saved) await notifyHost(data, email, saved.id);
     return { rsvpOk: true, bookingResults, emailSent, demoStatus: wantsDemo ? demoStatus : undefined };
   });
 
@@ -498,8 +498,33 @@ async function postMail(to: string, mail: { subject: string; html: string; text:
   }
 }
 
-async function notifyHost(data: RsvpInput, email: string): Promise<void> {
+// One-click decisions from the host's email: /decide?id=…&d=approved|declined&s=…
+// The link opens a confirm page (mail scanners prefetch links, so a GET never
+// decides anything); the button there posts the decision. Signed with a
+// server-only secret so a link can't be forged or reused for another guest.
+async function signDecision(rsvpId: string, decision: string): Promise<string> {
+  const secret = process.env.DECISION_LINK_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${rsvpId}.${decision}`));
+  return btoa(String.fromCharCode(...new Uint8Array(mac))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+async function decisionUrl(rsvpId: string, decision: "approved" | "declined"): Promise<string> {
+  const q = new URLSearchParams({ id: rsvpId, d: decision, s: await signDecision(rsvpId, decision) });
+  return `${SITE_URL}/decide?${q.toString()}`;
+}
+async function sigOk(rsvpId: string, decision: string, sig: string): Promise<boolean> {
+  if (!rsvpId || !sig || (decision !== "approved" && decision !== "declined")) return false;
+  const want = await signDecision(rsvpId, decision);
+  if (want.length !== sig.length) return false;
+  let diff = 0;
+  for (let i = 0; i < want.length; i++) diff |= want.charCodeAt(i) ^ sig.charCodeAt(i);
+  return diff === 0;
+}
+
+async function notifyHost(data: RsvpInput, email: string, rsvpId: string): Promise<void> {
   const mail = buildHostNotice({
+    approveUrl: await decisionUrl(rsvpId, "approved"),
+    declineUrl: await decisionUrl(rsvpId, "declined"),
     fullName: data.fullName,
     organisation: data.organisation,
     jobTitle: data.jobTitle,
@@ -514,29 +539,57 @@ async function notifyHost(data: RsvpInput, email: string): Promise<void> {
   await Promise.all(HOST_NOTIFY.map((to) => postMail(to, mail)));
 }
 
-// Host decision from /admin. Approving sends the full confirmation; declining
-// sends a short, polite note (the guest's 1:1 meetings are unaffected).
+// Host decision (from /admin or the email links). Approving sends the full
+// confirmation; declining a short, polite note (1:1 meetings are unaffected).
+async function decideDemo(rsvpId: string, decision: "approved" | "declined"): Promise<{ ok: boolean; emailSent?: boolean; message?: string }> {
+  const { data: row, error } = await supabaseAdmin
+    .from("rsvps")
+    .update({ demo_status: decision, demo_decided_at: new Date().toISOString() })
+    .eq("id", rsvpId)
+    .select("full_name, email, attend_showcase, attend_lunch")
+    .single();
+  if (error || !row) {
+    console.error("decideDemo error:", error);
+    return { ok: false, message: "Couldn't save the decision." };
+  }
+  const { data: rows } = await supabaseAdmin.from("bookings").select("timeslot_id, company_id").eq("email", row.email);
+  const mail = decision === "approved"
+    ? buildConfirmation({ kind: "approved", fullName: row.full_name, attendShowcase: row.attend_showcase, attendLunch: row.attend_lunch, meetings: rows ?? [] })
+    : buildDeclineNote(row.full_name, (rows ?? []).length > 0);
+  const emailSent = await postMail(row.email, mail);
+  return { ok: true, emailSent };
+}
+
 export const adminDecideDemo = createServerFn({ method: "POST" })
   .validator((data: { password: string; rsvpId: string; decision: "approved" | "declined" }) => data)
   .handler(async ({ data }): Promise<{ ok: boolean; emailSent?: boolean; message?: string }> => {
     if (!(await isAdmin(data.password))) return { ok: false, message: "Not authorised." };
     if (data.decision !== "approved" && data.decision !== "declined") return { ok: false, message: "Bad decision." };
-    const { data: row, error } = await supabaseAdmin
+    return decideDemo(data.rsvpId, data.decision);
+  });
+
+// /decide page: look up the guest behind a signed email link (read-only).
+export const peekDecision = createServerFn({ method: "POST" })
+  .validator((data: { id: string; d: string; s: string }) => data)
+  .handler(async ({ data }): Promise<
+    { ok: true; name: string; organisation: string; jobTitle: string; status: DemoStatus } | { ok: false }
+  > => {
+    if (!(await sigOk(data.id, data.d, data.s))) return { ok: false };
+    const { data: row } = await supabaseAdmin
       .from("rsvps")
-      .update({ demo_status: data.decision, demo_decided_at: new Date().toISOString() })
-      .eq("id", data.rsvpId)
-      .select("full_name, email, attend_showcase, attend_lunch")
-      .single();
-    if (error || !row) {
-      console.error("adminDecideDemo error:", error);
-      return { ok: false, message: "Couldn't save the decision." };
-    }
-    const { data: rows } = await supabaseAdmin.from("bookings").select("timeslot_id, company_id").eq("email", row.email);
-    const mail = data.decision === "approved"
-      ? buildConfirmation({ kind: "approved", fullName: row.full_name, attendShowcase: row.attend_showcase, attendLunch: row.attend_lunch, meetings: rows ?? [] })
-      : buildDeclineNote(row.full_name, (rows ?? []).length > 0);
-    const emailSent = await postMail(row.email, mail);
-    return { ok: true, emailSent };
+      .select("full_name, organisation, job_title, demo_status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!row) return { ok: false };
+    return { ok: true, name: row.full_name, organisation: row.organisation, jobTitle: row.job_title, status: row.demo_status as DemoStatus };
+  });
+
+// /decide page: the host pressed the button.
+export const applyDecision = createServerFn({ method: "POST" })
+  .validator((data: { id: string; d: string; s: string }) => data)
+  .handler(async ({ data }): Promise<{ ok: boolean; emailSent?: boolean; message?: string }> => {
+    if (!(await sigOk(data.id, data.d, data.s))) return { ok: false, message: "This link isn't valid." };
+    return decideDemo(data.id, data.d as "approved" | "declined");
   });
 
 // Auto confirmation email via an Apps Script web app deployed from
