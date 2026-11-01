@@ -101,9 +101,9 @@ export const MEETUP_DATES_SHORT = "Fri 20 Nov";
 // Demo Day RSVP isn't per company); "thu"/"fri" gate the 1:1 rounds.
 export type Session = "demo" | "thu" | "fri";
 export const SESSION_LABELS: Record<Session, string> = {
-  demo: "Demo Day, Thu AM",
-  thu: "1:1, Thu PM",
-  fri: "1:1, Fri",
+  demo: "Demo Day, 19 Nov",
+  thu: "1:1, 19 Nov",
+  fri: "1:1, 20 Nov",
 };
 const FRIDAY_ONLY = new Set(["elevenliter", "moneyguard"]);
 export function companySessions(companySlug: string): Session[] {

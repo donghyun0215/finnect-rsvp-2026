@@ -192,8 +192,8 @@ function Landing() {
             </h1>
             <p className="hero-in mt-8 max-w-[34rem] text-[1.0625rem] leading-relaxed text-white/75 [--i:3]">
               Twelve Korean fintechs in Singapore with the Korea Fintech Center's FIN:NECT programme, sponsored
-              by KakaoBank. See the Demo Day on Thursday morning, then meet the ones that fit your business at a 1:1 on
-              Friday afternoon.
+              by KakaoBank. See the Demo Day on 19 November, then meet the ones that fit your business at a 1:1 on
+              20 November.
             </p>
             <div className="hero-in mt-9 flex flex-wrap gap-3 [--i:4]">
               <Link to="/book" search={{ day: "7" }} className="btn-node">Request to join the Demo Day</Link>

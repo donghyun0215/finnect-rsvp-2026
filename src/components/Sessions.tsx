@@ -1,6 +1,6 @@
 import { companySessions, SESSION_LABELS, type Session } from "@/data/timeslots";
 
-const ORDER: Session[] = ["demo", "thu", "fri"];
+const ORDER: Session[] = ["demo", "fri"];
 
 // Where a startup can be met, as three node squares: filled when the company
 // is at that session, hollow when it isn't (MYSC's per-company open/close).
