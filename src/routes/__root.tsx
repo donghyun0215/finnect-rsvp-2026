@@ -85,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // Invite-only event site: keep it out of search engines (6 Oct)
       { name: "robots", content: "noindex, nofollow" },
       { title: "FIN:NECT Global Demoday Singapore 2026 · Demo Day & 1:1 meetings" },
-      { name: "description", content: "Twelve Korean fintech startups on the Korea Fintech Support Center's FIN:NECT programme meet investors and partners in Singapore: Demo Day on 19 November, 1:1 meetings on 19–20 November 2026." },
+      { name: "description", content: "Twelve Korean fintech startups on the Korea Fintech Center's FIN:NECT programme meet investors and partners in Singapore: Demo Day on 19 November, 1:1 meetings on 20 November 2026." },
       { name: "author", content: "LodestarT" },
       { property: "og:title", content: "FIN:NECT Global Demoday Singapore 2026" },
       { property: "og:description", content: "Korean fintech startups meet investors and partners in Singapore, 19–20 November 2026." },

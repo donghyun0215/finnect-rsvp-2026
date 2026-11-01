@@ -510,8 +510,8 @@
 @media (min-width: 1024px) { .pick-board { --cell: 3.6rem; --node: 2.3rem; --day-gap: 1.25rem; } }
 .pick-row {
   display: grid; align-items: center; column-gap: var(--day-gap);
-  /* --thu / --fri = number of rounds each day (set inline from TIMESLOTS) */
-  grid-template-columns: minmax(0, 1fr) calc(var(--cell) * var(--thu, 3)) calc(var(--cell) * var(--fri, 3));
+  /* --cols = name column + one group per meeting day (set inline from TIMESLOTS) */
+  grid-template-columns: var(--cols, minmax(0, 1fr) calc(var(--cell) * 3));
   border-bottom: 1px solid rgb(30 30 30 / .08); transition: background-color .15s;
 }
 .pick-row.is-hot { background: rgb(255 227 0 / .12); }

@@ -38,8 +38,7 @@ const searchSchema = z.object({
   // the first, so submit merges with the existing RSVP (see handleSubmit).
   // TanStack parses ?day=5 as a number, so coerce before the enum check.
   day: z.preprocess((v) => (v == null ? v : String(v)), z.enum(["5", "7"])).optional(),
-  // Kept so home-page links with ?on=thu|fri stay valid; both afternoons
-  // now sit on one board, so it no longer changes the view.
+  // Kept so older links with ?on=thu|fri stay valid; it no longer changes the view.
   on: z.enum(["thu", "fri"]).optional(),
 });
 
@@ -366,8 +365,9 @@ function RsvpPage() {
   const myBookingCount = Object.keys(myBookings).length;
   const pickedSlots = TIMESLOTS.filter((t) => selections[t.id] && !myBookings[t.id]);
   const scheduleCount = pickedSlots.length + myBookingCount;
-  const thuSlots = TIMESLOTS.filter((t) => t.day === "thu");
-  const friSlots = TIMESLOTS.filter((t) => t.day === "fri");
+  // One column group per meeting day that has rounds (Friday only since 1 Nov).
+  const dayGroups = MEETUP_DAYS.map((d) => TIMESLOTS.filter((t) => t.day === d.id));
+  const boardCols = `minmax(0, 1fr) ${dayGroups.map((g) => `calc(var(--cell) * ${g.length})`).join(" ")}`;
 
   // Crosshair for the picker: the row and round under the pointer.
   const [hover, setHover] = useState<{ slug: string; slot: string } | null>(null);
@@ -411,7 +411,7 @@ function RsvpPage() {
           </h1>
           <p className="hero-in mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white/70 [--i:1]">
             {day === "5"
-              ? "Private meetings with the startups of your choice, on Thursday afternoon and all day Friday. One startup per round; book as many rounds as you like."
+              ? "Private meetings with the startups of your choice, on Friday 20 November at the Wyndham Singapore Hotel. One startup per round; book as many rounds as you like."
               : "IR pitches from Korean fintechs, then their meetings with investors, run with Tenity on Thursday morning. It's a closed-door session: the host reviews each request and confirms by email."}
           </p>
 
@@ -554,7 +554,7 @@ function RsvpPage() {
                 <p className="mt-4 text-sm text-muted-foreground">
                   Want private meetings too?{" "}
                   <button type="button" onClick={() => setDay("5")} className="font-semibold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">
-                    Book 1:1s on Thursday afternoon or Friday
+                    Book 1:1s on Friday 20 November
                   </button>
                 </p>
               </div>
@@ -579,7 +579,7 @@ function RsvpPage() {
                       Booking opens soon. Register below and the organisers will match you with the startups that fit your goals.
                     </p>
                   ) : (
-                    <div className="pick-board" role="grid" aria-label="1:1 meeting rounds" aria-busy={loading} onMouseLeave={() => setHover(null)} style={{ "--thu": thuSlots.length, "--fri": friSlots.length } as CSSProperties}>
+                    <div className="pick-board" role="grid" aria-label="1:1 meeting rounds" aria-busy={loading} onMouseLeave={() => setHover(null)} style={{ "--cols": boardCols } as CSSProperties}>
                       {/* day headers */}
                       <div role="row" className="pick-row pick-head">
                         <span role="columnheader" className="pick-name text-xs text-muted-foreground">
@@ -595,7 +595,7 @@ function RsvpPage() {
                       {/* round headers */}
                       <div role="row" className="pick-row pick-rounds">
                         <span className="pick-name" />
-                        {[thuSlots, friSlots].map((slots, g) => (
+                        {dayGroups.map((slots, g) => (
                           <span key={g} className="pick-group" style={{ "--n": slots.length } as CSSProperties}>
                             {slots.map((t) => (
                               <span key={t.id} role="columnheader" className={`pick-round ${hover?.slot === t.id ? "is-hot" : ""}`}>
@@ -609,7 +609,6 @@ function RsvpPage() {
 
                       {MEETUP_COMPANIES.map((c) => {
                         const logo = STARTUP_LOGOS[c.slug];
-                        const friOnly = !companySessions(c.slug).includes("thu");
                         return (
                           <div key={c.slug} role="row" className={`pick-row ${hover?.slug === c.slug ? "is-hot" : ""}`}>
                             <Link to="/companies/$slug" params={{ slug: c.slug }} target="_blank" className="pick-name group flex items-center gap-3" title={`${c.name}: open profile`}>
@@ -621,10 +620,10 @@ function RsvpPage() {
                                 <span className="hidden truncate text-xs text-muted-foreground sm:block">{c.sector}</span>
                               </span>
                             </Link>
-                            {[thuSlots, friSlots].map((slots, g) =>
-                              g === 0 && friOnly ? (
+                            {dayGroups.map((slots, g) =>
+                              !companySessions(c.slug).includes(MEETUP_DAYS[g].id) ? (
                                 <span key={g} className="pick-group" style={{ "--n": slots.length } as CSSProperties}>
-                                  <span className="pick-closed">Friday only</span>
+                                  <span className="pick-closed">Not this day</span>
                                 </span>
                               ) : (
                                 <span key={g} className="pick-group" style={{ "--n": slots.length } as CSSProperties}>

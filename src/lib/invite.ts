@@ -24,11 +24,11 @@ import {
 // ── per-event copy and colours ──
 // FIN:NECT 2026 KV: black, yellow #FFE300 (fills and on-dark text only), grey
 const C = { brand: "#1e1e1e", accent: "#ffe300", ink: "#1e1e1e", muted: "#6d6d6d", line: "#e6e6e6" };
-const HOST_LINE = "Korea Fintech Support Center · Sponsored by KakaoBank";
+const HOST_LINE = "Korea Fintech Center · Sponsored by KakaoBank";
 const DATES = "19–20 November 2026 · Singapore FinTech Festival week";
 const SUBJECT = `Invitation to ${EVENT_NAME} (19–20 Nov, Singapore)`;
 const PITCH =
-  "Twelve Korean fintech startups are coming to Singapore with the Korea Fintech Support Center's FIN:NECT programme during Singapore FinTech Festival week, to meet investors, financial institutions and partners.";
+  "Twelve Korean fintech startups are coming to Singapore with the Korea Fintech Center's FIN:NECT programme during Singapore FinTech Festival week, to meet investors, financial institutions and partners.";
 // One line per startup for the "Featuring" list (falls back to the site tagline).
 const LINES: Record<string, string> = {
   "276holdings": "AI credit-scored supply-chain finance (Settle Now, Pay Later) for SMEs",
@@ -62,7 +62,7 @@ export function buildInvite(team = false, unsub = false): { subject: string; htm
   ];
   const [h1, m1, h2, m2] = (TIMESLOTS[0]?.time.match(/\d+/g) ?? []).map(Number);
   const mins = (h2 * 60 + m2) - (h1 * 60 + m1);
-  const perDay = TIMESLOTS.filter((t) => t.day === "thu").length;
+  const perDay = TIMESLOTS.length;
   const rounds = `Private ${mins}-minute meetings with the startups you choose (${perDay} rounds)`;
   const meetRows: [string, string][] = MEETUP_DAYS.map((d) => [`${d.id === "fri" ? "Fri" : "Thu"} ${d.time}`, rounds]);
 
@@ -96,7 +96,7 @@ export function buildInvite(team = false, unsub = false): { subject: string; htm
     "I hope this email finds you well.",
     `${I} delighted to invite you to <b>${esc(EVENT_NAME)}</b> in Singapore. ${esc(PITCH)}`,
     ONE_ON_ONE_OPEN
-      ? `The Demo Day is on the morning of <b>${esc(EVENT_DATE)}</b>, and you are welcome to book private 1:1 meetings with the startups that interest you on <b>Thursday afternoon or Friday</b>.`
+      ? `The Demo Day is on the morning of <b>${esc(EVENT_DATE)}</b>, and you are welcome to book private 1:1 meetings with the startups that interest you on <b>Friday 20 November</b>.`
       : `They will pitch at the Demo Day on <b>${esc(EVENT_DATE)}</b>.`,
     `It would mean a great deal to have you with us. Please find the details below, and ${my} be grateful if you could RSVP at your earliest convenience.`,
   ];

@@ -48,9 +48,9 @@ const COPY: Record<MailKind, { subject: string; headline: string; intro: string 
     intro: `Only three days until the <b>${EVENT_TITLE}</b>. Here is a quick recap of your schedule:`,
   },
   "meetup-eve": {
-    subject: "Your 1:1 meetings tomorrow afternoon (Thu 19 Nov)",
+    subject: "Your 1:1 meetings tomorrow (Fri 20 Nov)",
     headline: "Your 1:1 meetings are tomorrow",
-    intro: "A quick reminder that your 1:1 meetings with the startups are <b>tomorrow afternoon, Thursday 19 November</b>. Here are the details:",
+    intro: "A quick reminder that your 1:1 meetings with the startups are <b>tomorrow, Friday 20 November</b>. Here are the details:",
   },
   "demo-eve": {
     subject: "See you tomorrow at the FIN:NECT Demo Day (Thu 19 Nov)",
@@ -72,7 +72,7 @@ const PERSONAL: Partial<Record<MailKind, string[]>> = {
     "See you soon!",
   ],
   "meetup-eve": [
-    `Your 1:1 meetings with the startups are tomorrow afternoon (Thu 19 Nov) at ${MEETUP_VENUE}. The details are below. Please arrive 5–10 minutes before your first meeting.`,
+    `Your 1:1 meetings with the startups are tomorrow (Fri 20 Nov) at ${MEETUP_VENUE}. The details are below. Please arrive 5–10 minutes before your first meeting.`,
     "See you tomorrow!",
   ],
   "demo-eve": [
@@ -165,7 +165,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   }
   // "slots still open" only while booking is still useful (not on the eves)
   const nudge = (kind === "week" || kind === "3day") && meetings.length === 0;
-  if (nudge) t.push(`A few 1:1 meeting slots on Thu 19 and Fri 20 Nov are still open: ${SITE}/book?day=5`, "");
+  if (nudge) t.push(`A few 1:1 meeting slots on Fri 20 Nov are still open: ${SITE}/book?day=5`, "");
   const onTheDay = kind === "demo-eve";
   if (onTheDay) {
     t.push("ON THE DAY");
@@ -208,7 +208,7 @@ ${personal.map((l) => `<p style="${P}">${esc(l)}</p>`).join("\n")}
 ${personalHtml}
 <table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;${personal ? "border:1px solid #e6e6e6;" : ""}">
   <tr><td style="background:#1e1e1e;padding:22px 32px;">
-    <div style="${F}font-size:10px;letter-spacing:1px;font-weight:bold;color:#ffffff;text-transform:uppercase;">Korea Fintech Support Center | FIN:NECT Global</div>
+    <div style="${F}font-size:10px;letter-spacing:1px;font-weight:bold;color:#ffffff;text-transform:uppercase;">Korea Fintech Center | FIN:NECT Global</div>
     <div style="${F}padding-top:8px;font-size:24px;line-height:28px;font-weight:800;color:#ffffff;">${esc(copy.headline)}</div>
     <div style="${F}padding-top:4px;font-size:13px;font-weight:bold;color:#ffe300;">Demo Day &amp; 1:1 Meetings · 19–20 November 2026</div>
   </td></tr>
@@ -234,7 +234,7 @@ ${personalHtml}
     <b>Networking Lounge:</b> a private, attendee-only directory of everyone in the room, so conversations can continue after the event. ${link(`${SITE}/lounge`, "Open the lounge")}
   </td></tr>` : ""}
   ${nudge ? `<tr><td style="padding:0 32px 16px;${F}font-size:14px;line-height:21px;color:#1e1e1e;">
-    <div style="background:#fff7b3;border:1px solid #ffe300;padding:12px 14px;">A few <b>1:1 meeting slots on Thu 19 and Fri 20 Nov</b> are still open — ${link(`${SITE}/book?day=5`, "book a meeting")}.</div>
+    <div style="background:#fff7b3;border:1px solid #ffe300;padding:12px 14px;">A few <b>1:1 meeting slots on Fri 20 Nov</b> are still open — ${link(`${SITE}/book?day=5`, "book a meeting")}.</div>
   </td></tr>` : ""}
   <tr><td style="padding:4px 32px 22px;${F}font-size:14px;line-height:21px;color:#1e1e1e;">
     ${link(`${SITE}/book#manage`, "View or cancel your 1:1 meetings")}<br>

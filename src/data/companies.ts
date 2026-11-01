@@ -45,7 +45,7 @@ export interface Company {
 export const TRACKS = {
   track1: {
     title: "FIN:NECT Global Singapore 2026",
-    theme: "Korean fintech startups selected by the Korea Fintech Support Center",
+    theme: "Korean fintech startups selected by the Korea Fintech Center",
     dates: "19 November 2026",
   },
   track2: {

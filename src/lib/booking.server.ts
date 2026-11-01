@@ -468,10 +468,10 @@ export const createRsvp = createServerFn({ method: "POST" })
 
 export type DemoStatus = "pending" | "approved" | "declined";
 
-// Who hears about new Demo Day requests: Tammy, with Donghyun and Yina copied
-// (31 Oct). One email to all three; the Apps Script mailer passes a
-// comma-separated "to" straight to GmailApp.sendEmail.
-const HOST_NOTIFY = ["tammy.ahn@lodestart.ai", "donghyun.kim@lodestart.ai", "yina.song@lodestart.ai"];
+// Who hears about new Demo Day requests: Tammy, with Donghyun, Yina (31 Oct)
+// and Minjong Seo of MYSC (1 Nov) on the same email; the Apps Script mailer
+// passes a comma-separated "to" straight to GmailApp.sendEmail.
+const HOST_NOTIFY = ["tammy.ahn@lodestart.ai", "donghyun.kim@lodestart.ai", "yina.song@lodestart.ai", "mjseo@mysc.co.kr"];
 
 async function postMail(to: string, mail: { subject: string; html: string; text: string }): Promise<boolean> {
   const url = process.env.CONFIRMATION_WEBHOOK_URL;
