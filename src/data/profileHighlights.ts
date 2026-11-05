@@ -33,13 +33,13 @@ export const HIGHLIGHTS: Record<string, Highlight> = {
   },
   marinachain: {
     stats: [
-      ["1st", "OpenAI SF 2024 and K-Startup Grand Challenge"],
-      ["Top 8", "Global Shell StartUp Engine 2024"],
-      ["4", "regimes covered: IMO DCS, CII, EU MRV, FuelEU"],
+      ["USD 8.45M", "2025 revenue"],
+      ["USD 1.8M", "government grants secured"],
+      ["3", "PoCs under way: CMA CGM, Hyundai Samho, J Ocean"],
     ],
-    problem: "Emissions data starts as hand-typed emails and ends as a year-end scramble.",
-    fix: "Crews CC MarinaChain on their Noon Reports, and AI prepares the compliance filings.",
-    asks: ["Shipowners and ship managers", "AI pilot partners in any industry"],
+    problem: "Carbon rules for shipping keep getting more complex, and the data sits scattered.",
+    fix: "Maritime-specific AI: MarinaNet for noon reports and compliance, MarinaDocs for documents.",
+    asks: ["Potential customers", "Data partners"],
   },
   bigtechplus: {
     stats: [

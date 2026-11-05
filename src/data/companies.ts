@@ -13,8 +13,7 @@
 // All four one-pagers are due 21 Oct; replace these entries then.
 // IR decks are NOT published (CMK lesson, 7 Oct). Sector labels are ours.
 // Profile sections (16 Oct): from each company's FIN:NECT one-pager where
-// MYSC has finished it (7 of 8; DEVD's landed 20 Oct); MarinaChain from its
-// IR deck until its one-pager lands.
+// MYSC has finished it (all 8: DEVD's landed 20 Oct, MarinaChain's 5 Nov).
 
 export interface Company {
   slug: string;
@@ -159,55 +158,51 @@ export const companies: Company[] = [
     slug: "marinachain",
     name: "MarinaChain",
     displayName: "MarinaChain",
-    tagline: "An AI-powered maritime carbon and financial data platform that automates vessel emissions data processing and supports regulatory compliance and carbon allowance procurement.",
+    tagline: "AI solutions provider for maritime, ocean freight and heavy industries.",
     sector: "Financial data · Maritime carbon",
     stage: "Pre-A · founded 2023",
     track: "track1",
     website: "https://marinachain.io",
-    email: "info@marinachain.io",
-    phone: "",
+    email: "danha@marinachain.io",
+    phone: "+82 10 2038 8054",
     problem: [
-      "Ship crews enter vessel operation data by hand in non-standard formats, causing frequent errors from the very first step.",
-      "Daily Noon Reports are emailed to HQ and must be summarised at year-end for regulatory reporting, leaving data fragmented across inboxes.",
-      "Shipowners spend significant manpower and time on manual data collection and repeated reconciliation with verifiers and classification societies.",
+      "Complex carbon regulations keep emerging for shipping.",
+      "Vessel and compliance data is stored in a scattered manner.",
     ],
     solution: [
-      "AI compliance tools that fit existing workflows: crews simply CC MarinaChain on their daily Noon Report emails.",
-      "AI extracts and organises vessel operational data and prepares annual submissions for IMO DCS, CII, EU MRV and FuelEU.",
-      "One platform for operational data, contracts and compliance, serving regulators, verifiers and shipper requests from a single source.",
+      "Solutions built for specific market needs, based on deep maritime domain knowledge and applied AI.",
     ],
     keyFeatures: [
-      "MarinaNet: emissions compliance automation plus EUA calculation and purchase, fuel-intensity tracking, biofuel sourcing and pooling-partner matching.",
-      "MarinaDocs: AI document management for safety manuals, ISO certificates, contracts and receipts, with a chatbot and one-click digitisation of any format.",
-      "MarinaCP: charterparty AI that drafts agreements from past contracts, tracks clause changes and checks actual fuel use against CP terms.",
-      "ParseAI, MarinaCon and MarinaValue: a multi-format document parser, a port and legislation AI library, and market intelligence for asset strategy.",
+      "MarinaNet: noon report management and compliance solutions.",
+      "MarinaDocs: document-management AI for safety manuals, commercial contracts, BDNs and more.",
+      "MarinaValue (in development): vessel valuation and market analysis, such as scenario analysis on S&P and newbuilding.",
     ],
-    targetAudience: [
-      "Shipowners and ship managers facing IMO and EU emissions regulations.",
-      "Shipping lines, shipyards, owners and charterers managing operational data and contracts.",
-      "Companies in other industries seeking AI document-processing pilots.",
-    ],
+    targetAudience: [],
     businessModel: [
-      "MarinaNet: annual subscription priced per vessel.",
-      "Brokerage commission on EU Allowance (EUA) and biofuel purchases.",
-      "MarinaDocs and MarinaCP: per-contract customisation, transitioning to an annual subscription model.",
+      "Noon report parsing SaaS.",
+      "EUA brokerage and market reports.",
+      "Biofuel brokerage.",
+      "AI system integration.",
+      "Vessel profit-maximising AI agent SaaS (in development).",
     ],
     businessSnapshot: [
-      "Founded in 2023, with offices in Busan, Seoul and Singapore; clients include domestic and global shipping lines and shipyards.",
-      "1st Place at OpenAI SF 2024, 1st Place at the 2024 K-Startup Grand Challenge, and 1st Place (Minister's Prize) at the 2024 UPA Unicontest.",
-      "Selected for the 2024 Global Shell StartUp Engine (top 8); 2025 CMA CGM ZEBOX finalist with a PoC in progress; Microsoft x Pier71 programme (2026).",
-      "Appointed AI Advisor to the Singapore Shipping Association's Digitalisation Committee (2026); collaborates with Kim & Chang and DNV.",
+      "2025 revenue: USD 8.45M.",
+      "Government grants: USD 1.8M secured.",
+      "Major clients: Pan Ocean, Sinokor SM, Samsung Heavy Industries and others.",
+      "Ongoing PoCs: CMA CGM, Hyundai Samho and J Ocean.",
+      "AI Advisor to the Singapore Shipping Association (SSA).",
+      "Winner of an OpenAI competition (2023).",
     ],
     team: [
-      { name: "Dan Ha", role: "CEO & Co-founder", bio: ["CEO of Forabee Pte. Ltd.; former ship engineer at Sinokor", "B.A. Green Ship Engineering, Korea Maritime & Ocean University"] },
-      { name: "Jon Jie", role: "COO & Co-founder", bio: ["Founder of Scrio.ai, a chatbot AI startup", "Member, SSA Digitisation Committee (AI Division); B.A. Engineering & Innovation, NUS"] },
-      { name: "Dawon Kim", role: "CCO & Co-founder", bio: ["Director, Kinsale Maritime (Singapore); co-founder and director, Diatomic AB (Sweden)", "B.A. Visual Communications, University of the Arts London"] },
-      { name: "Jake Yoon", role: "Head of Engineering", bio: ["Former ML engineer at Qraft Technologies and analyst programmer at LG CNS", "B.A. Computer Science, Soongsil University"] },
+      { name: "Dan Ha", role: "Founder & CEO", bio: ["CEO of Forabee Pte. Ltd.", "Former ship engineer at Sinokor", "B.A. Green Ship Engineering, Korea Maritime & Ocean University"] },
+      { name: "Jon Jie", role: "COO", bio: ["Founder of Scrio.ai", "Expertise in AI, full-stack development and DevOps", "B.A. Engineering & Innovation, NUS"] },
+      { name: "Millie Lee", role: "Head of Partnerships", bio: ["M.A. Global Business Journalism, Tsinghua University", "Completed the Bloomberg ESG track", "Freelance writer for the Embassy of the Republic of Korea in China"] },
     ],
     seekingOpportunities: [
-      "Shipowners and ship managers looking to automate emissions compliance and streamline vessel operations.",
-      "Companies across industries interested in an AI innovation pilot using ParseAI.",
+      "Networking with potential customers across maritime, ocean freight and heavy industries.",
+      "Networking with potential data partners.",
     ],
+    onepager: "/onepagers/marinachain.pdf",
   },
   {
     slug: "bigtechplus",
