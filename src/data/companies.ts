@@ -10,7 +10,7 @@
 // master file (service overview, public milestones only); 앳원스 ·
 // 머니가드서비스 have no data in the master file yet, so their lines come from
 // press coverage (Money Today, Jan 2026; Hankyung, Aug 2025) and stay short.
-// All four one-pagers are due 21 Oct; replace these entries then.
+// One-pagers replace these entries as they land (머니가드서비스: 5 Nov).
 // IR decks are NOT published (CMK lesson, 7 Oct). Sector labels are ours.
 // Profile sections (16 Oct): from each company's FIN:NECT one-pager where
 // MYSC has finished it (all 8: DEVD's landed 20 Oct, MarinaChain's 5 Nov).
@@ -578,35 +578,53 @@ export const companies: Company[] = [
   },
   {
     slug: "moneyguard",
-    name: "Money Guard Service",
-    displayName: "Money Guard",
+    name: "MoneyGuard Service",
+    displayName: "MoneyGuard",
     tagline:
-      "A platform where creditors record a money promise, such as a personal loan or payment for goods and services, and the recovery steps follow automatically.",
-    sector: "Debt recovery",
-    stage: "FIN:NECT alumni",
+      "A mobile IOU infrastructure that turns personal loans between family and friends into legal evidence in 3 minutes and keeps repayment on track.",
+    sector: "Personal lending · Legal tech",
+    stage: "Seed · FIN:NECT alumni",
     track: "track1",
-    website: "",
-    email: "",
-    phone: "",
+    website: "https://www.moneygd.com",
+    email: "moneygd@moneygd.com",
+    phone: "+82 10 3422 1520",
     problem: [
-      "When a personal loan, a payment for goods or services, or child support goes unpaid, the creditor is usually left to chase it alone.",
+      "Bank records cannot prove a transfer to family was a loan, exposing it to gift tax and disputes.",
+      "Paper IOUs need in-person signatures and costly notarisation, so personal loans often remain verbal promises.",
     ],
     solution: [
-      "Creditors record the promise once on Money Guard, and the recovery process follows automatically.",
-      "Formal collection steps are handled through a linked credit-information company.",
+      "Lenders and borrowers sign a mobile IOU in 3 minutes through PASS identity verification, without meeting in person or visiting a notary.",
+      "The signed IOU proves a transfer was a loan for tax review or disputes, and a Korean district court has accepted it as evidence.",
     ],
-    keyFeatures: [],
-    targetAudience: [
-      "Individuals and businesses owed money for loans, goods or services.",
-      "Parents recovering unpaid child support.",
+    keyFeatures: [
+      "Standard IOU templates: users fill in only the amount, due date and interest.",
+      "Repayment reminders: repayment-date reminders sent to both lender and borrower.",
+      "Signed record: every IOU is stored in the app with each party's signing time.",
     ],
-    businessModel: [],
+    targetAudience: [],
+    businessModel: [
+      "Per-document fee: USD 7.49 per IOU in the app, or USD 29.99 with tax advice.",
+      "Paid retrieval: viewing and re-downloading stored IOUs.",
+      "Bank partnership: the same IOU flow inside partner banks' transfer screens.",
+    ],
     businessSnapshot: [
-      "Selected for TIPS, Korea's tech-startup programme, in December 2024.",
-      "Member company of Seoul Fintech Lab 2.",
+      "Investment: USD 172K seed (2024).",
+      "Sales revenue: USD 81K in 2025; USD 76K in January–July 2026.",
+      "Cumulative agreements: USD 397M across 20,000 IOUs, with a 40% repeat rate (2026).",
+      "Partnership contract with Woori Bank (2026).",
+      "Selected for the Google Play ChangGoo Programme (2025) and NICE Group Open Innovation (2026).",
     ],
-    team: [],
-    seekingOpportunities: [],
+    team: [
+      { name: "Moongyu Moon", role: "Founder & CEO", bio: ["Sales and debt-management operator for 15+ years", "Experience at KT Nasmedia and in the steel building-materials industry"] },
+      { name: "Jongha Baek", role: "CTO", bio: ["Financial infrastructure architect for 20+ years", "Large-scale document processing at Naver; speech recognition at Kakao", "B.S. and M.S., Yonsei University"] },
+      { name: "Seunga Lee", role: "Head of UI/UX", bio: ["Fintech, media and DeFi UX for 18+ years", "MFA, School of the Art Institute of Chicago; BFA, Ewha Womans University"] },
+    ],
+    seekingOpportunities: [
+      "Networking with potential bank partners in Southeast Asia.",
+      "Networking with potential legal-tech partners.",
+      "Connecting with investors ahead of a Pre-A round targeted for Q1 2027.",
+    ],
+    onepager: "/onepagers/moneyguard.pdf",
   },
 ];
 

@@ -124,11 +124,12 @@ export const HIGHLIGHTS: Record<string, Highlight> = {
   },
   moneyguard: {
     stats: [
-      ["TIPS", "selected for Korea's tech-startup programme, 2024"],
-      ["Seoul Fintech Lab", "member company"],
+      ["USD 397M", "in IOUs signed, across 20,000 agreements"],
+      ["3 min", "to sign a legally usable IOU on a phone"],
+      ["40%", "repeat rate (2026)"],
     ],
-    problem: "Getting back money you're owed is slow and awkward, and you usually do it alone.",
-    fix: "Record the promise once; the recovery steps follow automatically, with formal collection through a licensed partner.",
-    asks: [],
+    problem: "A bank transfer to family can't prove it was a loan, and paper IOUs need a notary.",
+    fix: "A mobile IOU signed in 3 minutes with PASS ID, accepted as evidence by a Korean court.",
+    asks: ["Banks in Southeast Asia", "Legal-tech partners", "Investors"],
   },
 };
