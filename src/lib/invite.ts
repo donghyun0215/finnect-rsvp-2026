@@ -75,7 +75,7 @@ export function buildInvite(team = false, unsub = false): { subject: string; htm
   <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:8px;">
    ${rows.map(([t, w]) => `<tr><td style="padding:3px 14px 3px 0;${F}font-size:13px;font-weight:bold;color:${C.brand};white-space:nowrap;vertical-align:top;">${esc(t)}</td><td style="padding:3px 0;${F}font-size:14px;color:${C.ink};">${esc(w)}</td></tr>`).join("")}
   </table>
-  <div style="${F}padding-top:10px;font-size:13px;line-height:19px;color:${C.muted};">${esc(venue)}<br>${esc(address)}</div>
+  <div style="${F}padding-top:10px;font-size:13px;line-height:19px;color:${C.muted};">${esc(venue)}${address ? `<br>${esc(address)}` : ""}</div>
   ${cta}
  </td></tr></table>
 </td></tr>`;
@@ -133,7 +133,7 @@ ${ORDER.map((k) => blocks[k]).join("")}
   const plain = (s: string) => s.replace(/<[^>]+>/g, "");
   const demoText = [`DEMO DAY · ${EVENT_DATE}`, ...demoRows.map(([t, w]) => `${t}  ${w}`), `${EVENT_VENUE}, ${EVENT_ADDRESS}`, `RSVP: ${SITE}/book?day=7`];
   const meetText = ONE_ON_ONE_OPEN
-    ? [`1:1 BUSINESS MEETINGS · ${MEETUP_DATES}`, ...meetRows.map(([t, w]) => `${t}  ${w}`), `${MEETUP_VENUE}, ${MEETUP_ADDRESS}`, `Book: ${SITE}/book?day=5`]
+    ? [`1:1 BUSINESS MEETINGS · ${MEETUP_DATES}`, ...meetRows.map(([t, w]) => `${t}  ${w}`), [MEETUP_VENUE, MEETUP_ADDRESS].filter(Boolean).join(", "), `Book: ${SITE}/book?day=5`]
     : [];
   const text = [
     "{{GREETING}}",

@@ -28,11 +28,11 @@ export const EVENT_NAME_LINE2 = "Fintech Demo Day";
 export const EVENT_DATE = "Thursday, 19 November 2026";
 export const EVENT_DAY_SHORT = "Thu 19 Nov";
 export const EVENT_TIME = "09:00 – 12:30";
-// Run with Tenity; contract signed, run of show agreed (ops deck, 12 Oct).
-export const EVENT_VENUE = "80RR Fintech Hub SG";
-export const EVENT_ADDRESS = "80 Robinson Road, #08-01, Singapore 068898";
-export const EVENT_MAP_URL =
-  "https://www.google.com/maps/search/?api=1&query=80+Robinson+Road+Singapore+068898";
+// Run with Tenity. Venue moved by Tenity from 80RR Fintech Hub SG to the
+// OGBC Innovation Hub (Tammy, 6 Nov; map link from Tammy).
+export const EVENT_VENUE = "OGBC Innovation Hub";
+export const EVENT_ADDRESS = "PLUS, 20 Cecil Street, Singapore 049705";
+export const EVENT_MAP_URL = "https://maps.app.goo.gl/rypzSxJFLBD3yDyBA";
 
 // Public 1:1 self-booking, same model as KIMST/CMK.
 export const ONE_ON_ONE_OPEN = true;
@@ -45,14 +45,16 @@ export const ONE_ON_ONE_OPEN = true;
 // their ids (now the afternoon rounds), slot7–8 are the new morning rounds.
 // IDs are stable references stored in bookings — change labels/times
 // freely, never the ids.
-// 1 Nov (Tammy): all 1:1s on one day, Friday 20 Nov at the Wyndham. The
-// Thursday rounds (slot1–3) are gone; no bookings had been made in them.
+// 1 Nov (Tammy): all 1:1s on one day, Friday 20 Nov. The Thursday rounds
+// (slot1–3) are gone; no bookings had been made in them.
+// 6 Nov (Tammy): four afternoon rounds from 13:40 (the morning is taken by
+// other programme items); venue TBC (moved off the Wyndham, being sourced).
+// slot7 (10:30) dropped and slot8 moved to 13:40 — no bookings in either.
 export const TIMESLOTS: Timeslot[] = [
-  { id: "slot7", label: "Round 1", time: "10:30 – 11:10", day: "fri" },
-  { id: "slot8", label: "Round 2", time: "11:20 – 12:00", day: "fri" },
-  { id: "slot4", label: "Round 3", time: "14:30 – 15:10", day: "fri" },
-  { id: "slot5", label: "Round 4", time: "15:20 – 16:00", day: "fri" },
-  { id: "slot6", label: "Round 5", time: "16:10 – 16:50", day: "fri" },
+  { id: "slot8", label: "Round 1", time: "13:40 – 14:20", day: "fri" },
+  { id: "slot4", label: "Round 2", time: "14:30 – 15:10", day: "fri" },
+  { id: "slot5", label: "Round 3", time: "15:20 – 16:00", day: "fri" },
+  { id: "slot6", label: "Round 4", time: "16:10 – 16:50", day: "fri" },
 ];
 
 export interface MeetupDay {
@@ -73,12 +75,13 @@ export const MEETUP_DAYS: MeetupDay[] = [
     id: "fri",
     date: "Friday, 20 November 2026",
     short: "Fri 20 Nov",
-    time: "10:30 – 16:50",
-    // Tammy (31 Oct): Wyndham Singapore Hotel; room to be confirmed with the hotel on Monday.
-    venue: "Wyndham Singapore Hotel (room to be confirmed)",
-    address: "5 Coleman Street, Singapore 179805",
-    mapUrl: "https://www.google.com/maps/search/?api=1&query=Wyndham+Singapore+Hotel+5+Coleman+Street",
-    cal: "20261120T103000/20261120T165000",
+    time: "13:40 – 16:50",
+    // Tammy (6 Nov): no longer the Wyndham; venue TBC. Empty address/map
+    // render as just the venue line.
+    venue: "Venue to be confirmed",
+    address: "",
+    mapUrl: "",
+    cal: "20261120T134000/20261120T165000",
   },
 ];
 export const meetupDay = (id: MeetupDayId): MeetupDay => MEETUP_DAYS.find((d) => d.id === id)!;
@@ -86,12 +89,12 @@ export const meetupDay = (id: MeetupDayId): MeetupDay => MEETUP_DAYS.find((d) =>
 export const slotName = (t: Timeslot) => `${meetupDay(t.day).short} · ${t.label}`;
 
 // The one 1:1 day (Friday 20 Nov), for older callers.
-export const MEETUP_TIME = "10:30 – 16:50";
+export const MEETUP_TIME = "13:40 – 16:50";
 export const MEETUP_DATE = "Friday, 20 November 2026";
 export const MEETUP_DAY_SHORT = "Fri 20 Nov";
-export const MEETUP_VENUE = "Wyndham Singapore Hotel (room to be confirmed)";
-export const MEETUP_ADDRESS = "5 Coleman Street, Singapore 179805";
-export const MEETUP_MAP_URL = "https://www.google.com/maps/search/?api=1&query=Wyndham+Singapore+Hotel+5+Coleman+Street";
+export const MEETUP_VENUE = "Venue to be confirmed";
+export const MEETUP_ADDRESS = "";
+export const MEETUP_MAP_URL = "";
 export const MEETUP_DATES = "Friday 20 November 2026";
 export const MEETUP_DATES_SHORT = "Fri 20 Nov";
 
@@ -143,8 +146,8 @@ export const PROGRAM: ProgramBlock[] = [
   {
     id: "meetups",
     title: "1:1 Business Meetings",
-    time: "Fri 20 Nov, 10:30 – 16:50",
-    description: "Private meetings with the startups of your choice, on Friday 20 November at the Wyndham Singapore Hotel.",
+    time: "Fri 20 Nov, 13:40 – 16:50",
+    description: "Private meetings with the startups of your choice, on Friday afternoon, 20 November.",
   },
 ];
 

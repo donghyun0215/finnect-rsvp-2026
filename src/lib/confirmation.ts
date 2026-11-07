@@ -9,6 +9,7 @@ import {
   EVENT_MAP_URL,
   EVENT_VENUE,
   MEETUP_DAYS,
+  MEETUP_ADDRESS,
   MEETUP_VENUE,
   EVENT_NAME,
   PROGRAM,
@@ -72,7 +73,7 @@ const PERSONAL: Partial<Record<MailKind, string[]>> = {
     "See you soon!",
   ],
   "meetup-eve": [
-    `Your 1:1 meetings with the startups are tomorrow (Fri 20 Nov) at ${MEETUP_VENUE}. The details are below. Please arrive 5–10 minutes before your first meeting.`,
+    `Your 1:1 meetings with the startups are tomorrow (Fri 20 Nov)${MEETUP_ADDRESS ? ` at ${MEETUP_VENUE}` : ""}. The details are below. Please arrive 5–10 minutes before your first meeting.`,
     "See you tomorrow!",
   ],
   "demo-eve": [
@@ -131,7 +132,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
     gcal(
       `FIN:NECT · 1:1 Business Meetings (${d.short})`,
       d.cal,
-      `${d.venue}, ${d.address}`,
+      [d.venue, d.address].filter(Boolean).join(", "),
       ["Your 1:1 meetings:", ...list.map((m) => `• ${m.round} ${m.time} — ${m.company}`), "", `Manage: ${SITE}/book#manage`].join("\n"),
     );
   const tbcNote = (d: (typeof MEETUP_DAYS)[number]) =>
@@ -161,7 +162,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   for (const { d, list } of meetDays) {
     t.push(`${d.short.toUpperCase()} · 1:1 BUSINESS MEETINGS`);
     for (const m of list) t.push(`• ${m.round} · ${m.time} — ${m.company}`);
-    t.push(`${d.venue}, ${d.address}`, ...(d.mapUrl ? [`Map: ${d.mapUrl}`] : []), `${tbcNote(d)}Please arrive 5–10 minutes before your first meeting.`, "");
+    t.push([d.venue, d.address].filter(Boolean).join(", "), ...(d.mapUrl ? [`Map: ${d.mapUrl}`] : []), `${tbcNote(d)}Please arrive 5–10 minutes before your first meeting.`, "");
   }
   // "slots still open" only while booking is still useful (not on the eves)
   const nudge = (kind === "week" || kind === "3day") && meetings.length === 0;
@@ -187,7 +188,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
         <tr><td style="padding:16px 18px;">
           <div style="${F}font-size:11px;letter-spacing:1.2px;font-weight:bold;color:#1e1e1e;text-transform:uppercase;">${esc(kicker)}</div>
           ${rows.map((r) => `<div style="${F}padding-top:8px;font-size:15px;line-height:21px;color:#1e1e1e;font-weight:bold;">${r}</div>`).join("")}
-          <div style="${F}padding-top:10px;font-size:13px;line-height:19px;color:#6d6d6d;">${esc(venue)}<br>${esc(address)}</div>
+          <div style="${F}padding-top:10px;font-size:13px;line-height:19px;color:#6d6d6d;">${esc(venue)}${address ? `<br>${esc(address)}` : ""}</div>
           ${note ? `<div style="${F}padding-top:6px;font-size:12px;line-height:17px;color:#6d6d6d;">${esc(note)}</div>` : ""}
           <div style="${F}padding-top:10px;font-size:13px;line-height:19px;">${map ? `${link(map, "Open in Google Maps")} &nbsp;·&nbsp; ` : ""}${link(cal, "Add to Google Calendar")}</div>
         </td></tr>

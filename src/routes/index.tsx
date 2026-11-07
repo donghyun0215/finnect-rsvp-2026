@@ -91,7 +91,7 @@ function Place({ venue, address, map }: { venue: string; address: string; map: s
       ) : (
         <span className="font-semibold">{venue}</span>
       )}
-      <span className="text-muted-foreground">, {address}</span>
+      {address && <span className="text-muted-foreground">, {address}</span>}
     </div>
   );
 }

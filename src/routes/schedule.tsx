@@ -77,11 +77,11 @@ const DAYS: ScheduleDay[] = [
   {
     date: "11/20", dow: "Fri", theme: "Institution Visits & 1:1 Meetings",
     items: [
-      // Friday 1:1s: five rounds from 31 Oct (10:30–16:50, Wyndham). The
-      // institution visits are being rescheduled around them (MYSC, Monday).
+      // Friday 1:1s: four afternoon rounds 13:40–16:50 from 6 Nov (venue TBC).
+      // The morning holds the institution visits.
       { time: "TBC", title: "Visits to fintech institutions (from SFA, DAA, SDX, OCBC, UOB — being rescheduled)" },
       ...TIMESLOTS.filter((t) => t.day === "fri" && t.time < "12").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: meetupDay("fri").venue, highlight: true })),
-      { time: "12:00 – 14:30", title: "Lunch" },
+      { time: "12:00", title: "Lunch" },
       ...TIMESLOTS.filter((t) => t.day === "fri" && t.time >= "12").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: meetupDay("fri").venue, highlight: true })),
       { time: "After 16:50", title: "Own B2B meetings & hustle time" },
       { time: "19:00", title: "Dinner (free)" },
