@@ -138,8 +138,9 @@ export const fetchBookedSlots = createServerFn({ method: "GET" }).handler(async 
 // FIN:NECT has its own admin password (22 Oct) so it can be shared with
 // MYSC and Tenity without opening the other programmes' admins, which use
 // the shared Lodestart one. Only the SHA-256 of the password is kept here
-// because the repo is public.
-const ADMIN_PASSWORD_SHA256 = "391841720174d2c2f6c4c492a8de1ecc76bf1cb565616d5f18747121e78b2401";
+// because the repo is public. Changed 9 Nov (Tammy): Tenity no longer has
+// access, so the password shared with them is retired.
+const ADMIN_PASSWORD_SHA256 = "99e9cce5dac027e0d7ad14dd0616185298aa8d70c83eb33fbbb7a9da412c8e31";
 // Forgiving match: phones auto-capitalise the first letter and chat apps
 // (KakaoTalk, WhatsApp) often add a trailing space/newline when the password
 // is copied — both locked MYSC out on 23 Sep. Case and surrounding whitespace
