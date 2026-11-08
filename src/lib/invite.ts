@@ -28,7 +28,7 @@ const HOST_LINE = "Korea Fintech Center · Sponsored by KakaoBank";
 const DATES = "19–20 November 2026 · Singapore FinTech Festival week";
 const SUBJECT = `Invitation to ${EVENT_NAME} (19–20 Nov, Singapore)`;
 const PITCH =
-  "Twelve Korean fintech startups are coming to Singapore with the Korea Fintech Center's FIN:NECT programme during Singapore FinTech Festival week, to meet investors, financial institutions and partners.";
+  "Ten Korean fintech startups are coming to Singapore with the Korea Fintech Center's FIN:NECT programme during Singapore FinTech Festival week, to meet investors, financial institutions and partners.";
 // One line per startup for the "Featuring" list (falls back to the site tagline).
 const LINES: Record<string, string> = {
   "276holdings": "AI credit-scored supply-chain finance (Settle Now, Pay Later) for SMEs",

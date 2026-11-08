@@ -54,7 +54,7 @@ export const TRACKS = {
   },
 } as const;
 
-export const companies: Company[] = [
+const ALL_COMPANIES: Company[] = [
   {
     slug: "276holdings",
     name: "276 Holdings",
@@ -627,6 +627,11 @@ export const companies: Company[] = [
     onepager: "/onepagers/moneyguard.pdf",
   },
 ];
+
+// Tammy (8 Nov): Atones and MoneyGuard are off the site. Their entries stay
+// above so they can come back by deleting them from this set.
+const HIDDEN = new Set(["atones", "moneyguard"]);
+export const companies: Company[] = ALL_COMPANIES.filter((c) => !HIDDEN.has(c.slug));
 
 export function getCompanyBySlug(slug: string): Company | undefined {
   return companies.find((c) => c.slug === slug);
