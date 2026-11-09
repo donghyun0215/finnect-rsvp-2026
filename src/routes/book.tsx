@@ -12,6 +12,7 @@ import {
   EVENT_ADDRESS,
   EVENT_MAP_URL,
   PROGRAM,
+  LUNCH_VENUE,
   TIMESLOTS,
   getSlotInfo,
   isSlotOffered,
@@ -416,7 +417,7 @@ function RsvpPage() {
           </h1>
           <p className="hero-in mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white/70 [--i:1]">
             {day === "5"
-              ? "Private meetings with the startups of your choice, on Friday afternoon, 20 November (venue to be confirmed). One startup per round; book as many rounds as you like."
+              ? "Private meetings with the startups of your choice, on Friday afternoon, 20 November, at the Wyndham Singapore Hotel. One startup per round; book as many rounds as you like."
               : "IR pitches from Korean fintechs, then their meetings with investors, run with Tenity on Thursday morning. It's a closed-door session: the host reviews each request and confirms by email."}
           </p>
 
@@ -476,7 +477,7 @@ function RsvpPage() {
                     <li className="flex items-baseline gap-4 py-3.5 text-sm">
                       <span className="w-24 shrink-0 tabular-nums text-muted-foreground">{EVENT_DAY_SHORT}</span>
                       <span className="font-semibold text-navy">
-                        {[submitted.attend.showcase && `Demo Day · ${EVENT_TIME}`, submitted.attend.lunch && "Networking"].filter(Boolean).join(" + ")}
+                        {[submitted.attend.showcase && `Demo Day · ${EVENT_TIME}`, submitted.attend.lunch && "Networking lunch"].filter(Boolean).join(" + ")}
                         {submitted.demoStatus === "pending" && <span className="ml-2 font-normal text-muted-foreground">(pending approval)</span>}
                         {submitted.demoStatus === "declined" && <span className="ml-2 font-normal text-muted-foreground">(not confirmed)</span>}
                       </span>
@@ -572,6 +573,7 @@ function RsvpPage() {
                           <span>
                             <span className="block font-semibold text-navy">{id === "showcase" ? "Demo Day" : b.title}</span>
                             <span className="block text-sm tabular-nums text-muted-foreground">{EVENT_DAY_SHORT} · {id === "showcase" ? EVENT_TIME : b.time}</span>
+                            <span className="block text-sm text-muted-foreground">{id === "showcase" ? EVENT_VENUE : LUNCH_VENUE}</span>
                           </span>
                         </label>
                       );
@@ -854,7 +856,7 @@ function RsvpPage() {
                       ) : (
                         <>
                           {attend.showcase && <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Demo Day · {EVENT_DAY_SHORT} · {EVENT_TIME}</li>}
-                          {attend.lunch && <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Networking · {EVENT_DAY_SHORT} · {PROGRAM.find((x) => x.id === "lunch")?.time}</li>}
+                          {attend.lunch && <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Networking lunch · {EVENT_DAY_SHORT} · {PROGRAM.find((x) => x.id === "lunch")?.time}</li>}
                         </>
                       )
                     ) : scheduleCount === 0 ? (

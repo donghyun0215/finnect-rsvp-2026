@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Wordmark } from "@/components/Wordmark";
 import { useEffect, useState } from "react";
 import { companies, MEETUP_COMPANIES } from "@/data/companies";
-import { CREDITS, DEMO_AGENDA, EVENT_VENUE, MEETUP_DATES_SHORT, MEETUP_VENUE, TIMESLOTS, isSlotOffered, EVENT_NAME, meetupDay } from "@/data/timeslots";
+import { CREDITS, DEMO_AGENDA, EVENT_VENUE, LUNCH_VENUE, MEETUP_DATES_SHORT, MEETUP_VENUE, TIMESLOTS, isSlotOffered, EVENT_NAME, meetupDay } from "@/data/timeslots";
 import { fetchMeetingRoster, type RosterEntry } from "@/lib/booking.server";
 import { LoadingNote } from "@/components/Spinner";
 import { absUrl } from "@/lib/url";
@@ -42,58 +42,58 @@ interface ScheduleDay {
   joint?: boolean; // joint day
 }
 
-// Source: "[마스터파일] 핀테크지원센터_현지프로그램" › 26_세부 일정표 (read
-// 12 Oct). Venues marked 미정 there are TBC here; update as bookings land.
+// Source: "[마스터파일] 핀테크지원센터_현지프로그램" › 프로그램 일정표(11.09).
+// Venues still marked 미정 there are TBC here; update as bookings land.
 const DAYS: ScheduleDay[] = [
   {
     date: "11/17", dow: "Tue", theme: "Arrival",
     items: [
-      { title: "Depart Incheon 12:35" },
-      { time: "18:20", title: "Land at Changi, bus to hotel" },
-      { time: "20:00", title: "Welcome dinner (light, TBC)" },
-      { time: "21:00", title: "Check-in & orientation · SFF badges handed out", highlight: true },
+      { time: "12:35", title: "Depart Incheon" },
+      { time: "18:20", title: "Land at Changi · staff meet you, bus to the hotel" },
+      { time: "19:30", title: "Welcome dinner (light) · restaurant TBC" },
+      { time: "21:00", title: "Check-in & orientation · SFF badges and name tags handed out", venue: "Hotel", highlight: true },
     ],
   },
   {
     date: "11/18", dow: "Wed", theme: "Singapore FinTech Festival",
     items: [
-      { time: "08:00", title: "Meet in the hotel lobby, bus to EXPO" },
-      { time: "9:00 – 12:00", title: "SFF exhibition & MeetUp meetings", venue: "Singapore EXPO, Halls 1–6", highlight: true },
-      { time: "12:00 – 13:00", title: "Lunch (free)" },
-      { time: "13:00 – 18:00", title: "SFF keynotes & Investor Hours", venue: "Singapore EXPO, Halls 1–6", highlight: true },
-      { time: "19:00", title: "SFF After Hours", venue: "Boat Quay" },
-    ],
-  },
-  {
-    date: "11/19", dow: "Thu", theme: "Demo Day & 1:1 Meetings",
-    joint: true,
-    items: [
-      { time: "08:30", title: "Group arrival at the venue", venue: EVENT_VENUE },
-      ...DEMO_AGENDA.map(([time, title]) => ({ time, title, highlight: /pitching|VC 1:1/.test(title) })),
-      { time: "From 12:30", title: "Networking near the venue (TBC)" },
-      ...TIMESLOTS.filter((t) => t.day === "thu").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: MEETUP_VENUE, highlight: true })),
-    ],
-  },
-  {
-    date: "11/20", dow: "Fri", theme: "Institution Visits & 1:1 Meetings",
-    items: [
-      // Friday 1:1s: four afternoon rounds 13:40–16:50 from 6 Nov (venue TBC).
-      // The morning holds the institution visits.
-      { time: "TBC", title: "Visits to fintech institutions (from SFA, DAA, SDX, OCBC, UOB — being rescheduled)" },
-      ...TIMESLOTS.filter((t) => t.day === "fri" && t.time < "12").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: meetupDay("fri").venue, highlight: true })),
-      { time: "12:00", title: "Lunch" },
-      ...TIMESLOTS.filter((t) => t.day === "fri" && t.time >= "12").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: meetupDay("fri").venue, highlight: true })),
-      { time: "After 16:50", title: "Own B2B meetings & hustle time" },
+      { time: "07:00", title: "Breakfast at the hotel" },
+      { time: "08:00", title: "Meet in the hotel lobby · bus leaves 09:00", venue: "Hotel lobby" },
+      { time: "10:00 – 12:00", title: "SFF exhibition (morning)", venue: "Singapore EXPO, Halls 1–6", highlight: true },
+      { time: "12:00", title: "Lunch (free, in small groups)", venue: "At or near the EXPO" },
+      { time: "13:00 – 17:00", title: "SFF exhibition (afternoon)", venue: "Singapore EXPO, Halls 1–6", highlight: true },
+      { time: "17:00", title: "Back to the Wyndham · free time" },
       { time: "19:00", title: "Dinner (free)" },
     ],
   },
   {
-    date: "11/21", dow: "Sat", theme: "Wrap-up & Departure",
+    date: "11/19", dow: "Thu", theme: "Demo Day & Networking Lunch",
+    joint: true,
     items: [
-      { time: "07:00", title: "Breakfast & check-out" },
-      { time: "09:00", title: "Wrap-up meeting · 3-minute results per company (venue TBC)" },
-      { time: "11:00", title: "Bus to Changi (11:00 sharp)" },
-      { time: "14:35", title: "Depart Singapore" },
+      { time: "07:00", title: "Breakfast at the hotel" },
+      { time: "08:00", title: "Meet in the hotel lobby, bus to the venue", venue: "Hotel lobby" },
+      ...DEMO_AGENDA.map(([time, title]) => ({ time, title, venue: EVENT_VENUE, highlight: /pitching|VC 1:1/.test(title) })),
+      { time: "12:30", title: "Networking lunch with investors and local partners", venue: LUNCH_VENUE, highlight: true },
+      { time: "14:30 – 16:30", title: "Visits to fintech stakeholders (DAA Exco confirmed) · venue TBC" },
+    ],
+  },
+  {
+    date: "11/20", dow: "Fri", theme: "Partner Meetings & 1:1 Meetings",
+    items: [
+      { time: "07:00", title: "Breakfast at the hotel" },
+      { time: "09:30 – 11:30", title: "SDAX & RHT Law · information session and 1:1 speed meetings", venue: "SDAX & RHT Law" },
+      { time: "12:00", title: "Lunch · morning results, afternoon check" },
+      ...TIMESLOTS.filter((t) => t.day === "fri").map((t) => ({ time: t.time, title: `1:1 meetings · ${t.label}`, venue: meetupDay("fri").venue, highlight: true })),
+      { time: "17:00", title: "Wrap-up meeting · 3-minute results per company, feedback, next steps", venue: meetupDay("fri").venue },
+      { time: "20:00", title: "Free time" },
+    ],
+  },
+  {
+    date: "11/21", dow: "Sat", theme: "Departure",
+    items: [
+      { time: "07:00", title: "Breakfast & check-out · luggage to the bus" },
+      { time: "11:00", title: "Bus to Changi (11:00 sharp)", venue: "Hotel lobby" },
+      { time: "14:35", title: "Depart Singapore · land Incheon 22:00 KST" },
     ],
   },
 ];

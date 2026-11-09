@@ -16,6 +16,7 @@ import { Pair, PAIRS } from "@/components/Pair";
 import { Sessions } from "@/components/Sessions";
 import { useScrollMotion } from "@/lib/useScrollMotion";
 import {
+  LUNCH_MAP_URL,
   EVENT_ADDRESS,
   EVENT_MAP_URL,
   EVENT_NAME,
@@ -232,6 +233,11 @@ function Landing() {
             </ol>
             <div className="mt-auto pt-5">
               <Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} />
+              <p className="mt-2 text-sm text-navy">
+                <span className="tabular-nums text-[#6d6d6d]">From 12:30</span> · Networking lunch at{" "}
+                <a href={LUNCH_MAP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">The Westin Singapore</a>
+                <span className="text-[#6d6d6d]"> (Lobby Lounge, Level 32)</span>
+              </p>
               <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">Request to join the Demo Day</Link>
             </div>
           </article>

@@ -76,11 +76,11 @@ export const MEETUP_DAYS: MeetupDay[] = [
     date: "Friday, 20 November 2026",
     short: "Fri 20 Nov",
     time: "13:40 – 16:50",
-    // Tammy (6 Nov): no longer the Wyndham; venue TBC. Empty address/map
-    // render as just the venue line.
-    venue: "Venue to be confirmed",
-    address: "",
-    mapUrl: "",
+    // Master sheet 프로그램 일정표(11.09): Wyndham Hotel, Function Room.
+    // (6 Nov it was briefly TBC.) Empty address/map would render venue only.
+    venue: "Wyndham Singapore Hotel, Function Room",
+    address: "5 Coleman Street, Singapore 179805",
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=Wyndham+Singapore+Hotel+5+Coleman+Street",
     cal: "20261120T134000/20261120T165000",
   },
 ];
@@ -92,9 +92,9 @@ export const slotName = (t: Timeslot) => `${meetupDay(t.day).short} · ${t.label
 export const MEETUP_TIME = "13:40 – 16:50";
 export const MEETUP_DATE = "Friday, 20 November 2026";
 export const MEETUP_DAY_SHORT = "Fri 20 Nov";
-export const MEETUP_VENUE = "Venue to be confirmed";
-export const MEETUP_ADDRESS = "";
-export const MEETUP_MAP_URL = "";
+export const MEETUP_VENUE = "Wyndham Singapore Hotel, Function Room";
+export const MEETUP_ADDRESS = "5 Coleman Street, Singapore 179805";
+export const MEETUP_MAP_URL = "https://www.google.com/maps/search/?api=1&query=Wyndham+Singapore+Hotel+5+Coleman+Street";
 export const MEETUP_DATES = "Friday 20 November 2026";
 export const MEETUP_DATES_SHORT = "Fri 20 Nov";
 
@@ -139,9 +139,9 @@ export const PROGRAM: ProgramBlock[] = [
   },
   {
     id: "lunch",
-    title: "Networking after the Demo Day",
+    title: "Networking lunch",
     time: "From 12:30",
-    description: "Networking with the founders, investors and local partners near the venue (details to follow).",
+    description: "A networking lunch with the founders, investors and local partners at The Westin Singapore (Lobby Lounge, Level 32).",
   },
   {
     id: "meetups",
@@ -150,6 +150,11 @@ export const PROGRAM: ProgramBlock[] = [
     description: "Private meetings with the startups of your choice, on Friday afternoon, 20 November.",
   },
 ];
+
+// Networking lunch after the Demo Day (master sheet 11.09: booked).
+export const LUNCH_VENUE = "The Westin Singapore, Lobby Lounge (Level 32)";
+export const LUNCH_ADDRESS = "12 Marina View, Asia Square Tower 2, Singapore 018961";
+export const LUNCH_MAP_URL = "https://www.google.com/maps/search/?api=1&query=The+Westin+Singapore+12+Marina+View";
 
 // Demo Day run of show (Tenity, agreed 29 Sep; ops deck 12 Oct).
 export const DEMO_AGENDA: [time: string, item: string][] = [

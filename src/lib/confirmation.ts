@@ -13,6 +13,7 @@ import {
   MEETUP_VENUE,
   EVENT_NAME,
   PROGRAM,
+  LUNCH_VENUE,
   SITE_URL as SITE,
   TIMESLOTS,
 } from "@/data/timeslots";
@@ -122,10 +123,10 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   const meetDays = MEETUP_DAYS.map((d) => ({ d, list: meetings.filter((m) => m.day === d.id) })).filter((x) => x.list.length);
   const demoDay: string[] = [];
   if (input.attendShowcase) demoDay.push(`Pitches & investor meetings ${programTime("showcase")}`);
-  if (input.attendLunch) demoDay.push(`Networking after the Demo Day ${programTime("lunch")}`);
+  if (input.attendLunch) demoDay.push(`Networking lunch ${programTime("lunch")}, ${LUNCH_VENUE}`);
   const pending: string[] = [];
   if (input.requested?.showcase) pending.push(`Pitches & investor meetings ${programTime("showcase")}`);
-  if (input.requested?.lunch) pending.push(`Networking after the Demo Day ${programTime("lunch")}`);
+  if (input.requested?.lunch) pending.push(`Networking lunch ${programTime("lunch")}, ${LUNCH_VENUE}`);
   const pendingNote = "Pending host approval · venue and details follow in your confirmation email";
 
   const meetupsCal = (d: (typeof MEETUP_DAYS)[number], list: typeof meetings) =>
