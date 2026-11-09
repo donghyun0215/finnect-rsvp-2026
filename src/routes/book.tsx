@@ -582,8 +582,8 @@ function RsvpPage() {
                     <div className="pick-board" role="grid" aria-label="1:1 meeting rounds" aria-busy={loading} onMouseLeave={() => setHover(null)} style={{ "--cols": boardCols } as CSSProperties}>
                       {/* day headers */}
                       <div role="row" className="pick-row pick-head">
-                        <span role="columnheader" className="pick-name text-xs text-muted-foreground">
-                          {loading ? <LoadingNote text="Checking availability…" className="text-xs font-semibold text-navy" /> : "Click a name to view its one-pager"}
+                        <span role="columnheader" className="pick-name text-sm font-semibold text-navy sm:text-base">
+                          {loading ? <LoadingNote text="Checking availability…" className="text-xs font-semibold text-navy" /> : <>Click a name to view its one-pager <span aria-hidden="true">↓</span></>}
                         </span>
                         {MEETUP_DAYS.map((d) => (
                           <span key={d.id} role="columnheader" className={`pick-day ${d.id === "fri" ? "is-fri" : ""}`}>
