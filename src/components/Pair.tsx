@@ -10,7 +10,7 @@ export const PAIRS: Record<string, [who: string, what: string]> = {
   aizen: ["EV riders & lenders", "bankable credit from EV data"],
   canopy: ["Employees", "earned wages on demand"],
   crosshub: ["International visitors", "ID-linked travel payments"],
-  ztosigma: ["Field B2B businesses", "an AI that remembers every deal"],
+  ztosigma: ["Industrial businesses", "calls turned into next actions"],
   elevenliter: ["Pet insurers", "underwriting from a photo"],
   atones: ["Card holders & shops", "one bill, split across cards"],
   moneyguard: ["Family & friends", "a loan IOU in 3 minutes"],

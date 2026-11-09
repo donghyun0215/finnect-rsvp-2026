@@ -39,9 +39,9 @@ const LINES: Record<string, string> = {
   aizen: "AI credit and data services for lenders and mobility platforms in Southeast Asia",
   canopy: "Payroll-data-driven financial wellness platform for employees",
   crosshub: "Voice-AI authentication and payments",
-  ztosigma: "Agentic AI that connects calls, transactions and payments for B2B field businesses",
-  elevenliter: "AI pet-insurance underwriting from smartphone photos",
-  atones: "Split one payment across several credit cards with a single QR scan",
+  ztosigma: "Voice-first AI that turns industrial customer calls into next actions",
+  elevenliter: "AI pet-insurance underwriting from one smartphone photo",
+  atones: "Split one purchase across several credit cards with one authentication",
   moneyguard: "Automated recovery of personal loans and unpaid payments",
 };
 const ORDER: ("demo" | "meetup")[] = ["demo", "meetup"]; // chronological

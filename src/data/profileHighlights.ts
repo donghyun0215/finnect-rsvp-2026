@@ -91,36 +91,36 @@ export const HIGHLIGHTS: Record<string, Highlight> = {
     fix: "Verify identity before arrival, get a card, and pay for the whole trip in one app.",
     asks: ["Banks and fintechs", "Strategic and PoC partners"],
   },
-  // Added 20 Oct, before their one-pagers (due 21 Oct). Sources as noted in
-  // companies.ts; Atones and Money Guard have no asks until MYSC sends them.
+  // From their one-pagers (9 Nov).
   ztosigma: {
     stats: [
-      ["36,588", "business sites on the platform in Korea"],
-      ["1.3M+", "transaction documents recorded"],
-      ["KRW 450B", "in transactions on the platform"],
+      ["1,582", "users"],
+      ["93%", "annual paid retention (Paywork)"],
+      ["1.3M", "transaction records since 2022"],
     ],
-    problem: "Field businesses still run on calls, faxes and memory, so the context of every deal sits in a few people's heads.",
-    fix: "Keeper AI links calls, transactions and payments, remembers each deal and takes the next step.",
-    asks: ["Field B2B companies for interviews and demos", "PoC and business partners", "VCs in AI, B2B SaaS and fintech"],
+    problem: "Industrial orders and quotes run on phone calls, and follow-ups get lost between calls and files.",
+    fix: "Keeper AI turns each customer call into next actions in Paywork, with the customer's history attached.",
+    asks: ["Industrial pilots in Singapore", "Local partners", "Pre-A investors"],
   },
   elevenliter: {
     stats: [
-      ["DB Insurance", "pet insurance co-developed and launched"],
-      ["Samsung", "SmartThings Pet Care AI checks, US launch Sep 2026"],
-      ["19", "patents filed in Korea and abroad"],
+      ["KRW 1.36B", "revenue in Jan–Sep 2026 alone (USD 0.9M)"],
+      ["67.8%", "loss ratio on Lifet Pet Insurance, about half the market"],
+      ["150K+", "AI tests run"],
     ],
-    problem: "Pet insurers can't see a pet's health, so they can't price its risk.",
-    fix: "A smartphone photo check that scores progressive conditions, so insurers can underwrite each pet.",
-    asks: ["Pet insurers for a PoC", "Insurers and insurtechs in Japan, the Americas and East Asia", "Insurance and fintech investors"],
+    problem: "Pet insurers price on age and breed alone and miss progressive diseases, the top cause of claims.",
+    fix: "One smartphone photo, graded by AI in 3 seconds, so insurers can accept and price each pet.",
+    asks: ["Pet insurers for an underwriting PoC", "API partners that sell pet insurance", "Series A VCs", "Supplement distributors"],
   },
   atones: {
     stats: [
-      ["2,000+", "users since the August 2025 launch"],
-      ["KRW 220M", "in payments processed (January 2026)"],
+      ["KRW 890M+", "cumulative payments since Aug 2024 (USD 660K)"],
+      ["3.0x", "2026 volume by September vs all of 2025"],
+      ["180+", "merchant locations; 4,500 users"],
     ],
-    problem: "Several cards in the wallet, one bill at the till, and no easy way to split it.",
-    fix: "Scan one QR code and split the payment across several cards, in the amounts you choose.",
-    asks: [],
+    problem: "Most wallets take one card per payment, and group bills leave the rewards with whoever paid.",
+    fix: "Split one purchase across several cards with one authentication, or let each person pay their share.",
+    asks: ["PoCs with SEA payment providers and wallets", "Platforms licensing the SDKs", "Pre-Series A investors"],
   },
   moneyguard: {
     stats: [
