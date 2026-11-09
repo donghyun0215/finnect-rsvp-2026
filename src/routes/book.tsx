@@ -583,7 +583,7 @@ function RsvpPage() {
                       {/* day headers */}
                       <div role="row" className="pick-row pick-head">
                         <span role="columnheader" className="pick-name text-sm font-semibold text-navy sm:text-base">
-                          {loading ? <LoadingNote text="Checking availability…" className="text-xs font-semibold text-navy" /> : <>Click a name to view its one-pager <span aria-hidden="true">↓</span></>}
+                          {loading ? <LoadingNote text="Checking availability…" className="text-xs font-semibold text-navy" /> : <>Click a name to view its <span className="whitespace-nowrap">one-pager <span aria-hidden="true">↓</span></span></>}
                         </span>
                         {MEETUP_DAYS.map((d) => (
                           <span key={d.id} role="columnheader" className={`pick-day ${d.id === "fri" ? "is-fri" : ""}`}>
