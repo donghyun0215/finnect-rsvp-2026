@@ -583,7 +583,7 @@ function RsvpPage() {
                       {/* day headers */}
                       <div role="row" className="pick-row pick-head">
                         <span role="columnheader" className="pick-name text-xs text-muted-foreground">
-                          {loading ? <LoadingNote text="Checking availability…" className="text-xs font-semibold text-navy" /> : `${MEETUP_COMPANIES.length} startups`}
+                          {loading ? <LoadingNote text="Checking availability…" className="text-xs font-semibold text-navy" /> : "Click a name to view its one-pager"}
                         </span>
                         {MEETUP_DAYS.map((d) => (
                           <span key={d.id} role="columnheader" className={`pick-day ${d.id === "fri" ? "is-fri" : ""}`}>
@@ -600,7 +600,8 @@ function RsvpPage() {
                             {slots.map((t) => (
                               <span key={t.id} role="columnheader" className={`pick-round ${hover?.slot === t.id ? "is-hot" : ""}`}>
                                 <span className="font-bold text-navy">{t.label.replace("Round ", "R")}</span>
-                                <span className="block text-[9px] tabular-nums text-muted-foreground sm:text-[10px]">{t.time.split("–")[0].trim()}</span>
+                                <span className="block text-[9px] leading-tight tabular-nums text-muted-foreground sm:text-[10px]">{t.time.split("–")[0].trim()}</span>
+                                <span className="block text-[9px] leading-tight tabular-nums text-muted-foreground sm:text-[10px]">–{t.time.split("–")[1].trim()}</span>
                               </span>
                             ))}
                           </span>
@@ -688,7 +689,7 @@ function RsvpPage() {
                               return (
                                 <li key={t.id} className={`sched-slot ${c ? "is-filled" : ""}`}>
                                   <span className="w-7 shrink-0 text-xs font-bold tabular-nums text-white/50">{t.label.replace("Round ", "R")}</span>
-                                  <span className="w-10 shrink-0 text-xs tabular-nums text-white/50">{t.time.split("–")[0].trim()}</span>
+                                  <span className="w-[5.2rem] shrink-0 text-xs tabular-nums text-white/50">{t.time.replace(/\s*–\s*/, "–")}</span>
                                   {c ? (
                                     <>
                                       <span className="min-w-0 flex-1 truncate text-sm font-semibold">{c.name}</span>
