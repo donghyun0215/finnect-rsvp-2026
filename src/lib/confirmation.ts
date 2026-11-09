@@ -122,10 +122,10 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   const meetDays = MEETUP_DAYS.map((d) => ({ d, list: meetings.filter((m) => m.day === d.id) })).filter((x) => x.list.length);
   const demoDay: string[] = [];
   if (input.attendShowcase) demoDay.push(`Pitches & investor meetings ${programTime("showcase")}`);
-  if (input.attendLunch) demoDay.push(`Networking dinner ${programTime("lunch")}`);
+  if (input.attendLunch) demoDay.push(`Networking after the Demo Day ${programTime("lunch")}`);
   const pending: string[] = [];
   if (input.requested?.showcase) pending.push(`Pitches & investor meetings ${programTime("showcase")}`);
-  if (input.requested?.lunch) pending.push(`Networking dinner ${programTime("lunch")}`);
+  if (input.requested?.lunch) pending.push(`Networking after the Demo Day ${programTime("lunch")}`);
   const pendingNote = "Pending host approval · venue and details follow in your confirmation email";
 
   const meetupsCal = (d: (typeof MEETUP_DAYS)[number], list: typeof meetings) =>

@@ -101,11 +101,11 @@ function RsvpPage() {
   // rsvp form
   const [attend, setAttend] = useState({ showcase: false, lunch: false, meetups: false });
   // Day 5 = 1:1 only, always on; Day 7 = showcase/dinner checkboxes, 1:1 off.
-  // Day 5 = 1:1 only; Day 7 = the whole demo day (pitches + networking), no
-  // per-session choice — RSVP means you're coming for the afternoon.
+  // Day 5 = 1:1 only. Day 7: the Demo Day and the networking after it are
+  // separate choices (Tammy, 9 Nov); the Demo Day starts ticked.
   useEffect(() => {
     setAttend((a) =>
-      day === "5" ? { ...a, meetups: true } : { showcase: true, lunch: true, meetups: false },
+      day === "5" ? { ...a, meetups: true } : { showcase: true, lunch: false, meetups: false },
     );
   }, [day]);
   const [selections, setSelections] = useState<Record<string, string | null>>(
@@ -237,6 +237,11 @@ function RsvpPage() {
       return;
     }
 
+
+    if (day === "7" && !attend.showcase && !attend.lunch) {
+      setFormError("Please tick the Demo Day, the networking, or both.");
+      return;
+    }
 
     const meetupSelections = attend.meetups
       ? TIMESLOTS.filter((t) => selections[t.id] && !myBookings[t.id]).map((t) => ({
@@ -471,7 +476,7 @@ function RsvpPage() {
                     <li className="flex items-baseline gap-4 py-3.5 text-sm">
                       <span className="w-24 shrink-0 tabular-nums text-muted-foreground">{EVENT_DAY_SHORT}</span>
                       <span className="font-semibold text-navy">
-                        Demo Day · {EVENT_TIME}
+                        {[submitted.attend.showcase && `Demo Day · ${EVENT_TIME}`, submitted.attend.lunch && "Networking"].filter(Boolean).join(" + ")}
                         {submitted.demoStatus === "pending" && <span className="ml-2 font-normal text-muted-foreground">(pending approval)</span>}
                         {submitted.demoStatus === "declined" && <span className="ml-2 font-normal text-muted-foreground">(not confirmed)</span>}
                       </span>
@@ -551,6 +556,28 @@ function RsvpPage() {
                     </li>
                   ))}
                 </ol>
+                <fieldset className="mt-6">
+                  <legend className="text-sm font-semibold text-navy">What would you like to join?</legend>
+                  <div className="mt-3 grid gap-2">
+                    {(["showcase", "lunch"] as const).map((id) => {
+                      const b = PROGRAM.find((x) => x.id === id)!;
+                      return (
+                        <label key={id} className={`flex cursor-pointer items-start gap-3 border p-4 transition-colors ${attend[id] ? "border-navy bg-yellow/15" : "border-navy/15 hover:border-navy/40"}`}>
+                          <input
+                            type="checkbox"
+                            checked={attend[id]}
+                            onChange={(e) => setAttend((a) => ({ ...a, [id]: e.target.checked }))}
+                            className="mt-1 h-4 w-4 shrink-0 accent-[#1f1f1f]"
+                          />
+                          <span>
+                            <span className="block font-semibold text-navy">{id === "showcase" ? "Demo Day" : b.title}</span>
+                            <span className="block text-sm tabular-nums text-muted-foreground">{EVENT_DAY_SHORT} · {id === "showcase" ? EVENT_TIME : b.time}</span>
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
                 <p className="mt-4 text-sm text-muted-foreground">
                   Want private meetings too?{" "}
                   <button type="button" onClick={() => setDay("5")} className="font-semibold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">
@@ -822,7 +849,14 @@ function RsvpPage() {
                   <h3 className="text-lg font-bold text-navy">Confirm</h3>
                   <ul className="mt-3 space-y-1.5 text-sm text-navy">
                     {day === "7" ? (
-                      <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Demo Day · {EVENT_DAY_SHORT} · {EVENT_TIME}</li>
+                      !attend.showcase && !attend.lunch ? (
+                        <li className="text-muted-foreground">Nothing ticked yet.</li>
+                      ) : (
+                        <>
+                          {attend.showcase && <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Demo Day · {EVENT_DAY_SHORT} · {EVENT_TIME}</li>}
+                          {attend.lunch && <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Networking · {EVENT_DAY_SHORT} · {PROGRAM.find((x) => x.id === "lunch")?.time}</li>}
+                        </>
+                      )
                     ) : scheduleCount === 0 ? (
                       <li className="text-muted-foreground">No meetings picked yet.</li>
                     ) : (
