@@ -596,9 +596,7 @@ function RsvpPage() {
           ) : (
             /* 1:1 PICKER — both afternoons on one board */
             <section className="py-14 md:py-20" aria-labelledby="pick-title">
-              {/* Date heading, same size as the 19 Nov pages (Tammy, 10 Nov) */}
-              <h2 className="text-3xl font-bold text-navy md:text-4xl">Friday, 20 November</h2>
-              <div className="mt-8 flex items-start gap-4">
+              <div className="flex items-start gap-4">
                 <span aria-hidden className="step-node">1</span>
                 <div>
                   <h2 id="pick-title" className="text-3xl font-bold text-navy md:text-4xl">Pick your startups</h2>
@@ -618,13 +616,15 @@ function RsvpPage() {
                     <div className="pick-board" role="grid" aria-label="1:1 meeting rounds" aria-busy={loading} onMouseLeave={() => setHover(null)} style={{ "--cols": boardCols } as CSSProperties}>
                       {/* day headers */}
                       <div role="row" className="pick-row pick-head">
+                        {/* Date sits over the startup list, same size as the 19 Nov pages; the
+                            day columns no longer repeat it (Tammy, 10 Nov) */}
                         <span role="columnheader" className="pick-name text-sm font-semibold text-navy sm:text-base">
+                          <span className="mb-2 block text-3xl font-bold leading-tight text-navy md:text-4xl">Friday, 20 November</span>
                           {loading ? <LoadingNote text="Checking availability…" className="text-xs font-semibold text-navy" /> : <>Click a name to view its <span className="whitespace-nowrap">one-pager <span aria-hidden="true">↓</span></span></>}
                         </span>
                         {MEETUP_DAYS.map((d) => (
-                          <span key={d.id} role="columnheader" className={`pick-day ${d.id === "fri" ? "is-fri" : ""}`}>
-                            <span className="block font-bold text-navy">{d.short}</span>
-                            <span className="block truncate text-[11px] tabular-nums text-muted-foreground">{d.time}</span>
+                          <span key={d.id} role="columnheader" className="pick-day" style={{ borderTop: 0 }}>
+                            <span className="sr-only">{d.short}</span>
                           </span>
                         ))}
                       </div>
