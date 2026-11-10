@@ -109,7 +109,10 @@ function ConnectBoard() {
     const x = k % 5, y = Math.floor(k / 5);
     if ((x + y) % 2) return { x, y, kind: "empty" as const };
     if (x === 2 && y === 2) return { x, y, kind: "mark" as const };
-    return { x, y, kind: "co" as const, c: companies[n++] };
+    // 12 squares, 10 startups since Atones/MoneyGuard went off the site: spare
+    // squares stay as plain tiles (an undefined company crashed the page).
+    const c = companies[n++];
+    return c ? { x, y, kind: "co" as const, c } : { x, y, kind: "spare" as const };
   });
   const lit = hover === null ? null : companies[hover];
   const joins: string[] = [];
@@ -120,6 +123,7 @@ function ConnectBoard() {
         {cells.map((cell, k) => {
           const d = { "--i": cell.x + cell.y } as CSSProperties;
           if (cell.kind === "empty") return <span key={k} aria-hidden className="aspect-square bg-white/[0.03]" />;
+          if (cell.kind === "spare") return <span key={k} aria-hidden className="cx-tile aspect-square bg-white/[0.08]" style={d} />;
           if (cell.kind === "mark")
             return (
               <span key={k} aria-hidden className="cx-tile flex aspect-square items-center justify-center bg-white/[0.08]" style={d}>
