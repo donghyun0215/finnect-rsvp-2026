@@ -496,7 +496,8 @@
 .mode-dot { width: 14px; height: 14px; border: 1.5px solid rgb(255 255 255 / .4); border-radius: 2px; transition: background-color .2s, border-color .2s; }
 .mode-tile.is-on .mode-dot { background: var(--yellow); border-color: var(--yellow); }
 .mode-tile:focus-visible { outline: 2px solid #00ccff; outline-offset: 3px; }
-.hero-cta:hover { border-color: var(--yellow); }
+.hero-cta { border-color: rgb(255 255 255 / .28); }
+.hero-cta:hover { border-color: var(--yellow); background: rgb(255 255 255 / .06); }
 
 /* Step number: a real sequence (pick, then details), set as a node. */
 .step-node {

@@ -195,21 +195,30 @@ function Landing() {
             </h1>
             <p className="hero-in mt-8 max-w-[34rem] text-[1.0625rem] leading-relaxed text-white/75 [--i:3]">
               Ten Korean fintechs in Singapore with the Korea Fintech Center's FIN:NECT programme, sponsored
-              by KakaoBank. Watch them pitch and join the networking lunch on 19 November, then meet the ones that fit your business at a 1:1 on
-              20 November.
+              by KakaoBank. Pick what you'd like to join.
             </p>
-            {/* Three sign-ups, each with its own day, time and place (Tammy, 10 Nov) */}
-            <div className="hero-in mt-9 grid gap-3 sm:grid-cols-3 [--i:4]">
+            {/* Three sign-ups grouped by day, each with its time and place (Tammy, 10 Nov) */}
+            <div className="hero-in mt-9 grid gap-x-3 gap-y-5 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] [--i:4]">
               {([
-                ["6", "Join the pitching event", `${EVENT_DAY_SHORT} · ${EVENT_TIME}`, EVENT_VENUE],
-                ["7", "Join the networking lunch", `${EVENT_DAY_SHORT} · from 12:30`, LUNCH_VENUE.split(",")[0]],
-                ...(ONE_ON_ONE_OPEN ? [["5", "Book 1:1 meetings", `${MEETUP_DAY_SHORT} · ${MEETUP_TIME}`, MEETUP_VENUE.split(",")[0]]] : []),
-              ] as [string, string, string, string][]).map(([d, label, when, where]) => (
-                <Link key={d} to="/book" search={{ day: d as "5" | "6" | "7" }} className="mode-tile hero-cta">
-                  <span className="flex items-start justify-between gap-2 font-bold leading-snug">{label}<span aria-hidden className="text-yellow">→</span></span>
-                  <span className="mt-2 block text-sm tabular-nums text-white/70">{when}</span>
-                  <span className="block text-sm text-white/45">{where}</span>
-                </Link>
+                [EVENT_DAY_SHORT, [
+                  ["6", "Pitching event", EVENT_TIME, EVENT_VENUE, "Join"],
+                  ["7", "Networking lunch", "From 12:30", LUNCH_VENUE.split(",")[0], "Join"],
+                ]],
+                [MEETUP_DAY_SHORT, ONE_ON_ONE_OPEN ? [["5", "1:1 meetings", MEETUP_TIME, MEETUP_VENUE.split(",")[0], "Book"]] : []],
+              ] as [string, [string, string, string, string, string][]][]).map(([dayLabel, tiles]) => (
+                <div key={dayLabel} className="min-w-0">
+                  <p className="text-sm font-semibold text-white">{dayLabel}</p>
+                  <div className={`mt-2 grid gap-3 ${tiles.length > 1 ? "sm:grid-cols-2" : ""}`}>
+                    {tiles.map(([d, label, when, where, verb]) => (
+                      <Link key={d} to="/book" search={{ day: d as "5" | "6" | "7" }} className="mode-tile hero-cta flex flex-col">
+                        <span className="text-lg font-bold leading-tight">{label}</span>
+                        <span className="mt-2 block text-sm tabular-nums text-white/85">{when}</span>
+                        <span className="block text-sm text-white/75">{where}</span>
+                        <span className="mt-4 text-sm font-bold text-yellow">{verb} <span aria-hidden>→</span></span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -229,51 +238,60 @@ function Landing() {
           <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for any or all three. The pitching event and the lunch are confirmed by the host; the 1:1 meetings are booked directly.</p>
         </div>
 
-        <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-10">
+        <div className="mt-12 grid gap-10 md:grid-cols-2 md:gap-14">
+          {/* THURSDAY: two sessions at two venues, each with its own sign-up */}
           <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--navy)]">
-            <p className="text-sm font-semibold text-[#6d6d6d]">{EVENT_DAY_SHORT} · morning, run by Tenity</p>
-            <h3 className="mt-1 text-2xl font-bold text-navy">Pitching event <span className="block tabular-nums text-[#6d6d6d]">{EVENT_TIME}</span></h3>
-            <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
-              {DEMO_AGENDA.map(([t, item], i) => (
-                <li key={t} className="agenda-row grid grid-cols-[7.5rem_1fr] gap-3 py-2.5 text-sm" style={{ "--i": i } as CSSProperties}>
-                  <span className="tabular-nums text-[#6d6d6d]">{t}</span>
-                  <span className="text-navy">{item}</span>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-auto pt-5">
-              <Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} />
-              <Link to="/book" search={{ day: "6" }} className="btn-node mt-7">Join the pitching event</Link>
+            <h3 className="text-2xl font-bold text-navy">Thursday 19 November</h3>
+            <div className="mt-5">
+              <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+                <span className="text-lg font-bold text-navy">Pitching event</span>
+                <span className="font-semibold tabular-nums text-[#6d6d6d]">{EVENT_TIME}</span>
+              </p>
+              <p className="text-sm text-[#6d6d6d]">Run by Tenity</p>
+              <ol className="mt-3 divide-y divide-navy/10 border-y border-navy/10">
+                {DEMO_AGENDA.map(([t, item], i) => (
+                  <li key={t} className="agenda-row grid grid-cols-[7.5rem_1fr] gap-3 py-2 text-sm" style={{ "--i": i } as CSSProperties}>
+                    <span className="tabular-nums text-[#6d6d6d]">{t}</span>
+                    <span className="text-navy">{item}</span>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-3"><Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} /></div>
+              <Link to="/book" search={{ day: "6" }} className="btn-node mt-5">Join the pitching event</Link>
+            </div>
+            <div className="mt-8 border-t-2 border-dashed border-navy/20 pt-6">
+              <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+                <span className="text-lg font-bold text-navy">Networking lunch</span>
+                <span className="font-semibold tabular-nums text-[#6d6d6d]">From 12:30</span>
+              </p>
+              <p className="text-sm text-[#6d6d6d]">With the founders, investors and local partners, at a different venue</p>
+              <div className="mt-3"><Place venue={LUNCH_VENUE} address={LUNCH_ADDRESS} map={LUNCH_MAP_URL} /></div>
+              <Link to="/book" search={{ day: "7" }} className="btn-node mt-5">Join the networking lunch</Link>
             </div>
           </article>
 
-          <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--navy)] [--d:100ms]">
-            <p className="text-sm font-semibold text-[#6d6d6d]">{EVENT_DAY_SHORT} · after the pitches</p>
-            <h3 className="mt-1 text-2xl font-bold text-navy">Networking lunch <span className="block tabular-nums text-[#6d6d6d]">From 12:30</span></h3>
-            <p className="mt-5 text-[15px] leading-relaxed text-navy">A networking lunch with the founders, investors and local partners.</p>
-            <div className="mt-auto pt-5">
-              <Place venue={LUNCH_VENUE} address={LUNCH_ADDRESS} map={LUNCH_MAP_URL} />
-              <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">Join the networking lunch</Link>
-            </div>
-          </article>
-
-          <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--yellow)] [--d:200ms]">
-            <p className="text-sm font-semibold text-[#6d6d6d]">{MEETUP_DAY_SHORT} · all 1:1s on one day</p>
-            <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="block tabular-nums text-[#6d6d6d]">{MEETUP_TIME}</span></h3>
-            <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
-              {TIMESLOTS.map((t, i) => (
-                <li key={t.id} className="agenda-row grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2.5 text-sm" style={{ "--i": i } as CSSProperties}>
-                  <span className="tabular-nums text-[#6d6d6d]">{t.time}</span>
-                  <span className="flex items-center gap-2 text-navy"><span aria-hidden className="h-2.5 w-2.5 bg-yellow ring-1 ring-navy/15" />{t.label}: a startup of your choice</span>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-auto pt-5">
-              <Place venue={MEETUP_VENUE} address={MEETUP_ADDRESS} map={MEETUP_MAP_URL} />
+          {/* FRIDAY: the 1:1s */}
+          <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--yellow)] [--d:150ms]">
+            <h3 className="text-2xl font-bold text-navy">Friday 20 November</h3>
+            <div className="mt-5">
+              <p className="flex flex-wrap items-baseline justify-between gap-x-3">
+                <span className="text-lg font-bold text-navy">1:1 business meetings</span>
+                <span className="font-semibold tabular-nums text-[#6d6d6d]">{MEETUP_TIME}</span>
+              </p>
+              <p className="text-sm text-[#6d6d6d]">One startup of your choice per round</p>
+              <ol className="mt-3 divide-y divide-navy/10 border-y border-navy/10">
+                {TIMESLOTS.map((t, i) => (
+                  <li key={t.id} className="agenda-row grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2 text-sm" style={{ "--i": i } as CSSProperties}>
+                    <span className="tabular-nums text-[#6d6d6d]">{t.time}</span>
+                    <span className="flex items-center gap-2 text-navy"><span aria-hidden className="h-2.5 w-2.5 bg-yellow ring-1 ring-navy/15" />{t.label}</span>
+                  </li>
+                ))}
+              </ol>
+              <div className="mt-3"><Place venue={MEETUP_VENUE} address={MEETUP_ADDRESS} map={MEETUP_MAP_URL} /></div>
               {ONE_ON_ONE_OPEN ? (
-                <Link to="/book" search={{ day: "5" }} className="btn-node-dark mt-7">Book a 1:1 meeting</Link>
+                <Link to="/book" search={{ day: "5" }} className="btn-node-dark mt-5">Book a 1:1 meeting</Link>
               ) : (
-                <p className="mt-7 text-sm text-[#6d6d6d]">Booking opens soon.</p>
+                <p className="mt-5 text-sm text-[#6d6d6d]">Booking opens soon.</p>
               )}
             </div>
           </article>
