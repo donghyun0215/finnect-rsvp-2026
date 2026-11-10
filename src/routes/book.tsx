@@ -9,10 +9,10 @@ import {
   DEMO_AGENDA,
   EVENT_TIME,
   EVENT_VENUE,
-  EVENT_ADDRESS,
-  EVENT_MAP_URL,
   PROGRAM,
   LUNCH_VENUE,
+  LUNCH_ADDRESS,
+  LUNCH_MAP_URL,
   TIMESLOTS,
   getSlotInfo,
   isSlotOffered,
@@ -102,11 +102,12 @@ function RsvpPage() {
   // rsvp form
   const [attend, setAttend] = useState({ showcase: false, lunch: false, meetups: false });
   // Day 5 = 1:1 only, always on; Day 7 = showcase/dinner checkboxes, 1:1 off.
-  // Day 5 = 1:1 only. Day 7: the Demo Day and the networking after it are
-  // separate choices (Tammy, 9 Nov); the Demo Day starts ticked.
+  // Day 5 = 1:1 only. Day 7: the networking lunch and the Demo Day are
+  // separate choices (Tammy, 9 Nov). The lunch is ours and starts ticked; the
+  // Demo Day is Tenity's, so it comes second (Tammy, 10 Nov).
   useEffect(() => {
     setAttend((a) =>
-      day === "5" ? { ...a, meetups: true } : { showcase: true, lunch: false, meetups: false },
+      day === "5" ? { ...a, meetups: true } : { showcase: false, lunch: true, meetups: false },
     );
   }, [day]);
   const [selections, setSelections] = useState<Record<string, string | null>>(
@@ -240,7 +241,7 @@ function RsvpPage() {
 
 
     if (day === "7" && !attend.showcase && !attend.lunch) {
-      setFormError("Please tick the Demo Day, the networking, or both.");
+      setFormError("Please tick the networking lunch, the Demo Day, or both.");
       return;
     }
 
@@ -413,7 +414,7 @@ function RsvpPage() {
 
         <div className="mx-auto max-w-6xl px-4 pb-12 pt-8 sm:px-6 md:pb-16 md:pt-12">
           <h1 className="hero-in max-w-3xl text-[clamp(2.1rem,5.6vw,3.9rem)] font-extrabold leading-[1.02] tracking-tight">
-            {day === "5" ? "Pick your 1:1 meetings" : "Request to join the Demo Day"}
+            {day === "5" ? "Pick your 1:1 meetings" : "Join the networking lunch"}
           </h1>
           <p className="hero-in mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white/70 [--i:1]">
             {day === "5"
@@ -424,7 +425,7 @@ function RsvpPage() {
           {/* The two sign-ups, as the home page's two sessions */}
           <div role="tablist" aria-label="What are you registering for?" className="hero-in mt-9 grid gap-3 sm:grid-cols-2 [--i:2]">
             {([
-              ["7", "Demo Day", `${EVENT_DAY_SHORT} · ${EVENT_TIME}`, EVENT_VENUE],
+              ["7", "Networking lunch", `${EVENT_DAY_SHORT} · From 12:30`, LUNCH_VENUE],
               ["5", "1:1 business meetings", `${MEETUP_DATES_SHORT}`, `${TIMESLOTS.length} rounds · ${MEETUP_COMPANIES.length} startups`],
             ] as const).map(([d, title, when, where]) => {
               const on = day === d;
@@ -477,7 +478,7 @@ function RsvpPage() {
                     <li className="flex items-baseline gap-4 py-3.5 text-sm">
                       <span className="w-24 shrink-0 tabular-nums text-muted-foreground">{EVENT_DAY_SHORT}</span>
                       <span className="font-semibold text-navy">
-                        {[submitted.attend.showcase && `Demo Day · ${EVENT_TIME}`, submitted.attend.lunch && "Networking lunch"].filter(Boolean).join(" + ")}
+                        {[submitted.attend.lunch && "Networking lunch", submitted.attend.showcase && `Demo Day · ${EVENT_TIME}`].filter(Boolean).join(" + ")}
                         {submitted.demoStatus === "pending" && <span className="ml-2 font-normal text-muted-foreground">(pending approval)</span>}
                         {submitted.demoStatus === "declined" && <span className="ml-2 font-normal text-muted-foreground">(not confirmed)</span>}
                       </span>
@@ -538,17 +539,15 @@ function RsvpPage() {
               <div>
                 <h2 className="text-3xl font-bold text-navy md:text-4xl">{EVENT_DATE.replace(" 2026", "")}</h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-                  Doors open at 09:00. Seats are limited and confirmed by the host, so each attendee sends their own request. You'll hear back by email.
+                  The networking lunch starts at 12:30, after the Demo Day. Seats are limited and confirmed by the host, so each attendee sends their own request. You'll hear back by email.
                 </p>
                 <p className="mt-6 text-sm text-navy">
-                  {EVENT_MAP_URL ? (
-                    <a href={EVENT_MAP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">{EVENT_VENUE}</a>
-                  ) : <span className="font-semibold">{EVENT_VENUE}</span>}
-                  <span className="block text-muted-foreground">{EVENT_ADDRESS}</span>
+                  <a href={LUNCH_MAP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">{LUNCH_VENUE}</a>
+                  <span className="block text-muted-foreground">{LUNCH_ADDRESS}</span>
                 </p>
               </div>
               <div className="border-t-4 border-navy pt-5">
-                <p className="text-sm font-semibold text-muted-foreground">Morning, with Tenity</p>
+                <p className="text-sm font-semibold text-muted-foreground">Before lunch: the Demo Day, run by Tenity</p>
                 <ol className="mt-3 divide-y divide-navy/10 border-y border-navy/10">
                   {DEMO_AGENDA.map(([time, label]) => (
                     <li key={time} className="grid grid-cols-[7.5rem_1fr] gap-3 py-3 text-[15px]">
@@ -560,7 +559,7 @@ function RsvpPage() {
                 <fieldset className="mt-6">
                   <legend className="text-sm font-semibold text-navy">What would you like to join?</legend>
                   <div className="mt-3 grid gap-2">
-                    {(["showcase", "lunch"] as const).map((id) => {
+                    {(["lunch", "showcase"] as const).map((id) => {
                       const b = PROGRAM.find((x) => x.id === id)!;
                       return (
                         <label key={id} className={`flex cursor-pointer items-start gap-3 border p-4 transition-colors ${attend[id] ? "border-navy bg-yellow/15" : "border-navy/15 hover:border-navy/40"}`}>
@@ -571,7 +570,7 @@ function RsvpPage() {
                             className="mt-1 h-4 w-4 shrink-0 accent-[#1f1f1f]"
                           />
                           <span>
-                            <span className="block font-semibold text-navy">{id === "showcase" ? "Demo Day" : b.title}</span>
+                            <span className="block font-semibold text-navy">{id === "showcase" ? "Demo Day (run by Tenity)" : b.title}</span>
                             <span className="block text-sm tabular-nums text-muted-foreground">{EVENT_DAY_SHORT} · {id === "showcase" ? EVENT_TIME : b.time}</span>
                             <span className="block text-sm text-muted-foreground">{id === "showcase" ? EVENT_VENUE : LUNCH_VENUE}</span>
                           </span>
@@ -855,8 +854,8 @@ function RsvpPage() {
                         <li className="text-muted-foreground">Nothing ticked yet.</li>
                       ) : (
                         <>
-                          {attend.showcase && <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Demo Day · {EVENT_DAY_SHORT} · {EVENT_TIME}</li>}
                           {attend.lunch && <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Networking lunch · {EVENT_DAY_SHORT} · {PROGRAM.find((x) => x.id === "lunch")?.time}</li>}
+                          {attend.showcase && <li className="flex gap-2"><span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 bg-yellow ring-1 ring-navy/20" />Demo Day · {EVENT_DAY_SHORT} · {EVENT_TIME}</li>}
                         </>
                       )
                     ) : scheduleCount === 0 ? (

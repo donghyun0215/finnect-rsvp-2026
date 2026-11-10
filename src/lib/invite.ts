@@ -81,7 +81,7 @@ export function buildInvite(team = false, unsub = false): { subject: string; htm
 </td></tr>`;
 
   const blocks = {
-    demo: card(`Demo Day · ${EVENT_DATE}`, demoRows, EVENT_VENUE, EVENT_ADDRESS, btn(`${SITE}/book?day=7`, "RSVP for the Demo Day")),
+    demo: card(`Demo Day · ${EVENT_DATE}`, demoRows, EVENT_VENUE, EVENT_ADDRESS, btn(`${SITE}/book?day=7`, "Join the networking lunch")),
     meetup: ONE_ON_ONE_OPEN
       ? card(`1:1 Business Meetings · ${MEETUP_DATES}`, meetRows, MEETUP_VENUE, MEETUP_ADDRESS, btn(`${SITE}/book?day=5`, "Book a 1:1 meeting"))
       : "",

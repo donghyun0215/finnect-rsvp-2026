@@ -16,11 +16,10 @@ import { Pair, PAIRS } from "@/components/Pair";
 import { Sessions } from "@/components/Sessions";
 import { useScrollMotion } from "@/lib/useScrollMotion";
 import {
+  LUNCH_ADDRESS,
   LUNCH_MAP_URL,
-  EVENT_ADDRESS,
-  EVENT_MAP_URL,
+  LUNCH_VENUE,
   EVENT_NAME,
-  EVENT_TIME,
   EVENT_VENUE,
   CREDITS,
   DEMO_AGENDA,
@@ -193,11 +192,11 @@ function Landing() {
             </h1>
             <p className="hero-in mt-8 max-w-[34rem] text-[1.0625rem] leading-relaxed text-white/75 [--i:3]">
               Ten Korean fintechs in Singapore with the Korea Fintech Center's FIN:NECT programme, sponsored
-              by KakaoBank. See the Demo Day on 19 November, then meet the ones that fit your business at a 1:1 on
+              by KakaoBank. Join the networking lunch on 19 November, then meet the ones that fit your business at a 1:1 on
               20 November.
             </p>
             <div className="hero-in mt-9 flex flex-wrap gap-3 [--i:4]">
-              <Link to="/book" search={{ day: "7" }} className="btn-node">Request to join the Demo Day</Link>
+              <Link to="/book" search={{ day: "7" }} className="btn-node">Join the networking lunch</Link>
               {ONE_ON_ONE_OPEN && (
                 <Link to="/book" search={{ day: "5" }} className="btn-node-ghost">Book a 1:1 meeting</Link>
               )}
@@ -216,13 +215,15 @@ function Landing() {
       <section id="rsvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 data-reveal="wipe" className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">19–20 November</h2>
-          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for the Demo Day, a 1:1 or both. The Demo Day is closed-door and host-approved; the 1:1 meetings are booked directly.</p>
+          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for the networking lunch, a 1:1 or both. Lunch seats are confirmed by the host; the 1:1 meetings are booked directly.</p>
         </div>
 
         <div className="mt-12 grid gap-10 md:grid-cols-2 md:gap-14">
           <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--navy)]">
-            <p className="text-sm font-semibold text-[#6d6d6d]">{EVENT_DAY_SHORT} · morning, with Tenity</p>
-            <h3 className="mt-1 text-2xl font-bold text-navy">Demo Day <span className="tabular-nums text-[#6d6d6d]">{EVENT_TIME}</span></h3>
+            <p className="text-sm font-semibold text-[#6d6d6d]">{EVENT_DAY_SHORT} · after the Demo Day</p>
+            <h3 className="mt-1 text-2xl font-bold text-navy">Networking lunch <span className="tabular-nums text-[#6d6d6d]">From 12:30</span></h3>
+            <p className="mt-3 text-[15px] text-navy">With the founders, investors and local partners.</p>
+            <p className="mt-6 text-sm font-semibold text-[#6d6d6d]">Before lunch: the Demo Day, run by Tenity <span className="font-normal">· {EVENT_VENUE}</span></p>
             <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
               {DEMO_AGENDA.map(([t, item], i) => (
                 <li key={t} className="agenda-row grid grid-cols-[7.5rem_1fr] gap-3 py-2.5 text-sm" style={{ "--i": i } as CSSProperties}>
@@ -232,13 +233,8 @@ function Landing() {
               ))}
             </ol>
             <div className="mt-auto pt-5">
-              <Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} />
-              <p className="mt-2 text-sm text-navy">
-                <span className="tabular-nums text-[#6d6d6d]">From 12:30</span> · Networking lunch at{" "}
-                <a href={LUNCH_MAP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">The Westin Singapore</a>
-                <span className="text-[#6d6d6d]"> (Lobby Lounge, Level 32)</span>
-              </p>
-              <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">Request to join the Demo Day</Link>
+              <Place venue={LUNCH_VENUE} address={LUNCH_ADDRESS} map={LUNCH_MAP_URL} />
+              <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">Join the networking lunch</Link>
             </div>
           </article>
 

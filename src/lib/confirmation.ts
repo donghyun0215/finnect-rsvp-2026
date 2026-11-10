@@ -78,7 +78,7 @@ const PERSONAL: Partial<Record<MailKind, string[]>> = {
     "See you tomorrow!",
   ],
   "demo-eve": [
-    `See you tomorrow at ${EVENT_VENUE} for the Demo Day! Your schedule and check-in details are below.`,
+    "See you tomorrow! Your schedule and check-in details are below.",
     "Looking forward to it!",
   ],
 };

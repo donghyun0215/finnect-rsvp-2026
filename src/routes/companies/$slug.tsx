@@ -147,7 +147,7 @@ function Profile({ company }: { company: Company }) {
   const irDeck = company.irdeck ?? null;
   // Only cohort companies take 1:1 bookings.
   const hasMeetups = ONE_ON_ONE_OPEN && company.track === "track1";
-  const bookLabel = hasMeetups ? "Book a 1:1 meeting" : "RSVP for the Demo Day";
+  const bookLabel = hasMeetups ? "Book a 1:1 meeting" : "Join the networking lunch";
   const bookSearch: Record<string, string> = hasMeetups ? { day: "5", company: company.slug } : { day: "7" };
   const pair = PAIRS[company.slug];
   const hl = HIGHLIGHTS[company.slug];
