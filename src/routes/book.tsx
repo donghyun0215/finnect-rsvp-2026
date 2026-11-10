@@ -596,7 +596,9 @@ function RsvpPage() {
           ) : (
             /* 1:1 PICKER — both afternoons on one board */
             <section className="py-14 md:py-20" aria-labelledby="pick-title">
-              <div className="flex items-start gap-4">
+              {/* Date heading, same size as the 19 Nov pages (Tammy, 10 Nov) */}
+              <h2 className="text-3xl font-bold text-navy md:text-4xl">Friday, 20 November</h2>
+              <div className="mt-8 flex items-start gap-4">
                 <span aria-hidden className="step-node">1</span>
                 <div>
                   <h2 id="pick-title" className="text-3xl font-bold text-navy md:text-4xl">Pick your startups</h2>
