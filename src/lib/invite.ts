@@ -11,6 +11,7 @@ import {
   EVENT_NAME_LINE2,
   EVENT_TIME,
   EVENT_VENUE,
+  LUNCH_VENUE,
   MEETUP_ADDRESS,
   MEETUP_DATES,
   MEETUP_DAYS,
@@ -81,7 +82,7 @@ export function buildInvite(team = false, unsub = false): { subject: string; htm
 </td></tr>`;
 
   const blocks = {
-    demo: card(`Demo Day · ${EVENT_DATE}`, demoRows, EVENT_VENUE, EVENT_ADDRESS, btn(`${SITE}/book?day=7`, "Join the networking lunch")),
+    demo: card(`Demo Day · ${EVENT_DATE}`, demoRows, `Pitching event: ${EVENT_VENUE}, ${EVENT_ADDRESS}`, `Networking lunch: ${LUNCH_VENUE}`, btn(`${SITE}/book?day=6`, "Join the pitching event") + btn(`${SITE}/book?day=7`, "Join the networking lunch")),
     meetup: ONE_ON_ONE_OPEN
       ? card(`1:1 Business Meetings · ${MEETUP_DATES}`, meetRows, MEETUP_VENUE, MEETUP_ADDRESS, btn(`${SITE}/book?day=5`, "Book a 1:1 meeting"))
       : "",
@@ -131,7 +132,7 @@ ${ORDER.map((k) => blocks[k]).join("")}
 </body></html>`;
 
   const plain = (s: string) => s.replace(/<[^>]+>/g, "");
-  const demoText = [`DEMO DAY · ${EVENT_DATE}`, ...demoRows.map(([t, w]) => `${t}  ${w}`), `${EVENT_VENUE}, ${EVENT_ADDRESS}`, `RSVP: ${SITE}/book?day=7`];
+  const demoText = [`DEMO DAY · ${EVENT_DATE}`, ...demoRows.map(([t, w]) => `${t}  ${w}`), `Pitching event: ${EVENT_VENUE}, ${EVENT_ADDRESS}`, `Networking lunch: ${LUNCH_VENUE}`, `Pitching event RSVP: ${SITE}/book?day=6`, `Networking lunch RSVP: ${SITE}/book?day=7`];
   const meetText = ONE_ON_ONE_OPEN
     ? [`1:1 BUSINESS MEETINGS · ${MEETUP_DATES}`, ...meetRows.map(([t, w]) => `${t}  ${w}`), [MEETUP_VENUE, MEETUP_ADDRESS].filter(Boolean).join(", "), `Book: ${SITE}/book?day=5`]
     : [];

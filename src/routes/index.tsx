@@ -19,8 +19,11 @@ import {
   LUNCH_ADDRESS,
   LUNCH_MAP_URL,
   LUNCH_VENUE,
+  EVENT_ADDRESS,
+  EVENT_MAP_URL,
   EVENT_NAME,
   EVENT_VENUE,
+  EVENT_TIME,
   CREDITS,
   DEMO_AGENDA,
   TIMESLOTS,
@@ -192,14 +195,22 @@ function Landing() {
             </h1>
             <p className="hero-in mt-8 max-w-[34rem] text-[1.0625rem] leading-relaxed text-white/75 [--i:3]">
               Ten Korean fintechs in Singapore with the Korea Fintech Center's FIN:NECT programme, sponsored
-              by KakaoBank. Join the networking lunch on 19 November, then meet the ones that fit your business at a 1:1 on
+              by KakaoBank. Watch them pitch and join the networking lunch on 19 November, then meet the ones that fit your business at a 1:1 on
               20 November.
             </p>
-            <div className="hero-in mt-9 flex flex-wrap gap-3 [--i:4]">
-              <Link to="/book" search={{ day: "7" }} className="btn-node">Join the networking lunch</Link>
-              {ONE_ON_ONE_OPEN && (
-                <Link to="/book" search={{ day: "5" }} className="btn-node-ghost">Book a 1:1 meeting</Link>
-              )}
+            {/* Three sign-ups, each with its own day, time and place (Tammy, 10 Nov) */}
+            <div className="hero-in mt-9 grid gap-3 sm:grid-cols-3 [--i:4]">
+              {([
+                ["6", "Join the pitching event", `${EVENT_DAY_SHORT} · ${EVENT_TIME}`, EVENT_VENUE],
+                ["7", "Join the networking lunch", `${EVENT_DAY_SHORT} · from 12:30`, LUNCH_VENUE.split(",")[0]],
+                ...(ONE_ON_ONE_OPEN ? [["5", "Book 1:1 meetings", `${MEETUP_DAY_SHORT} · ${MEETUP_TIME}`, MEETUP_VENUE.split(",")[0]]] : []),
+              ] as [string, string, string, string][]).map(([d, label, when, where]) => (
+                <Link key={d} to="/book" search={{ day: d as "5" | "6" | "7" }} className="mode-tile hero-cta">
+                  <span className="flex items-start justify-between gap-2 font-bold leading-snug">{label}<span aria-hidden className="text-yellow">→</span></span>
+                  <span className="mt-2 block text-sm tabular-nums text-white/70">{when}</span>
+                  <span className="block text-sm text-white/45">{where}</span>
+                </Link>
+              ))}
             </div>
           </div>
           <div className="hero-in flex justify-center [--i:2] lg:justify-end">
@@ -215,15 +226,13 @@ function Landing() {
       <section id="rsvp" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 data-reveal="wipe" className="text-3xl font-bold text-navy md:text-[2.6rem] md:leading-tight">19–20 November</h2>
-          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for the networking lunch, a 1:1 or both. Lunch seats are confirmed by the host; the 1:1 meetings are booked directly.</p>
+          <p data-reveal="rise" className="max-w-sm text-[15px] text-[#6d6d6d] [--d:400ms]">Come for any or all three. The pitching event and the lunch are confirmed by the host; the 1:1 meetings are booked directly.</p>
         </div>
 
-        <div className="mt-12 grid gap-10 md:grid-cols-2 md:gap-14">
+        <div className="mt-12 grid gap-10 md:grid-cols-3 md:gap-10">
           <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--navy)]">
-            <p className="text-sm font-semibold text-[#6d6d6d]">{EVENT_DAY_SHORT} · after the Demo Day</p>
-            <h3 className="mt-1 text-2xl font-bold text-navy">Networking lunch <span className="tabular-nums text-[#6d6d6d]">From 12:30</span></h3>
-            <p className="mt-3 text-[15px] text-navy">With the founders, investors and local partners.</p>
-            <p className="mt-6 text-sm font-semibold text-[#6d6d6d]">Before lunch: the Demo Day, run by Tenity <span className="font-normal">· {EVENT_VENUE}</span></p>
+            <p className="text-sm font-semibold text-[#6d6d6d]">{EVENT_DAY_SHORT} · morning, run by Tenity</p>
+            <h3 className="mt-1 text-2xl font-bold text-navy">Pitching event <span className="block tabular-nums text-[#6d6d6d]">{EVENT_TIME}</span></h3>
             <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
               {DEMO_AGENDA.map(([t, item], i) => (
                 <li key={t} className="agenda-row grid grid-cols-[7.5rem_1fr] gap-3 py-2.5 text-sm" style={{ "--i": i } as CSSProperties}>
@@ -233,14 +242,24 @@ function Landing() {
               ))}
             </ol>
             <div className="mt-auto pt-5">
+              <Place venue={EVENT_VENUE} address={EVENT_ADDRESS} map={EVENT_MAP_URL} />
+              <Link to="/book" search={{ day: "6" }} className="btn-node mt-7">Join the pitching event</Link>
+            </div>
+          </article>
+
+          <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--navy)] [--d:100ms]">
+            <p className="text-sm font-semibold text-[#6d6d6d]">{EVENT_DAY_SHORT} · after the pitches</p>
+            <h3 className="mt-1 text-2xl font-bold text-navy">Networking lunch <span className="block tabular-nums text-[#6d6d6d]">From 12:30</span></h3>
+            <p className="mt-5 text-[15px] leading-relaxed text-navy">A networking lunch with the founders, investors and local partners.</p>
+            <div className="mt-auto pt-5">
               <Place venue={LUNCH_VENUE} address={LUNCH_ADDRESS} map={LUNCH_MAP_URL} />
               <Link to="/book" search={{ day: "7" }} className="btn-node mt-7">Join the networking lunch</Link>
             </div>
           </article>
 
-          <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--yellow)] [--d:150ms]">
+          <article data-reveal="session" className="session flex flex-col pt-6 [--bar:var(--yellow)] [--d:200ms]">
             <p className="text-sm font-semibold text-[#6d6d6d]">{MEETUP_DAY_SHORT} · all 1:1s on one day</p>
-            <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="tabular-nums text-[#6d6d6d]">{MEETUP_TIME}</span></h3>
+            <h3 className="mt-1 text-2xl font-bold text-navy">1:1 business meetings <span className="block tabular-nums text-[#6d6d6d]">{MEETUP_TIME}</span></h3>
             <ol className="mt-5 divide-y divide-navy/10 border-y border-navy/10">
               {TIMESLOTS.map((t, i) => (
                 <li key={t.id} className="agenda-row grid grid-cols-[7.5rem_1fr] items-center gap-3 py-2.5 text-sm" style={{ "--i": i } as CSSProperties}>
