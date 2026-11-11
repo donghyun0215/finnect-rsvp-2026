@@ -424,7 +424,7 @@ function RsvpPage() {
           </h1>
           <p className="hero-in mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white/70 [--i:1]">
             {day === "5"
-              ? "Private meetings with the startups of your choice, on Friday afternoon, 20 November, at the Wyndham Singapore Hotel. One startup per round; book as many rounds as you like."
+              ? "Private meetings with the startups of your choice, on Friday afternoon, 20 November, at The Foundry (11 Prinsep Link, 2 min walk from Bencoolen MRT). One startup per round; book as many rounds as you like."
               : day === "6"
                 ? "IR pitches from Korean fintechs, then their meetings with investors, run by Tenity on Thursday morning, 19 November, at OGBC Innovation Hub. It's a closed-door session: the host reviews each request and confirms by email."
                 : "Lunch with the founders, investors and local partners on Thursday 19 November from 12:30, at The Westin Singapore. Seats are limited: the host reviews each request and confirms by email."}

@@ -5,14 +5,19 @@ import { buildConfirmation, type ConfirmationEmail, type MailKind } from "./conf
 import { buildThankYou } from "./thanks";
 import { companies } from "@/data/companies";
 
-export const REMINDER_KINDS: MailKind[] = ["week", "3day", "meetup-eve", "demo-eve"];
+export const REMINDER_KINDS: MailKind[] = ["week", "3day", "meetup-eve", "demo-eve", "venue"];
+
+// Colleagues who attend every 1:1 together (Tammy, 11 Nov: KAIA's Kyle and
+// Uno). Matched on organisation; each of them gets the shared schedule.
+const TOGETHER = ["kaia"];
 
 export async function buildReminderBatch(kind: MailKind): Promise<(ConfirmationEmail & { to: string })[]> {
   const [{ data: rsvps, error: e1 }, { data: bookings, error: e2 }] = await Promise.all([
-    supabaseAdmin.from("rsvps").select("full_name, email, attend_showcase, attend_lunch, demo_status"),
-    supabaseAdmin.from("bookings").select("full_name, email, timeslot_id, company_id"),
+    supabaseAdmin.from("rsvps").select("full_name, email, organisation, attend_showcase, attend_lunch, demo_status"),
+    supabaseAdmin.from("bookings").select("full_name, email, timeslot_id, company_id, organisation"),
   ]);
   if (e1 || e2) throw new Error(`DB error: ${(e1 ?? e2)?.message}`);
+  if (kind === "venue") return buildVenueBatch(rsvps ?? [], bookings ?? []);
 
   type Person = { name: string; showcase: boolean; lunch: boolean; meetings: { timeslot_id: string; company_id: string }[] };
   const people = new Map<string, Person>();
@@ -46,6 +51,43 @@ export async function buildReminderBatch(kind: MailKind): Promise<(ConfirmationE
       meetings: p.meetings,
     });
     out.push({ to: email, ...mail });
+  }
+  return out.sort((a, b) => a.to.localeCompare(b.to));
+}
+
+// Venue-change notice: everyone with a 1:1, their meetings only. Colleagues
+// in TOGETHER orgs each get the union of their group's meetings.
+function buildVenueBatch(
+  rsvps: { full_name: string; email: string; organisation?: string | null }[],
+  bookings: { full_name: string; email: string; timeslot_id: string; company_id: string; organisation: string | null }[],
+): (ConfirmationEmail & { to: string })[] {
+  const norm = (v: string | null | undefined) => (v || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const group = (org: string | null | undefined) => TOGETHER.find((g) => norm(org).includes(g));
+  const people = new Map<string, { name: string; org?: string; meetings: Map<string, { timeslot_id: string; company_id: string }> }>();
+  for (const b of bookings) {
+    const k = b.email.toLowerCase();
+    const p = people.get(k) ?? { name: b.full_name, org: group(b.organisation), meetings: new Map() };
+    p.meetings.set(`${b.timeslot_id}|${b.company_id}`, { timeslot_id: b.timeslot_id, company_id: b.company_id });
+    people.set(k, p);
+  }
+  // Shared schedule per group; group members with no booking of their own
+  // (e.g. cancelled to join a colleague's) are picked up from the RSVPs.
+  const shared = new Map<string, Map<string, { timeslot_id: string; company_id: string }>>();
+  for (const p of people.values()) if (p.org) {
+    const m = shared.get(p.org) ?? new Map();
+    p.meetings.forEach((v, k) => m.set(k, v));
+    shared.set(p.org, m);
+  }
+  for (const r of rsvps) {
+    const g = group(r.organisation);
+    const k = r.email.toLowerCase();
+    if (g && shared.has(g) && !people.has(k)) people.set(k, { name: r.full_name, org: g, meetings: new Map() });
+  }
+  const out: (ConfirmationEmail & { to: string })[] = [];
+  for (const [email, p] of people) {
+    const meetings = [...(p.org ? shared.get(p.org)! : p.meetings).values()];
+    if (!meetings.length) continue;
+    out.push({ to: email, ...buildConfirmation({ kind: "venue", fullName: p.name, attendShowcase: false, attendLunch: false, meetings }) });
   }
   return out.sort((a, b) => a.to.localeCompare(b.to));
 }

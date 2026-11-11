@@ -20,7 +20,7 @@ import {
 
 const EVENT_TITLE = EVENT_NAME;
 
-export type MailKind = "confirm" | "request" | "approved" | "week" | "3day" | "meetup-eve" | "demo-eve";
+export type MailKind = "confirm" | "request" | "approved" | "week" | "3day" | "meetup-eve" | "demo-eve" | "venue";
 
 const COPY: Record<MailKind, { subject: string; headline: string; intro: string }> = {
   confirm: {
@@ -54,6 +54,12 @@ const COPY: Record<MailKind, { subject: string; headline: string; intro: string 
     headline: "Your 1:1 meetings are tomorrow",
     intro: "A quick reminder that your 1:1 meetings with the startups are <b>tomorrow, Friday 20 November</b>. Here are the details:",
   },
+  // One-off notice (11 Nov): the 1:1 venue moved to The Foundry.
+  venue: {
+    subject: "Venue change: your 1:1 meetings on Fri 20 Nov are now at The Foundry",
+    headline: "New venue for your 1:1 meetings",
+    intro: "Your 1:1 meetings on <b>Friday 20 November</b> have moved to <b>The Foundry</b>. Times are unchanged.",
+  },
   "demo-eve": {
     subject: "See you tomorrow at the FIN:NECT Demo Day (Thu 19 Nov)",
     headline: "See you tomorrow",
@@ -76,6 +82,10 @@ const PERSONAL: Partial<Record<MailKind, string[]>> = {
   "meetup-eve": [
     `Your 1:1 meetings with the startups are tomorrow (Fri 20 Nov)${MEETUP_ADDRESS ? ` at ${MEETUP_VENUE}` : ""}. The details are below. Please arrive 5–10 minutes before your first meeting.`,
     "See you tomorrow!",
+  ],
+  venue: [
+    "Please note a change of venue for your 1:1 meetings on Friday 20 November. They will now take place at The Foundry, Level 1, 11 Prinsep Link, Singapore 187949, a 2-minute walk from Bencoolen MRT. Your meeting times stay the same.",
+    "Your updated schedule is below. If you added the meetings to your calendar earlier, please use the new calendar link to update the location. Sorry for any inconvenience, and see you on Friday!",
   ],
   "demo-eve": [
     "See you tomorrow! Your schedule and check-in details are below.",

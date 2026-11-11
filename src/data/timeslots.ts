@@ -76,11 +76,11 @@ export const MEETUP_DAYS: MeetupDay[] = [
     date: "Friday, 20 November 2026",
     short: "Fri 20 Nov",
     time: "13:40 – 16:50",
-    // Master sheet 프로그램 일정표(11.09): Wyndham Hotel, Function Room.
-    // (6 Nov it was briefly TBC.) Empty address/map would render venue only.
-    venue: "Wyndham Singapore Hotel, Function Room",
-    address: "5 Coleman Street, Singapore 179805",
-    mapUrl: "https://www.google.com/maps/search/?api=1&query=Wyndham+Singapore+Hotel+5+Coleman+Street",
+    // 11 Nov (Tammy): moved from the Wyndham Function Room to The Foundry,
+    // 2 min walk from Bencoolen MRT. Bookers get a "venue" email.
+    venue: "The Foundry, Level 1",
+    address: "11 Prinsep Link, Singapore 187949",
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=The+Foundry+11+Prinsep+Link+Singapore+187949",
     cal: "20261120T134000/20261120T165000",
   },
 ];
@@ -92,9 +92,10 @@ export const slotName = (t: Timeslot) => `${meetupDay(t.day).short} · ${t.label
 export const MEETUP_TIME = "13:40 – 16:50";
 export const MEETUP_DATE = "Friday, 20 November 2026";
 export const MEETUP_DAY_SHORT = "Fri 20 Nov";
-export const MEETUP_VENUE = "Wyndham Singapore Hotel, Function Room";
-export const MEETUP_ADDRESS = "5 Coleman Street, Singapore 179805";
-export const MEETUP_MAP_URL = "https://www.google.com/maps/search/?api=1&query=Wyndham+Singapore+Hotel+5+Coleman+Street";
+export const MEETUP_VENUE = "The Foundry, Level 1";
+export const MEETUP_ADDRESS = "11 Prinsep Link, Singapore 187949";
+export const MEETUP_DIRECTIONS = "2 min walk from Bencoolen MRT";
+export const MEETUP_MAP_URL = "https://www.google.com/maps/search/?api=1&query=The+Foundry+11+Prinsep+Link+Singapore+187949";
 export const MEETUP_DATES = "Friday 20 November 2026";
 export const MEETUP_DATES_SHORT = "Fri 20 Nov";
 
