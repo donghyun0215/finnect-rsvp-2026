@@ -112,7 +112,7 @@ export interface ConfirmationEmail {
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const programTime = (id: "showcase" | "lunch") => PROGRAM.find((b) => b.id === id)?.time ?? "";
 
-function gcal(text: string, dates: string, location: string, details: string): string {
+export function gcal(text: string, dates: string, location: string, details: string): string {
   const p = new URLSearchParams({ action: "TEMPLATE", text, dates, ctz: "Asia/Singapore", location, details });
   return `https://calendar.google.com/calendar/render?${p.toString()}`;
 }

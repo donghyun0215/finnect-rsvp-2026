@@ -19,6 +19,7 @@ import {
   ONE_ON_ONE_OPEN,
   EVENT_ADDRESS,
   EVENT_MAP_URL,
+  MEETUP_MAP_URL,
   MEETUP_TIME,
   MEETUP_VENUE,
   EVENT_NAME, MEETUP_DATES_SHORT, MEETUP_DAYS, meetupDay, slotName, companySessions } from "@/data/timeslots";
@@ -34,6 +35,7 @@ import {
 } from "@/lib/booking.server";
 import { BusyLabel, LoadingNote } from "@/components/Spinner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { gcal } from "@/lib/confirmation";
 
 const searchSchema = z.object({
   company: z.string().optional(),
@@ -423,11 +425,14 @@ function RsvpPage() {
             {day === "5" ? "Pick your 1:1 meetings" : day === "6" ? "Join the pitching event" : "Join the networking lunch"}
           </h1>
           <p className="hero-in mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-white/70 [--i:1]">
-            {day === "5"
-              ? "Private meetings with the startups of your choice, on Friday afternoon, 20 November, at The Foundry (11 Prinsep Link, 2 min walk from Bencoolen MRT). One startup per round; book as many rounds as you like."
-              : day === "6"
-                ? "IR pitches from Korean fintechs, then their meetings with investors, run by Tenity on Thursday morning, 19 November, at OGBC Innovation Hub. It's a closed-door session: the host reviews each request and confirms by email."
-                : "Lunch with the founders, investors and local partners on Thursday 19 November from 12:30, at The Westin Singapore. Seats are limited: the host reviews each request and confirms by email."}
+            {/* Venue names link to Google Maps (Tammy, 11 Nov) */}
+            {day === "5" ? (
+              <>Private meetings with the startups of your choice, on Friday afternoon, 20 November, at <MapLink href={MEETUP_MAP_URL}>The Foundry, 11 Prinsep Link</MapLink> (2 min walk from Bencoolen MRT). One startup per round; book as many rounds as you like.</>
+            ) : day === "6" ? (
+              <>IR pitches from Korean fintechs, then their meetings with investors, run by Tenity on Thursday morning, 19 November, at <MapLink href={EVENT_MAP_URL}>OGBC Innovation Hub</MapLink>. It's a closed-door session: the host reviews each request and confirms by email.</>
+            ) : (
+              <>Lunch with the founders, investors and local partners on Thursday 19 November from 12:30, at <MapLink href={LUNCH_MAP_URL}>The Westin Singapore</MapLink>. Seats are limited: the host reviews each request and confirms by email.</>
+            )}
           </p>
 
           {/* The two sign-ups, as the home page's two sessions */}
@@ -508,6 +513,29 @@ function RsvpPage() {
                     <li className="py-3.5 text-sm text-navy">1:1 meetings ({MEETUP_DATES_SHORT}): the organisers will be in touch.</li>
                   )}
                 </ul>
+                {/* 1:1s booked: venue, map and calendar right away (Tammy, 11 Nov) */}
+                {submitted.bookings.some((b) => b.ok) && (() => {
+                  const d = MEETUP_DAYS[0];
+                  const where = `${d.venue}, ${d.address}`;
+                  const lines = submitted.bookings.filter((b) => b.ok).map((b) => {
+                    const t = TIMESLOTS.find((x) => x.id === b.timeslotId);
+                    return `• ${t?.label ?? ""} ${t?.time ?? ""} — ${companies.find((x) => x.slug === b.companySlug)?.name ?? ""}`;
+                  });
+                  const details = ["Your 1:1 meetings:", ...lines, "", "2 min walk from Bencoolen MRT", `Manage: ${typeof window !== "undefined" ? window.location.origin : ""}/book#manage`].join("\n");
+                  // SGT → UTC (+8h, no DST) so .ics needs no VTIMEZONE block
+                  const utc = (v: string) => new Date(`${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}T${v.slice(9, 11)}:${v.slice(11, 13)}:00+08:00`).toISOString().replace(/[-:]|\.\d{3}/g, "");
+                  const [start, end] = d.cal.split("/").map(utc);
+                  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LodestarT//FIN:NECT//EN", "BEGIN:VEVENT", `UID:finnect-1on1-${submitted.email}`, `DTSTAMP:${utc(d.cal.split("/")[0])}`, `DTSTART:${start}`, `DTEND:${end}`, `SUMMARY:FIN:NECT · 1:1 Business Meetings (${d.short})`, `LOCATION:${where.replace(/,/g, "\\,")}`, `DESCRIPTION:${details.replace(/\n/g, "\\n").replace(/,/g, "\\,")}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+                  return (
+                    <div className="mx-6 mt-2 border-t border-border pt-4 text-sm">
+                      <p className="text-navy"><MapLink href={d.mapUrl} dark>{d.venue}</MapLink><span className="block text-muted-foreground">{d.address} · 2 min walk from Bencoolen MRT</span></p>
+                      <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+                        <a href={gcal(`FIN:NECT · 1:1 Business Meetings (${d.short})`, d.cal, where, details)} target="_blank" rel="noopener noreferrer" className="font-semibold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">Add to Google Calendar</a>
+                        <a href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`} download="finnect-1on1-meetings.ics" className="font-semibold text-navy underline decoration-yellow decoration-2 underline-offset-4 hover:decoration-navy">Apple / Outlook (.ics)</a>
+                      </p>
+                    </div>
+                  );
+                })()}
                 <p className="mx-6 mt-2 border-t border-border pt-4 text-sm leading-relaxed text-muted-foreground">
                   {submitted.emailSent ? (
                     <>We've emailed {submitted.demoStatus === "pending" ? "a copy of your request" : "your schedule"} to <strong className="break-all text-navy">{submitted.email}</strong>. Not there in a few minutes? Check spam or promotions.</>
@@ -985,5 +1013,14 @@ function RsvpPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Venue name → Google Maps (opens in a new tab).
+function MapLink({ href, dark, children }: { href: string; dark?: boolean; children: React.ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={`font-semibold underline decoration-yellow decoration-2 underline-offset-4 ${dark ? "text-navy hover:decoration-navy" : "text-white hover:decoration-white"}`}>
+      {children}<span aria-hidden> ↗</span>
+    </a>
   );
 }
