@@ -14,6 +14,8 @@ import {
   EVENT_NAME,
   PROGRAM,
   LUNCH_VENUE,
+  LUNCH_ADDRESS,
+  LUNCH_MAP_URL,
   SITE_URL as SITE,
   TIMESLOTS,
 } from "@/data/timeslots";
@@ -133,7 +135,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   const meetDays = MEETUP_DAYS.map((d) => ({ d, list: meetings.filter((m) => m.day === d.id) })).filter((x) => x.list.length);
   const demoDay: string[] = [];
   if (input.attendShowcase) demoDay.push(`Pitches & investor meetings ${programTime("showcase")}`);
-  if (input.attendLunch) demoDay.push(`Networking lunch ${programTime("lunch")}, ${LUNCH_VENUE}`);
+  if (input.attendLunch) demoDay.push(`Networking lunch ${programTime("lunch")}` + (input.attendShowcase ? `, ${LUNCH_VENUE}, ${LUNCH_ADDRESS}` : ""));
   const pending: string[] = [];
   if (input.requested?.showcase) pending.push(`Pitches & investor meetings ${programTime("showcase")}`);
   if (input.requested?.lunch) pending.push(`Networking lunch ${programTime("lunch")}, ${LUNCH_VENUE}`);
@@ -148,10 +150,16 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
     );
   const tbcNote = (d: (typeof MEETUP_DAYS)[number]) =>
     "";
+  // Lunch-only guests go straight to the Westin, so their block, map and
+  // calendar point there instead of the pitching venue.
+  const lunchOnly = !input.attendShowcase && !!input.attendLunch;
+  const demoVenue = lunchOnly ? LUNCH_VENUE : EVENT_VENUE;
+  const demoAddress = lunchOnly ? LUNCH_ADDRESS : EVENT_ADDRESS;
+  const demoMap = lunchOnly ? LUNCH_MAP_URL : EVENT_MAP_URL;
   const demoCal = gcal(
-    "FIN:NECT · Singapore Demo Day",
-    "20261119T090000/20261119T123000",
-    `${EVENT_VENUE}, ${EVENT_ADDRESS}`,
+    lunchOnly ? "FIN:NECT · Networking lunch" : "FIN:NECT · Singapore Demo Day",
+    lunchOnly ? "20261119T123000/20261119T140000" : "20261119T090000/20261119T123000",
+    `${demoVenue}, ${demoAddress}`,
     [...demoDay.map((d) => `• ${d}`), "", SITE].join("\n"),
   );
 
@@ -163,7 +171,7 @@ export function buildConfirmation(input: ConfirmationInput): ConfirmationEmail {
   if (demoDay.length) {
     t.push("THU 19 NOV (MORNING) · DEMO DAY");
     for (const d of demoDay) t.push(`• ${d}`);
-    t.push(`${EVENT_VENUE}, ${EVENT_ADDRESS}`, ...(EVENT_MAP_URL ? [`Map: ${EVENT_MAP_URL}`] : []), "");
+    t.push(`${demoVenue}, ${demoAddress}`, ...(demoMap ? [`Map: ${demoMap}`] : []), "");
   }
   if (pending.length) {
     t.push("THU 19 NOV (MORNING) · DEMO DAY — REQUESTED");
@@ -229,7 +237,7 @@ ${personalHtml}
     Dear <strong>${esc(input.fullName)}</strong>,<br><br>
     ${copy.intro}
   </td></tr>`}
-  ${demoDay.length ? block("Thu 19 Nov morning · Demo Day", demoDay.map(esc), EVENT_VENUE, EVENT_ADDRESS, EVENT_MAP_URL, demoCal) : ""}
+  ${demoDay.length ? block("Thu 19 Nov morning · Demo Day", demoDay.map(esc), demoVenue, demoAddress, demoMap, demoCal) : ""}
   ${pending.length ? `<tr><td style="padding:0 32px 18px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px dashed #c9c9c9;border-left:5px solid #c9c9c9;">
         <tr><td style="padding:16px 18px;">

@@ -142,7 +142,7 @@ export const PROGRAM: ProgramBlock[] = [
     id: "lunch",
     title: "Networking lunch",
     time: "From 12:30",
-    description: "A networking lunch with the founders, investors and local partners at The Westin Singapore (Lobby Lounge, Level 32).",
+    description: "A networking lunch with the founders, investors and local partners at The Westin Singapore (Seasonal Tastes, Level 32).",
   },
   {
     id: "meetups",
@@ -152,10 +152,11 @@ export const PROGRAM: ProgramBlock[] = [
   },
 ];
 
-// Networking lunch after the Demo Day (master sheet 11.09: booked).
-export const LUNCH_VENUE = "The Westin Singapore, Lobby Lounge (Level 32)";
-export const LUNCH_ADDRESS = "12 Marina View, Asia Square Tower 2, Singapore 018961";
-export const LUNCH_MAP_URL = "https://www.google.com/maps/search/?api=1&query=The+Westin+Singapore+12+Marina+View";
+// Networking lunch after the Demo Day (master sheet 11.09: booked; 13 Nov:
+// moved from the Lobby Lounge to the Seasonal Tastes buffet, same floor).
+export const LUNCH_VENUE = "The Westin Singapore, Seasonal Tastes (Level 32)";
+export const LUNCH_ADDRESS = "12 Marina View, Asia Square Tower 2, Level 32, Singapore 018961";
+export const LUNCH_MAP_URL = "https://www.google.com/maps/search/?api=1&query=Seasonal+Tastes+The+Westin+Singapore+12+Marina+View+018961";
 
 // Demo Day run of show (Tenity, agreed 29 Sep; ops deck 12 Oct).
 export const DEMO_AGENDA: [time: string, item: string][] = [
